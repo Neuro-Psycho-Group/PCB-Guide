@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>History of PCBs — PCB Primer</title>
+  <meta name="description" content="The complete history of printed circuit boards, from Albert Hanson's 1903 patent to today's accessible hobbyist fabrication services.">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    .era-badge {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-bottom: 0.5rem;
+    }
+    .era-concept  { background: #eee; color: #666; }
+    .era-military { background: #e8f0e9; color: var(--green-deep); border: 1px solid rgba(45,106,63,0.2); }
+    .era-industry { background: #fdf0e6; color: var(--copper); border: 1px solid rgba(168,90,24,0.2); }
+    .era-smd      { background: #fdf6e6; color: var(--gold); border: 1px solid rgba(184,134,15,0.2); }
+    .era-digital  { background: #eef4ff; color: #3a6fb8; border: 1px solid rgba(58,111,184,0.2); }
+    .era-open     { background: var(--green-pale); color: var(--green-deep); border: 1px solid rgba(45,106,63,0.3); }
+    .figure-quote {
+      border-left: 4px solid var(--green);
+      padding: 1rem 1.4rem;
+      margin: 1.5rem 0;
+      background: var(--bg-card);
+      border-radius: 0 8px 8px 0;
+    }
+    .figure-quote p { font-family: var(--font-serif); font-style: italic; font-size: 1.08rem; color: var(--text-muted); margin-bottom: 0.3rem; }
+    .figure-quote cite { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-light); font-style: normal; }
+    .key-figures {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.2rem;
+      margin: 2rem 0;
+    }
+    .figure-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.2rem;
+    }
+    .figure-card .year { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-light); margin-bottom: 0.3rem; }
+    .figure-card h4 { color: var(--green-deep); margin-bottom: 0.4rem; }
+    .figure-card p { font-size: 0.88rem; color: var(--text-muted); margin: 0; }
+  </style>
+</head>
+<body>
+
+  <div class="page-header">
+    <div class="container">
+      <p class="page-label">01 / History</p>
+      <h1>Where It All Began</h1>
+      <p>From a 1903 patent filed in London to a $2 board delivered to your door. The 120-year story of how wires became copper traces.</p>
+    </div>
+  </div>
+
+  <!-- ======== CONTEXT ======== -->
+  <section class="section section--white">
+    <div class="container" style="max-width:720px">
+      <p class="section-label">The problem PCBs solved</p>
+      <h2 class="section-title">Before the Board</h2>
+
+      <!-- Point-to-point vs PCB comparison diagram -->
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 660 200" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:660px">
+          <!-- LEFT: point-to-point wiring (chaos) -->
+          <text x="145" y="16" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="10.5" fill="#c0392b" font-weight="600">Pre-1950s: Point-to-Point Wiring</text>
+          <rect x="10" y="24" width="270" height="160" rx="5" fill="#f5f0e8" stroke="#c5c0b0" stroke-width="1.5"/>
+          <!-- Component "turrets" (terminal pins) -->
+          <circle cx="50"  cy="60"  r="7" fill="#888" stroke="#555" stroke-width="1"/>
+          <circle cx="120" cy="50"  r="7" fill="#888" stroke="#555" stroke-width="1"/>
+          <circle cx="200" cy="65"  r="7" fill="#888" stroke="#555" stroke-width="1"/>
+          <circle cx="240" cy="50"  r="7" fill="#888" stroke="#555" stroke-width="1"/>
+          <circle cx="60"  cy="130" r="7" fill="#888" stroke="#555" stroke-width="1"/>
+          <circle cx="150" cy="140" r="7" fill="#888" stroke="#555" stroke-width="1"/>
+          <circle cx="230" cy="130" r="7" fill="#888" stroke="#555" stroke-width="1"/>
+          <circle cx="100" cy="95"  r="7" fill="#888" stroke="#555" stroke-width="1"/>
+          <circle cx="180" cy="110" r="7" fill="#888" stroke="#555" stroke-width="1"/>
+          <!-- Many crossing wires (chaos) -->
+          <line x1="50"  y1="60"  x2="200" y2="65"  stroke="#c0392b" stroke-width="1.2" opacity="0.7"/>
+          <line x1="50"  y1="60"  x2="150" y2="140" stroke="#3a6fb8" stroke-width="1.2" opacity="0.7"/>
+          <line x1="120" y1="50"  x2="230" y2="130" stroke="#c97530" stroke-width="1.2" opacity="0.7"/>
+          <line x1="120" y1="50"  x2="60"  y2="130" stroke="#c0392b" stroke-width="1.2" opacity="0.7"/>
+          <line x1="200" y1="65"  x2="60"  y2="130" stroke="#2d6a3f" stroke-width="1.2" opacity="0.7"/>
+          <line x1="240" y1="50"  x2="100" y2="95"  stroke="#c0392b" stroke-width="1.2" opacity="0.7"/>
+          <line x1="240" y1="50"  x2="150" y2="140" stroke="#3a6fb8" stroke-width="1.2" opacity="0.7"/>
+          <line x1="100" y1="95"  x2="230" y2="130" stroke="#c97530" stroke-width="1.2" opacity="0.7"/>
+          <line x1="180" y1="110" x2="50"  y2="60"  stroke="#2d6a3f" stroke-width="1.2" opacity="0.7"/>
+          <line x1="180" y1="110" x2="120" y2="50"  stroke="#c0392b" stroke-width="1.2" opacity="0.7"/>
+          <line x1="60"  y1="130" x2="240" y2="50"  stroke="#c97530" stroke-width="1.2" opacity="0.7"/>
+          <line x1="150" y1="140" x2="100" y2="95"  stroke="#2d6a3f" stroke-width="1.2" opacity="0.7"/>
+          <line x1="230" y1="130" x2="180" y2="110" stroke="#c0392b" stroke-width="1.2" opacity="0.7"/>
+          <!-- Problems listed below -->
+          <text x="145" y="180" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#c0392b">slow · error-prone · unreliable · impossible to scale</text>
+
+          <!-- Divider + arrow -->
+          <line x1="298" y1="20" x2="298" y2="190" stroke="#ddd" stroke-width="1" stroke-dasharray="4 3"/>
+          <text x="318" y="108" font-family="'Share Tech Mono',monospace" font-size="22" fill="#c5c0b0">→</text>
+          <text x="317" y="125" font-family="'Share Tech Mono',monospace" font-size="8" fill="#8c8575">1936+</text>
+
+          <!-- RIGHT: PCB (clean) -->
+          <text x="515" y="16" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="10.5" fill="#2d6a3f" font-weight="600">PCB: Etched Copper Traces</text>
+          <rect x="340" y="24" width="310" height="160" rx="5" fill="#edf6ee" stroke="#2d6a3f" stroke-width="1.5"/>
+          <!-- Clean PCB board look with solder mask -->
+          <rect x="355" y="40" width="280" height="128" rx="4" fill="#2d6a3f" opacity="0.12"/>
+          <!-- Clean horizontal and vertical copper traces -->
+          <line x1="370" y1="70"  x2="600" y2="70"  stroke="#c97530" stroke-width="3" stroke-linecap="round"/>
+          <line x1="370" y1="100" x2="600" y2="100" stroke="#c97530" stroke-width="3" stroke-linecap="round"/>
+          <line x1="370" y1="130" x2="600" y2="130" stroke="#c97530" stroke-width="3" stroke-linecap="round"/>
+          <line x1="400" y1="55"  x2="400" y2="145" stroke="#d4a520" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="480" y1="55"  x2="480" y2="145" stroke="#d4a520" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="560" y1="55"  x2="560" y2="145" stroke="#d4a520" stroke-width="2.5" stroke-linecap="round"/>
+          <!-- Component pads at intersections -->
+          <circle cx="400" cy="70"  r="6" fill="#d4a520" stroke="#b5820a" stroke-width="1"/>
+          <circle cx="480" cy="70"  r="6" fill="#d4a520" stroke="#b5820a" stroke-width="1"/>
+          <circle cx="560" cy="70"  r="6" fill="#d4a520" stroke="#b5820a" stroke-width="1"/>
+          <circle cx="400" cy="100" r="6" fill="#d4a520" stroke="#b5820a" stroke-width="1"/>
+          <circle cx="480" cy="100" r="6" fill="#d4a520" stroke="#b5820a" stroke-width="1"/>
+          <circle cx="560" cy="100" r="6" fill="#d4a520" stroke="#b5820a" stroke-width="1"/>
+          <circle cx="400" cy="130" r="6" fill="#d4a520" stroke="#b5820a" stroke-width="1"/>
+          <circle cx="480" cy="130" r="6" fill="#d4a520" stroke="#b5820a" stroke-width="1"/>
+          <circle cx="560" cy="130" r="6" fill="#d4a520" stroke="#b5820a" stroke-width="1"/>
+          <!-- Board edge label -->
+          <text x="515" y="180" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#2d6a3f">reproducible · compact · manufacturable · reliable</text>
+        </svg>
+        <p class="diagram-caption">Point-to-point wiring was the only option before PCBs — every connection was a physical wire, hand-soldered, crossing all others</p>
+      </div>
+
+      <p>In the early days of electronics — the 1900s through 1940s — circuits were built by <strong>point-to-point wiring</strong>. Every connection was a physical wire, soldered by hand between component terminals. This worked, but had enormous problems at scale:</p>
+      <ul style="margin:1rem 0 1rem 1.5rem;line-height:2">
+        <li>Extremely labour-intensive — each unit had to be wired by hand</li>
+        <li>No two units were identical — human error meant variation between boards</li>
+        <li>Vibration caused solder joints to fail — a critical problem in aircraft and military equipment</li>
+        <li>Impossible to miniaturise — you can only solder wire so fine</li>
+        <li>Debugging was a nightmare — finding a broken connection in a tangle of wires took hours</li>
+      </ul>
+      <p>The demand for reliable, mass-producible electronics in World War II created enormous pressure to solve these problems. PCBs were the answer — and the military funded the research to prove it.</p>
+
+      <p class="video-section-label">Recommended watch — history of electronics</p>
+      <a href="https://www.youtube.com/watch?v=_W0RN_PfSIA" target="_blank" rel="noopener" class="video-card">
+        <div class="video-thumb">
+          <img src="https://img.youtube.com/vi/_W0RN_PfSIA/mqdefault.jpg" alt="EEVblog electronics history" loading="lazy" onerror="this.style.display='none';this.parentElement.style.background='#1a1a2e'">
+          <div class="video-play">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="white"><polygon points="5,2 16,9 5,16"/></svg>
+          </div>
+        </div>
+        <div class="video-info">
+          <p class="video-channel">EEVblog · YouTube</p>
+          <p class="video-title">EEVblog #1430 — The History of the PCB</p>
+          <p class="video-desc">Dave Jones covers the history of printed circuit boards with actual archival photos and documents — early Eisler boards, military proximity fuzes, the transition from point-to-point wiring to PCBs, and how manufacturing evolved. Seeing the physical artefacts from this page's timeline makes the history tangible.</p>
+          <span class="video-cta">▶ Watch on YouTube →</span>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <!-- ======== TIMELINE ======== -->
+  <section class="section section--tinted">
+    <div class="container" style="max-width:720px">
+      <p class="section-label">Timeline</p>
+      <h2 class="section-title">A History in Milestones</h2>
+
+      <ul class="timeline">
+
+        <li class="timeline-item reveal">
+          <div class="timeline-dot timeline-dot--gray">1903</div>
+          <div>
+            <span class="era-badge era-concept">Concept</span>
+            <p class="timeline-year">1903 · London</p>
+            <p class="timeline-title">Albert Hanson's flat conductor patent</p>
+            <p class="timeline-body">German inventor Albert Hanson files a British patent describing flat foil conductors laminated to an insulating board. He envisions it for telephone exchange systems. The idea is sound but nobody builds it — the technology to manufacture it reliably doesn't exist yet, and the problem it solves isn't pressing enough. The patent sits dormant.</p>
+          </div>
+        </li>
+
+        <li class="timeline-item reveal">
+          <div class="timeline-dot timeline-dot--green">1936</div>
+          <div>
+            <span class="era-badge era-military">Foundational</span>
+            <p class="timeline-year">1936 · London (again)</p>
+            <p class="timeline-title">Paul Eisler — the first real PCB</p>
+            <p class="timeline-body">Austrian engineer Paul Eisler, living in a London bedsit as a refugee from Nazi Germany, etches copper foil onto a fibreglass substrate to make the printed circuit for a radio set. He tries to sell the idea to British companies — nobody is interested. He calls his method "printed wiring" and files his own patents. The world still hasn't caught up to the idea.</p>
+          </div>
+        </li>
+
+        <li class="timeline-item reveal">
+          <div class="timeline-dot timeline-dot--green">1941–45</div>
+          <div>
+            <span class="era-badge era-military">Military adoption</span>
+            <p class="timeline-year">World War II</p>
+            <p class="timeline-title">Proximity fuzes and the US Army Signal Corps</p>
+            <p class="timeline-body">The US Army Signal Corps discovers the concept, licenses Eisler's patents, and pours funding into development. PCBs are used in proximity fuzes — miniaturised electronic devices that detonate artillery shells near their targets rather than on impact. The requirements are brutal: survive being fired from a cannon, function in rain, fog, and extreme temperatures. PCBs pass. Point-to-point wiring cannot. Manufacturing scales up dramatically, and the knowledge base for mass-producing PCBs is established. After the war, this industrial knowledge transfers to civilian manufacturing.</p>
+          </div>
+        </li>
+
+        <li class="timeline-item reveal">
+          <div class="timeline-dot timeline-dot--copper" style="background:var(--copper)">1948</div>
+          <div>
+            <span class="era-badge era-industry">Industry</span>
+            <p class="timeline-year">1948 · US Army</p>
+            <p class="timeline-title">US Army releases PCB for commercial use</p>
+            <p class="timeline-body">The US Army officially releases PCB technology for commercial use. This moment marks the beginning of the civilian electronics industry as we know it. Radio manufacturers immediately adopt the technology — assembly time drops dramatically compared to point-to-point wiring, and defect rates plummet. Television manufacturers follow. The consumer electronics boom of the 1950s runs on PCBs.</p>
+          </div>
+        </li>
+
+        <li class="timeline-item reveal">
+          <div class="timeline-dot timeline-dot--copper" style="background:var(--copper)">1956</div>
+          <div>
+            <span class="era-badge era-industry">Through-hole era</span>
+            <p class="timeline-year">1956 · US Patent Office</p>
+            <p class="timeline-title">Through-hole technology standardised</p>
+            <p class="timeline-body">The "Autosembly" process, developed by the US Army, establishes the through-hole mounting paradigm that would dominate electronics for the next three decades: components have wire leads that pass through drilled holes in the board, and are soldered on the underside. This allows automated insertion and wave soldering — a machine passes the board over a wave of liquid solder, simultaneously forming all bottom joints. Manufacturing throughput explodes.</p>
+          </div>
+        </li>
+
+        <li class="timeline-item reveal">
+          <div class="timeline-dot timeline-dot--copper" style="background:var(--copper)">1960s</div>
+          <div>
+            <span class="era-badge era-industry">Multi-layer</span>
+            <p class="timeline-year">1960s · Industry-wide</p>
+            <p class="timeline-title">Multi-layer boards emerge</p>
+            <p class="timeline-body">With integrated circuits shrinking and signal counts rising, a single-layer board can no longer route all the connections without traces crossing. The solution: laminate multiple copper layers together with insulating prepreg between them, then drill and plate holes (vias) to connect layers. The first multi-layer boards appear in aerospace and military applications. Routing complex circuits becomes possible for the first time.</p>
+          </div>
+        </li>
+
+        <li class="timeline-item reveal">
+          <div class="timeline-dot timeline-dot--gold" style="background:var(--gold)">1970s</div>
+          <div>
+            <span class="era-badge era-digital">CAD arrives</span>
+            <p class="timeline-year">1970s</p>
+            <p class="timeline-title">Computer-aided design replaces tape</p>
+            <p class="timeline-body">Before CAD, PCB layouts were drawn by hand at 2:1 or 4:1 scale using black tape on clear film — a painstaking process taking days or weeks for a complex board. The 1970s see the first computer-aided PCB design tools, initially running on expensive mainframes accessible only to large corporations. The introduction of interactive graphics workstations in the late 1970s begins democratising the design process.</p>
+          </div>
+        </li>
+
+        <li class="timeline-item reveal">
+          <div class="timeline-dot timeline-dot--gold" style="background:var(--gold)">1980s</div>
+          <div>
+            <span class="era-badge era-smd">SMD revolution</span>
+            <p class="timeline-year">1980s</p>
+            <p class="timeline-title">Surface mount technology changes everything</p>
+            <p class="timeline-body">Surface Mount Technology (SMT) eliminates wire leads entirely. Components are miniaturised into small packages with flat metal contacts that sit directly on pads on the board surface. No drilling required. Boards can be populated on both sides. Components shrink by 50–90% compared to their through-hole equivalents. The first SMD components appear in military and aerospace applications, then consumer electronics. By the late 1980s, SMT is the dominant technology for high-volume manufacturing. The components your friend was wrestling with tweezers — these are the descendants of that revolution.</p>
+          </div>
+        </li>
+
+        <li class="timeline-item reveal">
+          <div class="timeline-dot timeline-dot--gold" style="background:var(--gold)">1991</div>
+          <div>
+            <span class="era-badge era-digital">Digital design</span>
+            <p class="timeline-year">1991</p>
+            <p class="timeline-title">Gerber format becomes universal standard</p>
+            <p class="timeline-body">The Gerber format — originally developed by Gerber Scientific in the 1960s for photoplotters — is formalised as RS-274X and becomes the universal standard for transmitting PCB manufacturing data to fabrication houses. For the first time, a designer can send files anywhere in the world and expect a correctly manufactured board. The format is still in use today, virtually unchanged.</p>
+          </div>
+        </li>
+
+        <li class="timeline-item reveal">
+          <div class="timeline-dot timeline-dot--green">2000s</div>
+          <div>
+            <span class="era-badge era-open">Democratisation</span>
+            <p class="timeline-year">2000s</p>
+            <p class="timeline-title">PCBs reach the hobbyist</p>
+            <p class="timeline-body">Several forces converge: low-cost Chinese PCB fabrication services emerge (targeting the growing telecom industry), broadband internet enables file transfer to overseas factories, and the hobbyist electronics community (driven by Arduino's 2005 launch) creates demand for small-quantity board runs. Services like BatchPCB and later OSH Park make it possible to order as few as 3 boards. The knowledge barrier remains high, but the cost barrier has collapsed.</p>
+          </div>
+        </li>
+
+        <li class="timeline-item reveal">
+          <div class="timeline-dot timeline-dot--green">2010s</div>
+          <div>
+            <span class="era-badge era-open">Open source</span>
+            <p class="timeline-year">2010s</p>
+            <p class="timeline-title">KiCad, JLCPCB, and the maker explosion</p>
+            <p class="timeline-body">KiCad — a free, open-source EDA tool — reaches maturity and becomes genuinely viable for professional use. JLCPCB launches, offering 5 boards for $2 shipped from China. Component libraries on GitHub mean any designer can share and reuse footprints. Adafruit and SparkFun publish open-source hardware designs. The combination of free design tools, cheap fabrication, and open-source knowledge makes PCB design accessible to anyone with a laptop and internet connection. The YouTube tutorial ecosystem explodes.</p>
+          </div>
+        </li>
+
+        <li class="timeline-item reveal">
+          <div class="timeline-dot timeline-dot--green">Now</div>
+          <div>
+            <span class="era-badge era-open">Today</span>
+            <p class="timeline-year">2020s</p>
+            <p class="timeline-title">The golden age of accessible PCB design</p>
+            <p class="timeline-body">JLCPCB and PCBWay offer not just bare boards but full PCB assembly (PCBA) — they source components, apply solder paste, and reflow boards at scale for prices that were unimaginable five years ago. AI-assisted schematic and layout tools are emerging. Design rule checks catch errors before ordering. Community forums like EEVblog and r/PrintedCircuitBoard mean no question goes unanswered. You are designing PCBs at the best possible moment in history.</p>
+          </div>
+        </li>
+
+      </ul>
+    </div>
+  </section>
+
+  <!-- ======== KEY FIGURES ======== -->
+  <section class="section section--white">
+    <div class="container">
+      <p class="section-label">Pioneers</p>
+      <h2 class="section-title">Key Figures in PCB History</h2>
+
+      <div class="key-figures">
+        <div class="figure-card reveal">
+          <p class="year">1903</p>
+          <h4>Albert Hanson</h4>
+          <p>German inventor who conceived the idea of flat printed conductors on insulation. Filed the concept as a telephone exchange improvement — too early for anyone to act on it, but his patent predates all others.</p>
+        </div>
+        <div class="figure-card reveal">
+          <p class="year">1936</p>
+          <h4>Paul Eisler</h4>
+          <p>The father of the modern PCB. An Austrian Jewish refugee working in London who etched copper onto fibreglass and spent years trying to convince a sceptical industry to adopt it. The military eventually did, and changed electronics forever.</p>
+        </div>
+        <div class="figure-card reveal">
+          <p class="year">1940s</p>
+          <h4>US Army Signal Corps</h4>
+          <p>Not a person but an institution. The Signal Corps provided the funding, urgency, and manufacturing scale that turned a clever idea into an industrial process. Without wartime pressure, PCBs might have waited decades.</p>
+        </div>
+        <div class="figure-card reveal">
+          <p class="year">2005</p>
+          <h4>Massimo Banzi &amp; Arduino</h4>
+          <p>The Arduino project — an open-source microcontroller board designed for artists and students — created the mass-market demand for small hobbyist PCB runs. Indirectly responsible for the entire maker movement and the accessible fab services that followed.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

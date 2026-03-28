@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PCB Software &amp; EDA Tools — PCB Primer</title>
+  <meta name="description" content="EDA software comparison: KiCad, EasyEDA, Altium Designer, and more. Which to use and why, plus tips for getting started.">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    .tool-card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin: 2rem 0; }
+    .tool-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .tool-card .tool-header { padding: 1.2rem 1.4rem; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; gap: 1rem; }
+    .tool-logo { width: 40px; height: 40px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; }
+    .tool-card .tool-name { font-family: var(--font-serif); font-size: 1.25rem; font-weight: 700; color: var(--green-deep); margin-bottom: 0.1rem; }
+    .tool-card .tool-cost { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-light); }
+    .tool-card .tool-body { padding: 1.2rem 1.4rem; }
+    .tool-card .tool-desc { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.8rem; line-height: 1.65; }
+    .tool-pros-cons { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin: 0.8rem 0; }
+    .pros, .cons { font-size: 0.82rem; }
+    .pros h5, .cons h5 { font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.3rem; }
+    .pros h5 { color: var(--green); }
+    .cons h5 { color: var(--copper); }
+    .pros li { color: var(--green-deep); }
+    .cons li { color: var(--copper); }
+    ul.no-bullets { list-style: none; }
+    ul.no-bullets li::before { content: '· '; }
+    .tool-verdict { background: var(--green-faint); border: 1px solid var(--green-pale); border-radius: 4px; padding: 0.5rem 0.8rem; font-size: 0.82rem; color: var(--green-deep); margin-top: 0.8rem; }
+    .tool-verdict.warn { background: #fff8e6; border-color: #ffe0a0; color: var(--gold); }
+    .tool-verdict.neutral { background: var(--bg); border-color: var(--border); color: var(--text-muted); }
+    /* EDA ecosystem diagram */
+    .eda-flow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 1.5rem 0; }
+    .eda-stage { padding: 1.2rem; text-align: center; position: relative; }
+    .eda-stage:not(:last-child)::after { content: '→'; position: absolute; right: -10px; top: 50%; transform: translateY(-50%); font-size: 1.2rem; color: var(--border); z-index: 1; }
+    @media(max-width:600px) { .eda-flow { grid-template-columns: 1fr; } .eda-stage::after { display: none; } }
+    .eda-stage h4 { font-size: 0.95rem; color: var(--green-deep); margin-bottom: 0.4rem; }
+    .eda-stage p { font-size: 0.82rem; color: var(--text-muted); margin: 0; }
+    .eda-stage .stage-n { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-light); margin-bottom: 0.3rem; }
+    /* Comparison matrix */
+    .matrix-table td, .matrix-table th { text-align: center; }
+    .matrix-table td:first-child, .matrix-table th:first-child { text-align: left; }
+    .score-5 { color: var(--green); font-weight: 700; }
+    .score-4 { color: var(--green-mid); }
+    .score-3 { color: var(--gold); }
+    .score-2 { color: var(--copper-light); }
+    .score-1 { color: var(--copper); }
+    .resource-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+    .resource-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; padding: 1rem; }
+    .resource-card .res-type { font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-light); margin-bottom: 0.3rem; }
+    .resource-card h4 { font-size: 0.95rem; color: var(--green-deep); margin-bottom: 0.3rem; }
+    .resource-card p { font-size: 0.83rem; color: var(--text-muted); margin: 0; }
+  </style>
+</head>
+<body>
+
+  <div class="page-header">
+    <div class="container">
+      <p class="page-label">07 / Software</p>
+      <h1>EDA Tools</h1>
+      <p>Electronic Design Automation software is where all PCB design begins. Here's what's available, which to choose, and how to start.</p>
+    </div>
+  </div>
+
+  <!-- ======== WHAT IS EDA ======== -->
+  <section class="section section--white">
+    <div class="container">
+      <p class="section-label">What is EDA?</p>
+      <h2 class="section-title">What EDA Software Does</h2>
+      <p class="section-intro">EDA (Electronic Design Automation) software combines two main tools in one package: a schematic editor and a PCB layout editor. They work together, with the schematic's netlist driving the layout.</p>
+
+      <!-- Schematic Editor vs PCB Editor split diagram -->
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 680 230" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:680px">
+          <!-- Left panel: Schematic Editor -->
+          <rect x="10" y="10" width="310" height="210" rx="6" fill="#f5f3ec" stroke="#c5c0b0" stroke-width="1.5"/>
+          <!-- Title bar -->
+          <rect x="10" y="10" width="310" height="26" rx="6" fill="#1a3d26" stroke="none"/>
+          <rect x="10" y="28" width="310" height="8" rx="0" fill="#1a3d26"/>
+          <text x="165" y="27" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9.5" fill="#5aad74">Schematic Editor (Eeschema)</text>
+          <!-- Tool hints -->
+          <text x="16" y="52" font-family="'Share Tech Mono',monospace" font-size="8" fill="#8c8575">A=symbol  W=wire  P=power  E=edit</text>
+          <!-- VCC power symbol -->
+          <line x1="80" y1="75" x2="80" y2="90" stroke="#c97530" stroke-width="1.5"/>
+          <polygon points="74,78 80,68 86,78" fill="#c97530"/>
+          <text x="90" y="75" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#c97530">+3V3</text>
+          <!-- Resistor R1 -->
+          <line x1="80" y1="90" x2="80" y2="100" stroke="#c97530" stroke-width="1.5"/>
+          <rect x="72" y="100" width="16" height="26" rx="2" fill="none" stroke="#888" stroke-width="1.5"/>
+          <line x1="80" y1="126" x2="80" y2="138" stroke="#5aad74" stroke-width="1.5"/>
+          <text x="92" y="115" font-family="'Share Tech Mono',monospace" font-size="8" fill="#5c5545">R1</text>
+          <text x="92" y="124" font-family="'Share Tech Mono',monospace" font-size="8" fill="#5c5545">470Ω</text>
+          <!-- LED -->
+          <line x1="80" y1="138" x2="80" y2="148" stroke="#5aad74" stroke-width="1.5"/>
+          <polygon points="74,148 86,148 80,160" fill="none" stroke="#5aad74" stroke-width="1.5"/>
+          <line x1="74" y1="160" x2="86" y2="160" stroke="#5aad74" stroke-width="1.5"/>
+          <line x1="80" y1="160" x2="80" y2="175" stroke="#888" stroke-width="1.5"/>
+          <!-- LED glow -->
+          <line x1="84" y1="146" x2="90" y2="140" stroke="#5aad74" stroke-width="0.8" stroke-dasharray="2 1"/>
+          <line x1="87" y1="150" x2="94" y2="146" stroke="#5aad74" stroke-width="0.8" stroke-dasharray="2 1"/>
+          <text x="96" y="155" font-family="'Share Tech Mono',monospace" font-size="8" fill="#5c5545">LED1</text>
+          <!-- GND -->
+          <line x1="72" y1="175" x2="88" y2="175" stroke="#888" stroke-width="1.5"/>
+          <line x1="75" y1="180" x2="85" y2="180" stroke="#888" stroke-width="1.2"/>
+          <line x1="78" y1="185" x2="82" y2="185" stroke="#888" stroke-width="1"/>
+          <!-- IC block -->
+          <rect x="160" y="70" width="90" height="100" rx="4" fill="#2a2a2a" stroke="#555" stroke-width="1.5"/>
+          <text x="205" y="118" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#888">U1</text>
+          <text x="205" y="130" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#666">ATtiny85</text>
+          <!-- IC pins -->
+          <line x1="160" y1="82"  x2="148" y2="82"  stroke="#aaa" stroke-width="1.2"/>
+          <line x1="160" y1="96"  x2="148" y2="96"  stroke="#aaa" stroke-width="1.2"/>
+          <line x1="160" y1="150" x2="148" y2="150" stroke="#aaa" stroke-width="1.2"/>
+          <line x1="250" y1="82"  x2="262" y2="82"  stroke="#aaa" stroke-width="1.2"/>
+          <line x1="250" y1="96"  x2="262" y2="96"  stroke="#aaa" stroke-width="1.2"/>
+          <line x1="250" y1="110" x2="262" y2="110" stroke="#aaa" stroke-width="1.2"/>
+          <!-- Net label on IC pin -->
+          <rect x="262" y="76" width="28" height="12" rx="2" fill="#edf6ee" stroke="#2d6a3f" stroke-width="0.8"/>
+          <text x="276" y="85" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7" fill="#1a3d26">LED</text>
+          <!-- Wire connecting R1 to IC -->
+          <line x1="80"  y1="138" x2="130" y2="138" stroke="#5aad74" stroke-width="1.5"/>
+          <line x1="130" y1="138" x2="130" y2="96"  stroke="#5aad74" stroke-width="1.5"/>
+          <line x1="130" y1="96"  x2="148" y2="96"  stroke="#5aad74" stroke-width="1.5"/>
+          <!-- Bottom label -->
+          <text x="165" y="210" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#1a3d26">Logical — what connects where</text>
+          <text x="165" y="221" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#5c5545">no physical positions · pure circuit truth</text>
+
+          <!-- Arrow in middle -->
+          <text x="340" y="118" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="26" fill="#c5c0b0">→</text>
+          <text x="340" y="136" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#8c8575">netlist</text>
+
+          <!-- Right panel: PCB Editor -->
+          <rect x="360" y="10" width="310" height="210" rx="6" fill="#edf6ee" stroke="#c5c0b0" stroke-width="1.5"/>
+          <rect x="360" y="10" width="310" height="26" rx="6" fill="#7a3a10" stroke="none"/>
+          <rect x="360" y="28" width="310" height="8" fill="#7a3a10"/>
+          <text x="515" y="27" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9.5" fill="#fbb" >PCB Editor (PCBnew)</text>
+          <text x="366" y="52" font-family="'Share Tech Mono',monospace" font-size="8" fill="#8c8575">X=route  B=fill  E=edit  D=DRC</text>
+          <!-- Board outline -->
+          <rect x="380" y="58" width="270" height="148" rx="4" fill="#e8f0e9" stroke="#2d6a3f" stroke-width="1.5"/>
+          <!-- Component footprints placed on board -->
+          <!-- R1 footprint -->
+          <rect x="398" y="78" width="32" height="12" rx="1" fill="#c8c3a0" stroke="#888" stroke-width="1"/>
+          <rect x="396" y="80" width="6"  height="8" rx="1" fill="#d4a520"/>
+          <rect x="428" y="80" width="6"  height="8" rx="1" fill="#d4a520"/>
+          <text x="413" y="97" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#888">R1</text>
+          <!-- LED1 footprint -->
+          <circle cx="490" cy="84" r="10" fill="#c8c3a0" stroke="#888" stroke-width="1"/>
+          <circle cx="490" cy="84" r="4"  fill="#d4a520"/>
+          <text x="490" y="104" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#888">LED1</text>
+          <!-- U1 footprint (DIP-8) -->
+          <rect x="530" y="70" width="48" height="62" rx="2" fill="#c8c3a0" stroke="#888" stroke-width="1"/>
+          <rect x="534" y="74" width="40" height="54" rx="1" fill="#2a2a2a" opacity="0.5"/>
+          <!-- DIP pads -->
+          <rect x="524" y="76" width="10" height="8" rx="1" fill="#d4a520"/><rect x="524" y="90" width="10" height="8" rx="1" fill="#d4a520"/>
+          <rect x="524" y="104" width="10" height="8" rx="1" fill="#d4a520"/><rect x="524" y="118" width="10" height="8" rx="1" fill="#d4a520"/>
+          <rect x="578" y="76" width="10" height="8" rx="1" fill="#d4a520"/><rect x="578" y="90" width="10" height="8" rx="1" fill="#d4a520"/>
+          <rect x="578" y="104" width="10" height="8" rx="1" fill="#d4a520"/><rect x="578" y="118" width="10" height="8" rx="1" fill="#d4a520"/>
+          <text x="554" y="116" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#888">U1</text>
+          <!-- Copper trace connecting R1 to U1 -->
+          <path d="M434 84 L534 80" stroke="#c97530" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <!-- Ratsnest (unrouted) -->
+          <line x1="500" y1="84" x2="534" y2="90" stroke="#5aad74" stroke-width="1" stroke-dasharray="3 2" opacity="0.8"/>
+          <!-- Ground pour -->
+          <rect x="382" y="140" width="266" height="64" rx="3" fill="rgba(45,106,63,0.12)" stroke="rgba(45,106,63,0.3)" stroke-width="1" stroke-dasharray="3 2"/>
+          <text x="515" y="175" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#2d6a3f" opacity="0.7">GND copper pour</text>
+          <!-- Labels -->
+          <text x="515" y="210" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#7a3a10">Physical — where things actually sit</text>
+          <text x="515" y="221" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#5c5545">real board dimensions · copper traces · Gerbers →</text>
+        </svg>
+        <p class="diagram-caption">The two editors are linked — changes in the schematic update the netlist, which flows into the PCB editor as ratsnest lines to route</p>
+      </div>
+
+      <div class="eda-flow">
+        <div class="eda-stage" style="background:var(--green-faint)">
+          <p class="stage-n">Tool 1</p>
+          <h4>Schematic Editor</h4>
+          <p>Draw your circuit using symbols. Add nets, power flags, component values. Generates the netlist — the list of all connections.</p>
+        </div>
+        <div class="eda-stage" style="background:var(--bg-card)">
+          <p class="stage-n">Tool 2</p>
+          <h4>PCB Layout Editor</h4>
+          <p>Place footprints on a board. Route copper traces between pads. Set up copper fills, silkscreen, and board outline.</p>
+        </div>
+        <div class="eda-stage" style="background:#fdf6e6">
+          <p class="stage-n">Output</p>
+          <h4>Gerber Files</h4>
+          <p>Manufacturing files exported from the layout editor. Sent to the fab house. One file per layer of the board.</p>
+        </div>
+      </div>
+
+      <p>Both tools share a <strong>component library</strong> — a database of symbols (for the schematic) and footprints (for the layout). Matching the right footprint to the right symbol is one of the most important and error-prone steps in PCB design.</p>
+
+      <p class="video-section-label">Recommended watch — getting started with KiCad</p>
+      <a href="https://www.youtube.com/watch?v=aVUqaB0IMh4" target="_blank" rel="noopener" class="video-card">
+        <div class="video-thumb">
+          <img src="https://img.youtube.com/vi/aVUqaB0IMh4/mqdefault.jpg" alt="Phil's Lab KiCad PCB Design" loading="lazy" onerror="this.style.display='none';this.parentElement.style.background='#0f1f18'">
+          <div class="video-play">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="white"><polygon points="5,2 16,9 5,16"/></svg>
+          </div>
+        </div>
+        <div class="video-info">
+          <p class="video-channel">Phil's Lab · YouTube</p>
+          <p class="video-title">KiCad 6 STM32 Hardware Design — Full PCB Design Tutorial</p>
+          <p class="video-desc">The single best KiCad tutorial available. Phillip Salmony designs a complete STM32 microcontroller board from blank schematic to finished routed PCB — narrating every decision along the way. Watching this video transforms KiCad from confusing to intuitive. Start here before opening KiCad for the first time.</p>
+          <span class="video-cta">▶ Watch on YouTube →</span>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <!-- ======== TOOL COMPARISON MATRIX ======== -->
+  <section class="section section--tinted">
+    <div class="container">
+      <p class="section-label">Side by side</p>
+      <h2 class="section-title">EDA Tool Comparison</h2>
+
+      <div class="table-wrap">
+        <table class="matrix-table">
+          <thead>
+            <tr>
+              <th>Tool</th>
+              <th>Cost</th>
+              <th>Beginner-friendly</th>
+              <th>Schematic quality</th>
+              <th>Routing features</th>
+              <th>Library size</th>
+              <th>Community</th>
+              <th>Offline use</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>KiCad 8</strong></td>
+              <td>Free &amp; OSS</td>
+              <td class="score-4">★★★★</td>
+              <td class="score-5">★★★★★</td>
+              <td class="score-4">★★★★</td>
+              <td class="score-5">★★★★★</td>
+              <td class="score-5">★★★★★</td>
+              <td class="score-5">Yes</td>
+            </tr>
+            <tr>
+              <td><strong>EasyEDA</strong></td>
+              <td>Free</td>
+              <td class="score-5">★★★★★</td>
+              <td class="score-3">★★★</td>
+              <td class="score-3">★★★</td>
+              <td class="score-5">★★★★★</td>
+              <td class="score-4">★★★★</td>
+              <td class="score-2">Limited</td>
+            </tr>
+            <tr>
+              <td><strong>Altium Designer</strong></td>
+              <td>~£7,000/yr</td>
+              <td class="score-2">★★</td>
+              <td class="score-5">★★★★★</td>
+              <td class="score-5">★★★★★</td>
+              <td class="score-5">★★★★★</td>
+              <td class="score-4">★★★★</td>
+              <td class="score-5">Yes</td>
+            </tr>
+            <tr>
+              <td><strong>Eagle (Fusion)</strong></td>
+              <td>Free/paid tiers</td>
+              <td class="score-3">★★★</td>
+              <td class="score-3">★★★</td>
+              <td class="score-4">★★★★</td>
+              <td class="score-4">★★★★</td>
+              <td class="score-4">★★★★</td>
+              <td class="score-4">Yes</td>
+            </tr>
+            <tr>
+              <td><strong>OrCAD</strong></td>
+              <td>$1,500+/yr</td>
+              <td class="score-2">★★</td>
+              <td class="score-5">★★★★★</td>
+              <td class="score-4">★★★★</td>
+              <td class="score-4">★★★★</td>
+              <td class="score-3">★★★</td>
+              <td class="score-5">Yes</td>
+            </tr>
+            <tr>
+              <td><strong>Flux.ai</strong></td>
+              <td>Free tier</td>
+              <td class="score-5">★★★★★</td>
+              <td class="score-4">★★★★</td>
+              <td class="score-3">★★★</td>
+              <td class="score-4">★★★★</td>
+              <td class="score-3">★★★</td>
+              <td class="score-1">No (browser)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== TOOL CARDS ======== -->
+  <section class="section section--white">
+    <div class="container">
+      <p class="section-label">In depth</p>
+      <h2 class="section-title">The Main Tools</h2>
+
+      <div class="tool-card-grid">
+
+        <div class="tool-card">
+          <div class="tool-header">
+            <div class="tool-logo" style="background:#2d6a3f;color:#fff">KI</div>
+            <div>
+              <div class="tool-name">KiCad</div>
+              <div class="tool-cost">Free · Open source · kicad.org</div>
+            </div>
+          </div>
+          <div class="tool-body">
+            <p class="tool-desc">The industry-standard open-source EDA tool. KiCad 7 and 8 are genuinely professional-grade tools used from bedroom projects to aerospace hardware. It has a steeper initial learning curve than EasyEDA, but the skills you build here transfer directly to professional environments.</p>
+            <div class="tool-pros-cons">
+              <div class="pros"><h5>Strengths</h5><ul class="no-bullets"><li>Completely free, forever</li><li>Excellent schematic editor</li><li>Push-and-shove router</li><li>3D board preview</li><li>Massive library + community</li><li>Works fully offline</li></ul></div>
+              <div class="cons"><h5>Weaknesses</h5><ul class="no-bullets"><li>First-time setup is confusing</li><li>Library management complex</li><li>Autorouter is basic</li></ul></div>
+            </div>
+            <div class="tool-verdict">⭐ Best all-round choice. Learn KiCad and you've learned PCB design properly.</div>
+          </div>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-header">
+            <div class="tool-logo" style="background:#c97530;color:#fff">EE</div>
+            <div>
+              <div class="tool-name">EasyEDA</div>
+              <div class="tool-cost">Free · Browser-based · easyeda.com</div>
+            </div>
+          </div>
+          <div class="tool-body">
+            <p class="tool-desc">Browser-based EDA tool made by JLCPCB's parent company LCSC. Tightly integrated with JLCPCB ordering and LCSC component database. Very low friction to get started — no installation, huge library of components with available stock, one-click ordering.</p>
+            <div class="tool-pros-cons">
+              <div class="pros"><h5>Strengths</h5><ul class="no-bullets"><li>No installation required</li><li>Massive real-stock LCSC library</li><li>Direct JLCPCB ordering</li><li>Very easy for first board</li><li>LCSC BOM integration</li></ul></div>
+              <div class="cons"><h5>Weaknesses</h5><ul class="no-bullets"><li>Requires internet connection</li><li>Less powerful schematic tools</li><li>Cloud-locked designs</li></ul></div>
+            </div>
+            <div class="tool-verdict">Best for your very first board if you don't want to install software. Move to KiCad as you grow.</div>
+          </div>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-header">
+            <div class="tool-logo" style="background:#1a237e;color:#fff">AD</div>
+            <div>
+              <div class="tool-name">Altium Designer</div>
+              <div class="tool-cost">~£7,000/year · altium.com</div>
+            </div>
+          </div>
+          <div class="tool-body">
+            <p class="tool-desc">The gold standard of professional EDA software. Used by the majority of hardware companies for production design. Exceptional schematic tools, advanced routing features (differential pairs, length matching, impedance control), and the best library management available. You will encounter it if you work in hardware engineering.</p>
+            <div class="tool-pros-cons">
+              <div class="pros"><h5>Strengths</h5><ul class="no-bullets"><li>Most powerful routing engine</li><li>Best constraint management</li><li>Industry standard professionally</li><li>Excellent simulation tools</li></ul></div>
+              <div class="cons"><h5>Weaknesses</h5><ul class="no-bullets"><li>Extremely expensive</li><li>Not worth learning until paid to use it</li><li>Very complex for beginners</li></ul></div>
+            </div>
+            <div class="tool-verdict warn">Don't buy or learn this until you're employed somewhere that uses it. KiCad produces professional results at zero cost.</div>
+          </div>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-header">
+            <div class="tool-logo" style="background:#888;color:#fff">Fx</div>
+            <div>
+              <div class="tool-name">Flux.ai</div>
+              <div class="tool-cost">Free tier available · flux.ai</div>
+            </div>
+          </div>
+          <div class="tool-body">
+            <p class="tool-desc">A newer browser-based EDA tool with AI-assisted features. Pitched at rapid prototyping and collaboration. The AI can suggest component connections and help with routing decisions. Interesting for exploration but still maturing as a product. Entirely cloud-based.</p>
+            <div class="tool-pros-cons">
+              <div class="pros"><h5>Strengths</h5><ul class="no-bullets"><li>AI-assisted design features</li><li>Good collaboration tools</li><li>Modern UI</li></ul></div>
+              <div class="cons"><h5>Weaknesses</h5><ul class="no-bullets"><li>Cloud-only, no offline use</li><li>Smaller community</li><li>Less proven in production</li></ul></div>
+            </div>
+            <div class="tool-verdict neutral">Worth watching. Not yet a primary recommendation — use KiCad or EasyEDA until it matures further.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== KICAD QUICK START ======== -->
+  <section class="section section--tinted">
+    <div class="container" style="max-width:760px">
+      <p class="section-label">Getting started with KiCad</p>
+      <h2 class="section-title">KiCad: First Steps</h2>
+      <p>KiCad can feel overwhelming when you open it. Here's what the main components are and how they connect.</p>
+
+      <div class="callout callout--info" style="margin-bottom:2rem">
+        <p class="callout-title">Download</p>
+        <p style="margin:0">Get the latest stable release from <strong>kicad.org/download</strong>. KiCad 8 is the current version. Install includes all libraries — total install is about 5GB. Worth every byte.</p>
+      </div>
+
+      <h3>The KiCad workflow</h3>
+      <div class="steps" style="margin-top:1rem">
+        <div class="step reveal">
+          <div class="step-num">01</div>
+          <div class="step-body">
+            <h3>Project Manager</h3>
+            <p style="font-size:0.92rem;color:var(--text-muted)">The main KiCad window. Create a new project here (File → New Project). Every design is a project — it holds your schematic file (<code>.kicad_sch</code>), PCB file (<code>.kicad_pcb</code>), and library symlinks. Open each sub-tool from this window.</p>
+          </div>
+        </div>
+        <div class="step reveal">
+          <div class="step-num">02</div>
+          <div class="step-body">
+            <h3>Schematic Editor (Eeschema)</h3>
+            <p style="font-size:0.92rem;color:var(--text-muted)">Open this first. Draw your circuit using symbols from the symbol library (<kbd>A</kbd> to add a symbol). Wire components together (<kbd>W</kbd>). Add power symbols (<kbd>P</kbd>). When done, run ERC (Inspect → Electrical Rules Checker) to catch errors before layout.</p>
+          </div>
+        </div>
+        <div class="step reveal">
+          <div class="step-num">03</div>
+          <div class="step-body">
+            <h3>PCB Editor (PCBnew)</h3>
+            <p style="font-size:0.92rem;color:var(--text-muted)">Open after the schematic is complete. Import the schematic's netlist (Tools → Update PCB from Schematic). All your components appear as footprints connected by ratsnest lines. Place them, draw the board outline on Edge.Cuts layer, then route.</p>
+          </div>
+        </div>
+        <div class="step reveal">
+          <div class="step-num">04</div>
+          <div class="step-body">
+            <h3>Plot / Generate Gerbers</h3>
+            <p style="font-size:0.92rem;color:var(--text-muted)">In PCBnew: File → Plot. Select all required layers. Set output format to Gerber. Also run File → Fabrication Outputs → Drill Files. Compress everything into a <code>.zip</code> and upload to your fab house.</p>
+          </div>
+        </div>
+      </div>
+
+      <h3 style="margin-top:2rem">Essential KiCad keyboard shortcuts</h3>
+      <div class="table-wrap" style="margin-top:0.8rem">
+        <table>
+          <thead><tr><th>Key</th><th>Schematic</th><th>PCB Editor</th></tr></thead>
+          <tbody>
+            <tr><td><code>A</code></td><td>Add symbol</td><td>Add footprint</td></tr>
+            <tr><td><code>W</code></td><td>Draw wire</td><td>Route track (copper trace)</td></tr>
+            <tr><td><code>P</code></td><td>Add power symbol</td><td>Add pad</td></tr>
+            <tr><td><code>E</code></td><td>Edit properties</td><td>Edit properties</td></tr>
+            <tr><td><code>G</code></td><td>Grab (move with connections)</td><td>Drag (move with ratsnest)</td></tr>
+            <tr><td><code>R</code></td><td>Rotate</td><td>Rotate</td></tr>
+            <tr><td><code>X</code></td><td>—</td><td>Route single trace</td></tr>
+            <tr><td><code>U</code></td><td>—</td><td>Select connected tracks</td></tr>
+            <tr><td><code>B</code></td><td>—</td><td>Fill all copper zones (ground pour)</td></tr>
+            <tr><td><code>D</code></td><td>—</td><td>Interactive router: drag</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== LEARNING RESOURCES ======== -->
+  <section class="section section--white">
+    <div class="container">
+      <p class="section-label">Further learning</p>
+      <h2 class="section-title">Learning Resources</h2>
+
+      <div class="resource-cards stagger-children">
+        <div class="resource-card reveal">
+          <p class="res-type">YouTube</p>
+          <h4>Phil's Lab</h4>
+          <p>The best KiCad tutorial series online. Phil covers complete designs from schematic to ordering. Professional-grade content that's beginner-accessible. Essential watching.</p>
+        </div>
+        <div class="resource-card reveal">
+          <p class="res-type">YouTube</p>
+          <h4>EEVblog</h4>
+          <p>Dave Jones' channel covers PCB design, test equipment, and electronics fundamentals in depth. Particularly good for design-for-test and practical engineering tips.</p>
+        </div>
+        <div class="resource-card reveal">
+          <p class="res-type">Book</p>
+          <h4>The Art of Electronics</h4>
+          <p>Horowitz &amp; Hill. The definitive electronics engineering reference. Not a PCB book specifically, but understanding the circuits you're laying out transforms your design quality.</p>
+        </div>
+        <div class="resource-card reveal">
+          <p class="res-type">Community</p>
+          <h4>r/PrintedCircuitBoard</h4>
+          <p>Post your layout for review before ordering — the community is generous with specific, actionable feedback. A genuine shortcut to avoiding mistakes that would take weeks to discover yourself.</p>
+        </div>
+        <div class="resource-card reveal">
+          <p class="res-type">Community</p>
+          <h4>KiCad Forum</h4>
+          <p>forum.kicad.info — the official KiCad community. Friendly, knowledgeable, and highly responsive to beginner questions.</p>
+        </div>
+        <div class="resource-card reveal">
+          <p class="res-type">Reference</p>
+          <h4>IPC-2221 Standard</h4>
+          <p>Generic standard for printed board design. Freely available in summarised form online. Defines trace width vs current, clearances, and via sizing formulae. The professional reference.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

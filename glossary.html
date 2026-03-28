@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PCB Glossary — PCB Primer</title>
+  <meta name="description" content="Complete PCB glossary: 60+ terms from annular ring to via, clearly defined for beginners.">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    .glossary-wrap { max-width: 760px; }
+    .glossary-stats { display: flex; gap: 2rem; margin-bottom: 2rem; flex-wrap: wrap; }
+    .stat { text-align: center; }
+    .stat .big { font-family: var(--font-mono); font-size: 2rem; color: var(--green); display: block; }
+    .stat .label { font-size: 0.8rem; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+
+  <div class="page-header">
+    <div class="container">
+      <p class="page-label">11 / Glossary</p>
+      <h1>The Vocabulary</h1>
+      <p>Every term you'll encounter in PCB design, fabrication, and assembly — clearly defined. Search below to find any term.</p>
+    </div>
+  </div>
+
+  <section class="section section--white">
+    <div class="container">
+      <div class="glossary-wrap">
+        <input type="text" class="glossary-search" id="glossary-search" placeholder="Search terms… e.g. &ldquo;via&rdquo; or &ldquo;copper&rdquo;">
+
+        <div class="glossary-stats">
+          <div class="stat"><span class="big">60+</span><span class="label">Terms defined</span></div>
+          <div class="stat"><span class="big">A–Z</span><span class="label">Alphabetical</span></div>
+          <div class="stat"><span class="big">⌕</span><span class="label">Instant search</span></div>
+        </div>
+
+        <!-- A -->
+        <div class="glossary-letter-section">
+          <div class="glossary-letter">A</div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Annular Ring</p>
+            <p class="glossary-def">The ring of copper surrounding a drilled hole (via or through-hole pad). Minimum annular ring is typically 0.15mm at hobby fab houses — if a drill hole is too large relative to the pad, the ring disappears and the via becomes unreliable.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">AOI (Automated Optical Inspection)</p>
+            <p class="glossary-def">A camera-based system that scans finished boards and compares them to the Gerber reference. Detects missing solder, bridges, lifted components, and other assembly defects. Used in manufacturing, not by hobbyists.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Autorouter</p>
+            <p class="glossary-def">A software feature that automatically routes all unconnected nets in a PCB layout. Saves time but produces suboptimal results — traces may be longer than necessary, ground planes may be fragmented, and high-speed signal rules are rarely respected. Used to speed up routine work, not as a substitute for proper layout.</p>
+          </div>
+        </div>
+
+        <!-- B -->
+        <div class="glossary-letter-section">
+          <div class="glossary-letter">B</div>
+          <div class="glossary-entry">
+            <p class="glossary-term">BGA (Ball Grid Array)</p>
+            <p class="glossary-def">An IC package where solder balls on the underside of the chip form the connections to the PCB pads in a grid pattern. Extremely compact. Cannot be hand-soldered — requires reflow. Used in high-density applications: processors, FPGAs, memory modules.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Blind Via</p>
+            <p class="glossary-def">A via that connects an outer layer to one or more inner layers without going all the way through the board. More expensive to manufacture than through-hole vias. Used in high-density designs where through-hole vias would waste routing space on unused layers.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">BOM (Bill of Materials)</p>
+            <p class="glossary-def">A complete list of every component in the design, including manufacturer part numbers, reference designators, quantities, and often purchase links. Generated from the schematic. Essential for ordering components and for factory assembly (PCBA).</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Buried Via</p>
+            <p class="glossary-def">A via connecting two or more inner layers of a PCB, with no connection to either outer surface. Invisible from outside the board. Very expensive to manufacture — requires sequential lamination processes.</p>
+          </div>
+        </div>
+
+        <!-- C -->
+        <div class="glossary-letter-section">
+          <div class="glossary-letter">C</div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Castellated Holes</p>
+            <p class="glossary-def">Half-holes (half-circles) around the edge of a PCB, copper-plated. Allow one PCB to be soldered directly onto another — used for module designs like ESP8266, LoRa modules, and other surface-mountable sub-boards. Also called edge-plated holes.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Clearance</p>
+            <p class="glossary-def">The minimum air gap required between any two copper features at different potentials. Insufficient clearance can cause voltage arcing between traces. Fab houses specify minimum clearance — typically 0.1mm for hobby boards, with higher values required for mains voltages.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Copper Pour / Copper Fill</p>
+            <p class="glossary-def">A large area of copper flooding a layer, typically connected to a specific net (usually GND). Reduces EMI by providing a low-impedance return path, improves heat distribution, and uses up otherwise wasted copper space. Called a "zone" in KiCad.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Copper Weight</p>
+            <p class="glossary-def">The thickness of copper on a PCB layer, expressed in ounces per square foot (oz/ft²). 1 oz/ft² = approximately 35 micrometres. Standard boards use 1 oz; high-current boards may use 2 oz or more. Heavier copper can carry more current but costs more and requires wider minimum features.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Courtyard</p>
+            <p class="glossary-def">A boundary drawn around a component's footprint in the EDA tool, defining the minimum required clearance zone around the physical component. Two courtyards must not overlap — EDA tools flag this as a DRC error. Prevents components from being physically too close to fit or interfere.</p>
+          </div>
+        </div>
+
+        <!-- D -->
+        <div class="glossary-letter-section">
+          <div class="glossary-letter">D</div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Decoupling Capacitor</p>
+            <p class="glossary-def">A small capacitor (typically 100nF ceramic) placed as close as possible to each IC power pin. When the IC switches and demands a sudden burst of current, the capacitor provides it locally — preventing a voltage dip that would otherwise propagate through the power supply. Every IC should have one. Not optional.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Design Rule Check (DRC)</p>
+            <p class="glossary-def">An automated check in EDA software that verifies a PCB layout against a set of manufacturing and electrical constraints (minimum trace width, clearance, annular ring size, etc.). Run before generating Gerbers. A clean DRC pass is the minimum requirement before sending to fab.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Differential Pair</p>
+            <p class="glossary-def">Two parallel traces carrying equal but opposite-polarity signals (e.g., USB D+ and D−, Ethernet TX+/TX−). The two traces must be equal length, equal width, and routed close together so that noise affects both equally and cancels out at the receiver. EDA tools have special differential pair routing modes.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">DIP (Dual Inline Package)</p>
+            <p class="glossary-def">Through-hole IC package with two rows of pins on 2.54mm (0.1") pitch. Breadboard-compatible. Used for classic 555 timers, op-amps, and older microcontrollers. Still widely used in hobby and educational contexts despite being large.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Drill File</p>
+            <p class="glossary-def">A manufacturing file (typically in Excellon format) that specifies the location, size, and type of every hole to be drilled in the PCB. Part of the Gerber file set. Contains through-holes (for THT components and vias) and any board-mounting holes.</p>
+          </div>
+        </div>
+
+        <!-- E -->
+        <div class="glossary-letter-section">
+          <div class="glossary-letter">E</div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Edge.Cuts</p>
+            <p class="glossary-def">The KiCad layer name for the board outline — the line that defines the physical edge of the PCB. The factory uses this layer to cut (route) your board from the manufacturing panel. Must be a continuous closed shape with no gaps or overlapping lines.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">EMC / EMI</p>
+            <p class="glossary-def">Electromagnetic Compatibility / Electromagnetic Interference. EMI is unintended radio frequency energy emitted by a PCB; EMC is the discipline of designing boards that don't interfere with other devices and are not interfered with by them. Required by law (CE marking) for any product sold in the UK/EU. Complex topic for advanced designers.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">ENIG (Electroless Nickel Immersion Gold)</p>
+            <p class="glossary-def">A PCB surface finish: a thin gold layer deposited over a nickel barrier on exposed copper pads. Provides a flat, corrosion-resistant surface ideal for fine-pitch SMD soldering and long shelf life. Standard on premium boards. Adds small cost (~$3 at JLCPCB).</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">ERC (Electrical Rules Check)</p>
+            <p class="glossary-def">The schematic equivalent of DRC — an automated check for common electrical errors such as unconnected pins, conflicting driver types (two outputs connected together), missing power flags, and floating pins. Run this and fix all errors before starting PCB layout.</p>
+          </div>
+        </div>
+
+        <!-- F -->
+        <div class="glossary-letter-section">
+          <div class="glossary-letter">F</div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Fab House (Fabrication House)</p>
+            <p class="glossary-def">A company that manufactures PCBs from Gerber files. Hobbyist-oriented fab houses include JLCPCB, PCBWay, Aisler, and OSH Park. Some fab houses also offer PCBA (PCB Assembly) — sourcing components and soldering them onto your boards.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Fiducial</p>
+            <p class="glossary-def">A small copper circle (usually 1mm diameter) with a clear solder mask opening, placed on a PCB to give pick-and-place machines a positional reference point. Required for accurate automated SMD assembly. Three fiducials on a board give the machine X, Y, and rotation reference.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Flood (see Copper Pour)</p>
+            <p class="glossary-def">See Copper Pour / Copper Fill.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Footprint</p>
+            <p class="glossary-def">The physical land pattern for a component in the PCB layout — the set of pads, courtyard, silkscreen, and 3D model that represents where and how a component physically sits on the board. Must exactly match the real component's dimensions. The most common source of beginner ordering errors.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">FR4</p>
+            <p class="glossary-def">The most common PCB substrate material. "Flame Retardant grade 4" — a composite of woven fibreglass cloth and epoxy resin. Rigid, electrically non-conductive, dimensionally stable, and inexpensive. Standard thickness is 1.6mm. The correct material for 99% of hobby and consumer electronics boards.</p>
+          </div>
+        </div>
+
+        <!-- G -->
+        <div class="glossary-letter-section">
+          <div class="glossary-letter">G</div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Gerber Files</p>
+            <p class="glossary-def">The industry-standard file format for PCB manufacturing data. Named after Gerber Scientific, which developed the original format. One file per layer (top copper, bottom copper, solder mask, silkscreen, board outline, drill). Sent to the fab house. Format specification: RS-274X (extended Gerber).</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Gold Fingers</p>
+            <p class="glossary-def">Edge connectors with ENIG-plated contacts along one edge of a PCB, designed to plug into a card edge connector slot. Used for expansion cards (RAM, GPU), cartridges, and module connections. Require a bevelled board edge and a special hard ENIG finish.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Ground Plane</p>
+            <p class="glossary-def">A solid copper area covering most of a PCB layer, connected entirely to the ground net. Provides a low-impedance return path for all signals, shields against EMI, helps distribute heat, and simplifies routing by eliminating the need to route individual ground traces. Best practice for any serious design.</p>
+          </div>
+        </div>
+
+        <!-- H-I -->
+        <div class="glossary-letter-section">
+          <div class="glossary-letter">H–I</div>
+          <div class="glossary-entry">
+            <p class="glossary-term">HASL (Hot Air Solder Levelling)</p>
+            <p class="glossary-def">A PCB surface finish where the board is dipped in molten solder and excess is removed by hot air jets. Cheap and highly solderable. Can be lead-free (lead-free HASL) or traditional leaded. Surface is slightly uneven, which can cause issues for very fine-pitch SMD components but is fine for THT and 0805+ SMD.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">IPC Standards</p>
+            <p class="glossary-def">A series of industry standards for PCB design and assembly, published by IPC (Association Connecting Electronics Industries). Key standards: IPC-2221 (generic design), IPC-7251 (through-hole land patterns), IPC-7351 (SMD land patterns), IPC-A-610 (acceptability of electronic assemblies). Free summaries available online; full documents are sold.</p>
+          </div>
+        </div>
+
+        <!-- J-L -->
+        <div class="glossary-letter-section">
+          <div class="glossary-letter">J–L</div>
+          <div class="glossary-entry">
+            <p class="glossary-term">JLCPCB</p>
+            <p class="glossary-def">One of the world's largest PCB fabrication services, based in Shenzhen, China. Offers 5 boards for approximately $2 (plus shipping) with 24–48 hour production time. Also offers PCBA (assembly) services using components from their sister company LCSC. The default recommendation for beginner hobbyists.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">KiCad</p>
+            <p class="glossary-def">Free, open-source EDA software for PCB design. Includes schematic editor (Eeschema), PCB layout editor (PCBnew), Gerber viewer, 3D board viewer, and component library manager. The recommended tool for hobbyists and professionals alike. Current version: KiCad 8.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Layer Stackup</p>
+            <p class="glossary-def">The arrangement of all layers in a PCB, from top to bottom — including copper layers, prepreg (binding material), and core (substrate). Defines the board's electrical characteristics (impedance depends on stackup geometry) and its mechanical properties.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Length Matching</p>
+            <p class="glossary-def">The practice of making trace lengths equal within a group of related signals (e.g., a memory bus, differential pair). Signals propagate at a finite speed — if one trace is significantly longer than others in the group, it arrives later, causing timing errors. EDA tools have length-matching routing features.</p>
+          </div>
+        </div>
+
+        <!-- M-N -->
+        <div class="glossary-letter-section">
+          <div class="glossary-letter">M–N</div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Mil</p>
+            <p class="glossary-def">A unit of length equal to one thousandth of an inch (0.0254mm). Common in American PCB design. "100 mil" = 2.54mm, which is the standard through-hole pitch. "10 mil" ≈ 0.25mm. Still used by some EDA tools and fab spec sheets, especially older American ones.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">MOSFET</p>
+            <p class="glossary-def">Metal-Oxide-Semiconductor Field Effect Transistor. A voltage-controlled switch used for efficient power switching (motors, loads, DC-DC converters) and signal amplification. Has three terminals: Gate (control), Drain, and Source. N-channel MOSFETs switch to ground; P-channel switch the high side.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Net</p>
+            <p class="glossary-def">A named group of pins that are electrically connected in the schematic. All pins in a net must be physically connected (routed) in the PCB layout. Examples: GND, VCC, UART_TX. The schematic defines nets; the layout implements them. Unrouted nets appear as ratsnest lines.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Netlist</p>
+            <p class="glossary-def">A data file generated from the schematic that lists every component (with reference designator and footprint) and every connection (which pin of which component connects to which net). This file is imported into the PCB layout editor to transfer the circuit's connectivity information.</p>
+          </div>
+        </div>
+
+        <!-- O-P -->
+        <div class="glossary-letter-section">
+          <div class="glossary-letter">O–P</div>
+          <div class="glossary-entry">
+            <p class="glossary-term">OSP (Organic Solderability Preservative)</p>
+            <p class="glossary-def">A PCB surface finish — a thin organic coating that protects copper pads from oxidation. Very flat surface, RoHS-compliant, inexpensive. However, has a limited shelf life (6 months) and tolerates fewer reflow cycles than ENIG. Not ideal for boards that will be stored long-term before assembly.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Pad</p>
+            <p class="glossary-def">An exposed copper area on a PCB's surface (or around a hole) where a component is soldered. The solder mask is opened at each pad location. Pad size and shape must match the component's datasheet exactly — this is the definition of a footprint.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Panel / Panelisation</p>
+            <p class="glossary-def">The process of arranging multiple PCB designs (or multiple copies of one design) onto a larger board for efficient manufacturing. Individual boards are connected by tabs or v-score cuts and separated after assembly. Fab houses often panelise small orders automatically.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">PCBA (PCB Assembly)</p>
+            <p class="glossary-def">A service where a fab house not only manufactures your bare PCB but also sources and solders all the components onto it. JLCPCB and PCBWay both offer PCBA. You provide Gerbers (for the board), a BOM (component list), and a CPL (component placement list). Final product is a populated, ready-to-test board.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Prepreg</p>
+            <p class="glossary-def">Pre-impregnated fibreglass cloth used as the bonding layer between copper layers and the FR4 core in multi-layer PCBs. It is B-staged (partially cured) so it flows under heat and pressure during lamination, then fully cures to bond the layers together.</p>
+          </div>
+        </div>
+
+        <!-- Q-R -->
+        <div class="glossary-letter-section">
+          <div class="glossary-letter">Q–R</div>
+          <div class="glossary-entry">
+            <p class="glossary-term">QFN (Quad Flat No-Lead)</p>
+            <p class="glossary-def">An IC package with pads on the bottom perimeter and a large central thermal pad, but no protruding leads. Compact, excellent thermal and electrical properties. Requires hot air or reflow to solder — the centre thermal pad cannot be soldered with an iron and must be reflowed for proper contact.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Ratsnest</p>
+            <p class="glossary-def">The thin lines shown in PCB layout software connecting component pins that need to be electrically connected but have not yet been routed. Like a web of straight "as-the-crow-flies" connections. As you route traces, ratsnest lines disappear. The goal is zero ratsnest lines = fully routed board.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Reference Designator</p>
+            <p class="glossary-def">A unique alphanumeric identifier for each component on the schematic and PCB: R1, R2, C1, C2, U1, Q1, etc. The letter identifies the component type; the number is sequential. Printed on the silkscreen layer. Used in the BOM to link the physical component to its position on the board.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Reflow Soldering</p>
+            <p class="glossary-def">A soldering process for SMD components: solder paste (solder in flux gel) is applied to pads, components are placed in it, and the board is passed through a reflow oven (or heated with hot air). The temperature profile melts the solder, which wets the pads and component terminals, then cools and solidifies. The standard method for SMD assembly.</p>
+          </div>
+        </div>
+
+        <!-- S -->
+        <div class="glossary-letter-section">
+          <div class="glossary-letter">S</div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Schematic</p>
+            <p class="glossary-def">An abstract circuit diagram using standardised symbols and lines to represent components and their electrical connections. The schematic defines what the circuit does — not how it physically looks. It is the primary engineering document for any PCB design and must be completed before layout begins.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Silkscreen</p>
+            <p class="glossary-def">The layer of ink (typically white) printed on the solder mask surface. Contains component reference designators (R1, C3), polarity markers (+, ▽), board revision, and any other labels. Has no electrical function. Defined by the silkscreen Gerber file.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">SMD / SMT</p>
+            <p class="glossary-def">Surface Mount Device / Surface Mount Technology. Components that mount directly onto pads on the board surface, with no drilled holes. Dramatically smaller than through-hole equivalents. Require soldering paste + reflow or careful iron/hot air work. The dominant technology in all commercial electronics since the 1990s.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Solder Mask</p>
+            <p class="glossary-def">The coloured lacquer (green, red, blue, black, white, or yellow) that covers the outer copper layers of a PCB, with openings at pad locations. Prevents solder from bridging between adjacent traces during assembly and protects copper from oxidation. The colour is purely aesthetic.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Solder Paste</p>
+            <p class="glossary-def">A grey paste consisting of tiny solder alloy balls suspended in flux. Applied to PCB pads via a metal stencil or syringe before placing SMD components. When heated in a reflow oven, the flux activates and the solder balls melt and wet the pad, then cool to form a solid joint.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Stencil</p>
+            <p class="glossary-def">A thin metal sheet (typically stainless steel, 0.12–0.15mm thick) with laser-cut openings matching every SMD pad on a PCB. Used to apply solder paste uniformly: the stencil is aligned over the board, paste is spread with a squeegee, and the stencil is lifted leaving paste on each pad. Essential for production SMD assembly.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Symbol (Schematic Symbol)</p>
+            <p class="glossary-def">The standardised graphical representation of a component in a schematic — a rectangle with numbered pins for an IC, a resistor zig-zag or rectangle, a capacitor parallel lines, etc. Paired with a footprint to form a complete component in the EDA library. The symbol represents the component's electrical behaviour; the footprint represents its physical form.</p>
+          </div>
+        </div>
+
+        <!-- T-V -->
+        <div class="glossary-letter-section">
+          <div class="glossary-letter">T–V</div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Test Point</p>
+            <p class="glossary-def">A small exposed copper pad (or through-hole) on a PCB specifically intended for probing during testing and debugging. Best practice is to add test points on every important net: power rails, clock lines, key data signals. Allows a multimeter or oscilloscope probe to reach the circuit without having to balance on a component lead.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Thermal Relief</p>
+            <p class="glossary-def">A pattern of spokes connecting a through-hole pad to a surrounding copper pour. Without thermal relief, the large copper area wicks heat away during soldering so rapidly that the solder can't reach proper temperature. Thermal relief spokes reduce this heat sinking effect. EDA tools add thermal relief automatically.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">THT (Through-Hole Technology)</p>
+            <p class="glossary-def">The older mounting technology for PCB components — component leads pass through drilled holes in the board and are soldered on the underside. Strong mechanical connection. Large component footprint. Easier to solder by hand than SMD. Used for connectors, large capacitors, through-hole ICs, and in educational contexts.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Trace</p>
+            <p class="glossary-def">A narrow copper pathway on a PCB layer that carries electrical current from one point to another. The PCB equivalent of a wire. Width determines current capacity: a 0.1mm trace carries ~0.5A; a 1mm trace carries ~2A+ (varies by copper weight and temperature rise). Wider traces = lower resistance = less heat.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">TVS Diode (Transient Voltage Suppressor)</p>
+            <p class="glossary-def">A protection diode that clamps voltage spikes — instantly absorbs excess energy from ESD events, lightning-induced surges, or inductive kickback. Placed on I/O lines to protect against electrostatic discharge. The clamping voltage must be below the maximum voltage of the device being protected.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Via</p>
+            <p class="glossary-def">A drilled hole in a PCB with copper-plated walls, creating an electrical connection between copper layers. The hole itself is non-conductive — only the copper plating makes the connection. Types: through-hole via (full depth), blind via (outer to inner layer), buried via (inner layers only). The standard hobbyist board only uses through-hole vias.</p>
+          </div>
+        </div>
+
+        <!-- W-Z -->
+        <div class="glossary-letter-section">
+          <div class="glossary-letter">W–Z</div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Wave Soldering</p>
+            <p class="glossary-def">An automated soldering process for through-hole components in manufacturing. The populated board is passed conveyor-style over a standing wave of molten solder. The solder wets the leads protruding through the bottom of the board simultaneously, forming all connections in seconds. Used for high-volume THT assembly.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">WEEE</p>
+            <p class="glossary-def">Waste Electrical and Electronic Equipment. EU/UK regulation requiring that electronics be disposed of through approved recycling channels rather than household waste. Most supermarkets and local councils have WEEE collection points. Relevant when you have old components, boards, or failed soldering attempts to dispose of.</p>
+          </div>
+          <div class="glossary-entry">
+            <p class="glossary-term">Zone (KiCad)</p>
+            <p class="glossary-def">The KiCad term for a copper fill area — a region flooded with copper connected to a specific net. Draw a zone, assign it to a net (usually GND), then press B to fill it. This is how you add ground planes and power planes in KiCad.</p>
+          </div>
+        </div>
+
+      </div><!-- end glossary-wrap -->
+    </div>
+  </section>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

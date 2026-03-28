@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PCB Components — PCB Primer</title>
+  <meta name="description" content="Through-hole vs surface mount, resistors, capacitors, ICs, transistors, connectors, and PCB package types explained.">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    .comp-type-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.2rem; margin: 2rem 0; }
+    .comp-type-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .comp-type-card .card-header { padding: 0.8rem 1.2rem; display: flex; align-items: center; gap: 0.8rem; }
+    .comp-type-card .card-body { padding: 1rem 1.2rem; }
+    .comp-icon { width: 42px; height: 42px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .comp-type-card h4 { margin: 0; font-size: 1rem; }
+    .comp-type-card .comp-desc { font-size: 0.88rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 0.7rem; }
+    .comp-type-card .comp-uses { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-light); }
+    .package-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+    .package-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; padding: 0.9rem; }
+    .package-card .pkg-name { font-family: var(--font-mono); font-size: 0.78rem; font-weight: 700; color: var(--green-deep); margin-bottom: 0.3rem; }
+    .package-card .pkg-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; }
+    .package-card .pkg-size { font-family: var(--font-mono); font-size: 0.72rem; color: var(--copper); margin-top: 0.4rem; }
+    .smd-size-table td, .smd-size-table th { text-align: center; }
+    .smd-size-table td:first-child { text-align: left; font-family: var(--font-mono); }
+    .difficulty { display: inline-flex; gap: 3px; }
+    .difficulty span { width: 10px; height: 10px; border-radius: 50%; background: var(--border); }
+    .difficulty span.filled { background: var(--green); }
+    .tht-smd-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 2rem 0; }
+    @media(max-width:640px){ .tht-smd-compare { grid-template-columns: 1fr; } }
+    .compare-col { padding: 1.5rem; }
+    .compare-col.tht-col { background: var(--bg-card); border-right: 1px solid var(--border); }
+    .compare-col.smd-col { background: var(--bg-card); }
+    .compare-col h3 { margin-bottom: 1rem; }
+    .compare-row { display: flex; justify-content: space-between; align-items: baseline; padding: 7px 0; border-bottom: 1px dashed var(--border-light); font-size: 0.88rem; gap: 1rem; }
+    .compare-row:last-child { border-bottom: none; }
+    .compare-row .attr { color: var(--text-muted); font-size: 0.83rem; flex-shrink: 0; }
+    .compare-row .val { font-family: var(--font-mono); font-size: 0.82rem; text-align: right; }
+    /* Cross-section diagrams */
+    .cross-section-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 1.5rem 0; }
+    @media(max-width:600px){ .cross-section-pair { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+  <div class="page-header">
+    <div class="container">
+      <p class="page-label">03 / Components</p>
+      <h1>Parts on the Board</h1>
+      <p>Everything that gets soldered to a PCB: the two mounting families, all common component types, and how to read package codes.</p>
+    </div>
+  </div>
+
+  <!-- ======== THT vs SMD ======== -->
+  <section class="section section--white">
+    <div class="container">
+      <p class="section-label">The two families</p>
+      <h2 class="section-title">Through-hole vs Surface Mount</h2>
+      <p class="section-intro">Every component you place on a PCB belongs to one of two mounting families. Understanding the difference is fundamental — it affects your tool choices, design rules, and soldering technique.</p>
+
+      <!-- Cross-section comparison diagram - clean, generous spacing -->
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 680 280" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:680px">
+          <!-- THT SIDE (left half: x 0-340) -->
+          <text x="170" y="22" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="13" fill="#1a3d26" font-weight="600">Through-Hole (THT)</text>
+          <text x="170" y="40" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9.5" fill="#8c8575">legs pass through drilled holes</text>
+
+          <!-- THT Component body -->
+          <rect x="90" y="56" width="160" height="36" rx="10" fill="#777" stroke="#444" stroke-width="1.5"/>
+          <text x="170" y="79" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="10" fill="#ddd">resistor body</text>
+          <!-- Component legs -->
+          <line x1="120" y1="92" x2="120" y2="114" stroke="#888" stroke-width="3" stroke-linecap="round"/>
+          <line x1="220" y1="92" x2="220" y2="114" stroke="#888" stroke-width="3" stroke-linecap="round"/>
+
+          <!-- Solder joints (on top, where legs enter) -->
+          <ellipse cx="120" cy="116" rx="11" ry="7" fill="#9ecdc3" stroke="#4a9d93" stroke-width="1"/>
+          <ellipse cx="220" cy="116" rx="11" ry="7" fill="#9ecdc3" stroke="#4a9d93" stroke-width="1"/>
+
+          <!-- Board layers THT -->
+          <rect x="40" y="114" width="260" height="13" rx="1" fill="#2d6a3f" opacity="0.85"/>
+          <rect x="40" y="127" width="260" height="8" rx="1" fill="#c97530" opacity="0.9"/>
+          <rect x="40" y="135" width="260" height="60" rx="2" fill="#c8c3a0" opacity="0.8"/>
+          <text x="170" y="166" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#7a755e">FR4 substrate</text>
+          <rect x="40" y="195" width="260" height="8" rx="1" fill="#c97530" opacity="0.9"/>
+          <rect x="40" y="203" width="260" height="13" rx="1" fill="#2d6a3f" opacity="0.85"/>
+
+          <!-- Legs through board -->
+          <rect x="114" y="114" width="12" height="102" fill="#888" opacity="0.8"/>
+          <rect x="214" y="114" width="12" height="102" fill="#888" opacity="0.8"/>
+          <!-- Holes in substrate -->
+          <rect x="114" y="135" width="12" height="60" fill="#e8e4c8"/>
+          <rect x="214" y="135" width="12" height="60" fill="#e8e4c8"/>
+
+          <!-- Solder fillets underneath -->
+          <ellipse cx="120" cy="216" rx="13" ry="8" fill="#9ecdc3" stroke="#4a9d93" stroke-width="1"/>
+          <ellipse cx="220" cy="216" rx="13" ry="8" fill="#9ecdc3" stroke="#4a9d93" stroke-width="1"/>
+
+          <!-- Bent leg stubs below -->
+          <path d="M114 216 L100 228" stroke="#888" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M126 216 L140 228" stroke="#888" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M214 216 L200 228" stroke="#888" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M226 216 L240 228" stroke="#888" stroke-width="2.5" stroke-linecap="round"/>
+
+          <!-- THT labels, well-spaced below -->
+          <text x="170" y="255" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#5c5545">→ solder on underside</text>
+          <text x="170" y="268" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#5c5545">→ legs clipped after soldering</text>
+
+          <!-- ============ DIVIDER ============ -->
+          <line x1="340" y1="10" x2="340" y2="270" stroke="#c5c0b0" stroke-width="1" stroke-dasharray="4 3"/>
+
+          <!-- SMD SIDE (right half: x 340-680) -->
+          <text x="510" y="22" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="13" fill="#1a3d26" font-weight="600">Surface Mount (SMD/SMT)</text>
+          <text x="510" y="40" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9.5" fill="#8c8575">component sits on surface, no holes drilled</text>
+
+          <!-- SMD component body (tiny 0805 resistor) -->
+          <rect x="455" y="120" width="110" height="24" rx="4" fill="#2a2a2a" stroke="#111" stroke-width="1"/>
+          <text x="510" y="136" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9.5" fill="#888">0805 resistor</text>
+
+          <!-- SMD pads (the contacts on either end) -->
+          <rect x="438" y="122" width="20" height="20" rx="2" fill="#d4a520" stroke="#b5820a" stroke-width="0.5"/>
+          <rect x="562" y="122" width="20" height="20" rx="2" fill="#d4a520" stroke="#b5820a" stroke-width="0.5"/>
+
+          <!-- Solder paste between pad and component -->
+          <rect x="438" y="140" width="20" height="6" rx="1" fill="#9ecdc3" opacity="0.9"/>
+          <rect x="562" y="140" width="20" height="6" rx="1" fill="#9ecdc3" opacity="0.9"/>
+
+          <!-- Board layers SMD -->
+          <rect x="380" y="144" width="260" height="13" rx="1" fill="#2d6a3f" opacity="0.85"/>
+          <rect x="380" y="157" width="260" height="8" rx="1" fill="#c97530" opacity="0.9"/>
+          <!-- Pad windows (no mask on pads) -->
+          <rect x="434" y="144" width="28" height="13" fill="#d4a520"/>
+          <rect x="558" y="144" width="28" height="13" fill="#d4a520"/>
+
+          <rect x="380" y="165" width="260" height="60" rx="2" fill="#c8c3a0" opacity="0.8"/>
+          <text x="510" y="196" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#7a755e">FR4 substrate</text>
+          <rect x="380" y="225" width="260" height="8" rx="1" fill="#c97530" opacity="0.9"/>
+          <rect x="380" y="233" width="260" height="13" rx="1" fill="#2d6a3f" opacity="0.85"/>
+
+          <!-- Note: no holes! -->
+          <text x="510" y="255" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#5c5545">→ no holes drilled in substrate</text>
+          <text x="510" y="268" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#5c5545">→ reflow oven melts solder paste</text>
+        </svg>
+        <p class="diagram-caption">Cross-section comparison: through-hole (left) vs surface mount (right)</p>
+      </div>
+
+      <!-- Comparison table -->
+      <div class="tht-smd-compare">
+        <div class="compare-col tht-col">
+          <h3 style="color:var(--green-deep)">Through-hole (THT)</h3>
+          <div class="compare-row"><span class="attr">Component size</span><span class="val">Large, handleable</span></div>
+          <div class="compare-row"><span class="attr">Soldering tool</span><span class="val">Soldering iron</span></div>
+          <div class="compare-row"><span class="attr">Skill needed</span><div class="difficulty"><span class="filled"></span><span class="filled"></span><span></span><span></span><span></span></div></div>
+          <div class="compare-row"><span class="attr">Mechanical strength</span><span class="val" style="color:var(--green)">Excellent</span></div>
+          <div class="compare-row"><span class="attr">Board density</span><span class="val" style="color:var(--copper)">Low</span></div>
+          <div class="compare-row"><span class="attr">Both sides of board</span><span class="val" style="color:var(--copper)">No (legs block bottom)</span></div>
+          <div class="compare-row"><span class="attr">Best for</span><span class="val">Connectors, prototyping, high-vibration</span></div>
+          <div class="compare-row"><span class="attr">Common beginners use</span><span class="val" style="color:var(--green)">Yes — start here</span></div>
+        </div>
+        <div class="compare-col smd-col">
+          <h3 style="color:var(--green-deep)">Surface mount (SMD)</h3>
+          <div class="compare-row"><span class="attr">Component size</span><span class="val">Tiny to microscopic</span></div>
+          <div class="compare-row"><span class="attr">Soldering tool</span><span class="val">Iron, hot air, or reflow oven</span></div>
+          <div class="compare-row"><span class="attr">Skill needed</span><div class="difficulty"><span class="filled"></span><span class="filled"></span><span class="filled"></span><span class="filled"></span><span></span></div></div>
+          <div class="compare-row"><span class="attr">Mechanical strength</span><span class="val" style="color:var(--copper)">Moderate</span></div>
+          <div class="compare-row"><span class="attr">Board density</span><span class="val" style="color:var(--green)">Very high</span></div>
+          <div class="compare-row"><span class="attr">Both sides of board</span><span class="val" style="color:var(--green)">Yes</span></div>
+          <div class="compare-row"><span class="attr">Best for</span><span class="val">Everything in production electronics</span></div>
+          <div class="compare-row"><span class="attr">Common beginners use</span><span class="val" style="color:var(--copper)">0805 or larger only</span></div>
+        </div>
+      </div>
+
+      <div class="callout callout--tip">
+        <p class="callout-title">Your friend's tweezers</p>
+        <p style="margin:0">Surface mount soldering is absolutely manageable — but it requires practice, good light, and the right tools. Start with 0805-size components (1mm × 0.5mm), which are just large enough to pick up reliably. Avoid 0402 (0.6mm × 0.3mm) and anything smaller until you're comfortable.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== SMD SIZE CODES ======== -->
+  <section class="section section--tinted">
+    <div class="container">
+      <p class="section-label">SMD sizing</p>
+      <h2 class="section-title">SMD Package Size Codes</h2>
+      <p class="section-intro">SMD passive components (resistors, capacitors, inductors) use a numeric code that encodes their physical size in hundredths of an inch or tenths of a millimetre.</p>
+
+      <div class="table-wrap">
+        <table class="smd-size-table">
+          <thead><tr><th>Code (imperial)</th><th>Code (metric)</th><th>Size (L × W)</th><th>Approx. reference</th><th>Beginner-friendly?</th></tr></thead>
+          <tbody>
+            <tr><td>0201</td><td>0603</td><td>0.6mm × 0.3mm</td><td>Smaller than a grain of sand</td><td><span style="color:var(--copper)">No — expert only</span></td></tr>
+            <tr><td>0402</td><td>1005</td><td>1.0mm × 0.5mm</td><td>Barely visible to naked eye</td><td><span style="color:var(--copper)">No — difficult</span></td></tr>
+            <tr><td>0603</td><td>1608</td><td>1.6mm × 0.8mm</td><td>About 1.5× a pen tip</td><td><span style="color:var(--gold)">Possible with practice</span></td></tr>
+            <tr><td>0805</td><td>2012</td><td>2.0mm × 1.25mm</td><td>About the width of a match head</td><td><span style="color:var(--green)">Yes — start here</span></td></tr>
+            <tr><td>1206</td><td>3216</td><td>3.2mm × 1.6mm</td><td>Clearly visible, easy to handle</td><td><span style="color:var(--green)">Yes — very manageable</span></td></tr>
+            <tr><td>1210</td><td>3225</td><td>3.2mm × 2.5mm</td><td>Common for higher-value capacitors</td><td><span style="color:var(--green)">Yes</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:0.88rem;color:var(--text-muted);margin-top:0.5rem">Note: Imperial codes are older and still most commonly used. 0805 refers to 0.08" × 0.05". The metric equivalent is 2012 (2.0mm × 1.2mm).</p>
+    </div>
+  </section>
+
+  <!-- ======== COMPONENT TYPES ======== -->
+  <section class="section section--white">
+    <div class="container">
+      <p class="section-label">Component types</p>
+      <h2 class="section-title">Common PCB Components</h2>
+
+      <div class="tabs">
+        <div class="tab-list" role="tablist">
+          <button class="tab-btn" role="tab">Passives</button>
+          <button class="tab-btn" role="tab">Semiconductors</button>
+          <button class="tab-btn" role="tab">Integrated Circuits</button>
+          <button class="tab-btn" role="tab">Connectors &amp; Misc</button>
+        </div>
+
+        <!-- PASSIVES -->
+        <div class="tab-panel">
+          <div class="comp-type-grid">
+            <div class="comp-type-card">
+              <div class="card-header">
+                <div class="comp-icon" style="background:var(--bg-code)">
+                  <svg viewBox="0 0 40 20" width="36"><rect x="2" y="6" width="36" height="8" rx="2" fill="#777" stroke="#444" stroke-width="1"/><line x1="0" y1="10" x2="2" y2="10" stroke="#555" stroke-width="2"/><line x1="38" y1="10" x2="40" y2="10" stroke="#555" stroke-width="2"/></svg>
+                </div>
+                <h4>Resistor</h4>
+              </div>
+              <div class="card-body">
+                <p class="comp-desc">Limits current flow. Defined by its resistance value in Ohms (Ω). Can be used to set biasing voltages, limit LED current, form voltage dividers, and set RC time constants.</p>
+                <p class="comp-uses">Schematic symbol: zig-zag (US) or rectangle (EU/IEC) · Code: R or RN</p>
+                <div class="trace-divider"><span>key specs</span></div>
+                <div class="spec-row"><span class="spec-label">Value range</span><span class="spec-val">1Ω to 10MΩ, E24/E96 series</span></div>
+                <div class="spec-row"><span class="spec-label">Power rating</span><span class="spec-val">1/8W to 1W typical</span></div>
+                <div class="spec-row"><span class="spec-label">Tolerance</span><span class="spec-val">1% (metal film) or 5% (carbon film)</span></div>
+              </div>
+            </div>
+
+            <div class="comp-type-card">
+              <div class="card-header">
+                <div class="comp-icon" style="background:var(--bg-code)">
+                  <svg viewBox="0 0 40 24" width="36"><line x1="0" y1="12" x2="10" y2="12" stroke="#555" stroke-width="2"/><line x1="10" y1="4" x2="10" y2="20" stroke="#c97530" stroke-width="2"/><line x1="14" y1="4" x2="14" y2="20" stroke="#c97530" stroke-width="2"/><line x1="14" y1="12" x2="40" y2="12" stroke="#555" stroke-width="2"/></svg>
+                </div>
+                <h4>Capacitor</h4>
+              </div>
+              <div class="card-body">
+                <p class="comp-desc">Stores electrical charge. Used for power supply filtering, decoupling (removing noise near ICs), timing circuits, and coupling AC signals while blocking DC.</p>
+                <p class="comp-uses">Types: ceramic (MLCC), electrolytic, tantalum, film · Code: C</p>
+                <div class="trace-divider"><span>key specs</span></div>
+                <div class="spec-row"><span class="spec-label">Value</span><span class="spec-val">1pF to 10,000µF</span></div>
+                <div class="spec-row"><span class="spec-label">Voltage rating</span><span class="spec-val">Must exceed supply voltage with margin</span></div>
+                <div class="spec-row"><span class="spec-label">Polarity</span><span class="spec-val">Electrolytics/tantalums: observe +/−</span></div>
+              </div>
+            </div>
+
+            <div class="comp-type-card">
+              <div class="card-header">
+                <div class="comp-icon" style="background:var(--bg-code)">
+                  <svg viewBox="0 0 40 24" width="36"><line x1="0" y1="12" x2="8" y2="12" stroke="#555" stroke-width="2"/><path d="M8 12 Q12 4 16 12 Q20 20 24 12 Q28 4 32 12" stroke="#5aad74" stroke-width="2" fill="none"/><line x1="32" y1="12" x2="40" y2="12" stroke="#555" stroke-width="2"/></svg>
+                </div>
+                <h4>Inductor</h4>
+              </div>
+              <div class="card-body">
+                <p class="comp-desc">Stores energy in a magnetic field. Resists changes in current. Used in power converters (buck/boost regulators), RF filters, and impedance matching. Often paired with capacitors to form LC filters.</p>
+                <p class="comp-uses">Types: air core, ferrite core, toroidal · Code: L</p>
+                <div class="trace-divider"><span>key specs</span></div>
+                <div class="spec-row"><span class="spec-label">Value</span><span class="spec-val">1nH to several Henries</span></div>
+                <div class="spec-row"><span class="spec-label">DCR</span><span class="spec-val">DC winding resistance (lower = better)</span></div>
+                <div class="spec-row"><span class="spec-label">Saturation current</span><span class="spec-val">Max before inductance drops</span></div>
+              </div>
+            </div>
+
+            <div class="comp-type-card">
+              <div class="card-header">
+                <div class="comp-icon" style="background:var(--bg-code)">
+                  <svg viewBox="0 0 40 24" width="36"><rect x="8" y="6" width="24" height="12" rx="2" fill="none" stroke="#888" stroke-width="1.5"/><line x1="0" y1="12" x2="8" y2="12" stroke="#555" stroke-width="2"/><line x1="32" y1="12" x2="40" y2="12" stroke="#555" stroke-width="2"/><line x1="14" y1="6" x2="14" y2="18" stroke="#888" stroke-width="1"/><line x1="20" y1="6" x2="20" y2="18" stroke="#888" stroke-width="1"/><line x1="26" y1="6" x2="26" y2="18" stroke="#888" stroke-width="1"/></svg>
+                </div>
+                <h4>Crystal / Oscillator</h4>
+              </div>
+              <div class="card-body">
+                <p class="comp-desc">Provides a precise timing reference for microcontrollers and communication circuits. A crystal resonates at a specific frequency when electrical energy is applied (piezoelectric effect). An oscillator packages the crystal with its drive circuit.</p>
+                <p class="comp-uses">Common frequencies: 8MHz, 12MHz, 16MHz, 32.768kHz (RTC) · Code: Y or XTAL</p>
+                <div class="trace-divider"><span>key specs</span></div>
+                <div class="spec-row"><span class="spec-label">Frequency</span><span class="spec-val">Must match microcontroller spec</span></div>
+                <div class="spec-row"><span class="spec-label">Load capacitance</span><span class="spec-val">Datasheet specifies Cload</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SEMICONDUCTORS -->
+        <div class="tab-panel">
+          <div class="comp-type-grid">
+            <div class="comp-type-card">
+              <div class="card-header">
+                <div class="comp-icon" style="background:var(--bg-code)">
+                  <svg viewBox="0 0 40 24" width="36"><line x1="0" y1="12" x2="14" y2="12" stroke="#555" stroke-width="2"/><line x1="14" y1="4" x2="14" y2="20" stroke="#c97530" stroke-width="2"/><polygon points="14,8 28,12 14,16" fill="#5aad74" stroke="#2d6a3f" stroke-width="1"/><line x1="28" y1="12" x2="40" y2="12" stroke="#555" stroke-width="2"/><line x1="26" y1="6" x2="30" y2="10" stroke="#555" stroke-width="1.5"/><line x1="26" y1="18" x2="30" y2="14" stroke="#555" stroke-width="1.5"/></svg>
+                </div>
+                <h4>Diode</h4>
+              </div>
+              <div class="card-body">
+                <p class="comp-desc">Allows current to flow in one direction only. The cathode end (marked with a band) is the negative terminal. Used for reverse polarity protection, rectification (AC→DC), and signal clipping.</p>
+                <p class="comp-uses">Types: rectifier, Schottky (fast/low dropout), Zener (voltage regulation), TVS (ESD protection) · Code: D</p>
+                <div class="spec-row"><span class="spec-label">Forward voltage (Vf)</span><span class="spec-val">~0.6V silicon, ~0.2V Schottky</span></div>
+                <div class="spec-row"><span class="spec-label">Polarity</span><span class="spec-val">Band = cathode (negative)</span></div>
+              </div>
+            </div>
+
+            <div class="comp-type-card">
+              <div class="card-header">
+                <div class="comp-icon" style="background:var(--bg-code)">
+                  <svg viewBox="0 0 40 24" width="36"><line x1="0" y1="12" x2="14" y2="12" stroke="#555" stroke-width="2"/><line x1="14" y1="4" x2="14" y2="20" stroke="#c97530" stroke-width="2"/><polygon points="14,8 28,12 14,16" fill="#f59e0b" stroke="#d97706" stroke-width="1"/><line x1="28" y1="12" x2="40" y2="12" stroke="#555" stroke-width="2"/><circle cx="26" cy="8" r="2" fill="#f59e0b" stroke="#d97706"/><circle cx="30" cy="12" r="2" fill="#f59e0b" stroke="#d97706"/></svg>
+                </div>
+                <h4>LED</h4>
+              </div>
+              <div class="card-body">
+                <p class="comp-desc">Light Emitting Diode — a diode that emits light when forward-biased. Always requires a current-limiting resistor in series; without one, it will draw unlimited current and burn out immediately.</p>
+                <p class="comp-uses">Resistor calculation: R = (Vsupply − Vf) / If · Code: D or LED</p>
+                <div class="spec-row"><span class="spec-label">Forward voltage (Vf)</span><span class="spec-val">1.8V red · 2.0V yellow · 3.0V blue/white</span></div>
+                <div class="spec-row"><span class="spec-label">Typical forward current</span><span class="spec-val">10–20mA</span></div>
+                <div class="spec-row"><span class="spec-label">Polarity</span><span class="spec-val">Anode (+) to positive supply</span></div>
+              </div>
+            </div>
+
+            <div class="comp-type-card">
+              <div class="card-header">
+                <div class="comp-icon" style="background:var(--bg-code)">
+                  <svg viewBox="0 0 40 28" width="36"><line x1="12" y1="0" x2="12" y2="28" stroke="#c97530" stroke-width="2"/><line x1="0" y1="20" x2="12" y2="20" stroke="#555" stroke-width="2"/><line x1="20" y1="7" x2="12" y2="12" stroke="#5aad74" stroke-width="1.5"/><line x1="20" y1="21" x2="12" y2="16" stroke="#5aad74" stroke-width="1.5"/><polygon points="12,12 20,7 20,21 12,16" fill="none" stroke="#5aad74" stroke-width="1.5"/><line x1="20" y1="7" x2="40" y2="7" stroke="#555" stroke-width="2"/><line x1="20" y1="21" x2="40" y2="21" stroke="#555" stroke-width="2"/></svg>
+                </div>
+                <h4>Transistor (BJT)</h4>
+              </div>
+              <div class="card-body">
+                <p class="comp-desc">A semiconductor device used for switching and amplification. A small current into the base controls a larger current through the collector-emitter path. NPN and PNP are the two polarities.</p>
+                <p class="comp-uses">Uses: logic-level switching, motor drivers, signal amplification · Code: Q or T</p>
+                <div class="spec-row"><span class="spec-label">Terminals</span><span class="spec-val">Base, Collector, Emitter</span></div>
+                <div class="spec-row"><span class="spec-label">hFE (gain)</span><span class="spec-val">Current gain: Ic / Ib</span></div>
+                <div class="spec-row"><span class="spec-label">Vce(sat)</span><span class="spec-val">Saturation voltage — low is good</span></div>
+              </div>
+            </div>
+
+            <div class="comp-type-card">
+              <div class="card-header">
+                <div class="comp-icon" style="background:var(--bg-code)">
+                  <svg viewBox="0 0 40 28" width="36"><line x1="12" y1="0" x2="12" y2="28" stroke="#c97530" stroke-width="2"/><line x1="0" y1="14" x2="12" y2="14" stroke="#555" stroke-width="2"/><line x1="12" y1="8" x2="20" y2="8" stroke="#5aad74" stroke-width="1.5"/><line x1="12" y1="20" x2="20" y2="20" stroke="#5aad74" stroke-width="1.5"/><line x1="20" y1="6" x2="20" y2="22" stroke="#5aad74" stroke-width="2"/><line x1="20" y1="8" x2="40" y2="8" stroke="#555" stroke-width="2"/><line x1="20" y1="20" x2="40" y2="20" stroke="#555" stroke-width="2"/></svg>
+                </div>
+                <h4>MOSFET</h4>
+              </div>
+              <div class="card-body">
+                <p class="comp-desc">Metal-Oxide-Semiconductor Field Effect Transistor. Like a BJT but voltage-controlled rather than current-controlled. The gate voltage controls the drain-source current. Far more efficient for power switching than BJTs.</p>
+                <p class="comp-uses">Uses: motor control, power switching, DC-DC conversion · Code: Q</p>
+                <div class="spec-row"><span class="spec-label">Terminals</span><span class="spec-val">Gate, Drain, Source</span></div>
+                <div class="spec-row"><span class="spec-label">Vgs(th)</span><span class="spec-val">Gate threshold voltage to turn on</span></div>
+                <div class="spec-row"><span class="spec-label">Rds(on)</span><span class="spec-val">On-state resistance — lower = less heat</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ICS -->
+        <div class="tab-panel">
+          <div class="comp-type-grid">
+            <div class="comp-type-card">
+              <div class="card-header">
+                <div class="comp-icon" style="background:var(--bg-code)">
+                  <svg viewBox="0 0 40 32" width="36"><rect x="8" y="4" width="24" height="24" rx="2" fill="#2a2a2a" stroke="#555" stroke-width="1.5"/><line x1="0" y1="10" x2="8" y2="10" stroke="#aaa" stroke-width="1.5"/><line x1="0" y1="16" x2="8" y2="16" stroke="#aaa" stroke-width="1.5"/><line x1="0" y1="22" x2="8" y2="22" stroke="#aaa" stroke-width="1.5"/><line x1="32" y1="10" x2="40" y2="10" stroke="#aaa" stroke-width="1.5"/><line x1="32" y1="16" x2="40" y2="16" stroke="#aaa" stroke-width="1.5"/><line x1="32" y1="22" x2="40" y2="22" stroke="#aaa" stroke-width="1.5"/><text x="20" y="20" text-anchor="middle" font-family="monospace" font-size="6" fill="#666">MCU</text></svg>
+                </div>
+                <h4>Microcontroller (MCU)</h4>
+              </div>
+              <div class="card-body">
+                <p class="comp-desc">A complete computer on a single chip: CPU, memory (flash + RAM), and peripherals (GPIO, UART, SPI, I²C, ADC, PWM). The brains of most embedded devices. Programmed in C/C++ or MicroPython.</p>
+                <p class="comp-uses">Popular choices: ATmega328P (Arduino), STM32 series, RP2040 (Raspberry Pi Pico), ESP32 (WiFi+BT) · Code: U</p>
+                <div class="spec-row"><span class="spec-label">Supply voltage</span><span class="spec-val">Check datasheet — often 3.3V or 5V</span></div>
+                <div class="spec-row"><span class="spec-label">Decoupling caps</span><span class="spec-val">100nF on every power pin</span></div>
+              </div>
+            </div>
+
+            <div class="comp-type-card">
+              <div class="card-header">
+                <div class="comp-icon" style="background:var(--bg-code)">
+                  <svg viewBox="0 0 40 28" width="36"><rect x="6" y="6" width="28" height="16" rx="2" fill="#1a3d26" stroke="#2d6a3f" stroke-width="1.5"/><line x1="0" y1="10" x2="6" y2="10" stroke="#aaa" stroke-width="1.5"/><line x1="0" y1="18" x2="6" y2="18" stroke="#aaa" stroke-width="1.5"/><line x1="34" y1="14" x2="40" y2="14" stroke="#aaa" stroke-width="1.5"/><text x="20" y="17" text-anchor="middle" font-family="monospace" font-size="6" fill="#5aad74">VREG</text></svg>
+                </div>
+                <h4>Voltage Regulator</h4>
+              </div>
+              <div class="card-body">
+                <p class="comp-desc">Converts an unregulated input voltage to a stable output. Linear regulators (LDO) are simple but inefficient — excess voltage is wasted as heat. Switching regulators (buck/boost/buck-boost) are efficient but more complex to design.</p>
+                <p class="comp-uses">Common: AMS1117-3.3 (LDO linear), LM7805, TPS6300x (switching) · Code: U or VR</p>
+                <div class="spec-row"><span class="spec-label">LDO efficiency</span><span class="spec-val">Vout/Vin — can be very low</span></div>
+                <div class="spec-row"><span class="spec-label">Switching efficiency</span><span class="spec-val">85–96% typical</span></div>
+              </div>
+            </div>
+
+            <div class="comp-type-card">
+              <div class="card-header">
+                <div class="comp-icon" style="background:var(--bg-code)">
+                  <svg viewBox="0 0 40 28" width="36"><rect x="4" y="4" width="32" height="20" rx="2" fill="#333" stroke="#555" stroke-width="1"/><line x1="0" y1="8" x2="4" y2="8" stroke="#aaa" stroke-width="1.5"/><line x1="0" y1="12" x2="4" y2="12" stroke="#aaa" stroke-width="1.5"/><line x1="0" y1="16" x2="4" y2="16" stroke="#aaa" stroke-width="1.5"/><line x1="0" y1="20" x2="4" y2="20" stroke="#aaa" stroke-width="1.5"/><line x1="36" y1="8" x2="40" y2="8" stroke="#aaa" stroke-width="1.5"/><line x1="36" y1="12" x2="40" y2="12" stroke="#aaa" stroke-width="1.5"/><line x1="36" y1="16" x2="40" y2="16" stroke="#aaa" stroke-width="1.5"/><line x1="36" y1="20" x2="40" y2="20" stroke="#aaa" stroke-width="1.5"/><text x="20" y="17" text-anchor="middle" font-family="monospace" font-size="5.5" fill="#888">OP-AMP</text></svg>
+                </div>
+                <h4>Op-Amp</h4>
+              </div>
+              <div class="card-body">
+                <p class="comp-desc">Operational Amplifier — a high-gain differential amplifier with two inputs (inverting −, non-inverting +) and one output. With external resistors, can be configured as an amplifier, comparator, filter, adder, or integrator.</p>
+                <p class="comp-uses">Popular: LM358, LM741, TL072, AD8232 · Code: U</p>
+                <div class="spec-row"><span class="spec-label">Open loop gain</span><span class="spec-val">Very high (100,000+)</span></div>
+                <div class="spec-row"><span class="spec-label">Closed loop</span><span class="spec-val">Set by feedback resistors</span></div>
+              </div>
+            </div>
+
+            <div class="comp-type-card">
+              <div class="card-header">
+                <div class="comp-icon" style="background:var(--bg-code)">
+                  <svg viewBox="0 0 40 28" width="36"><rect x="4" y="4" width="32" height="20" rx="2" fill="#2a2a5a" stroke="#444" stroke-width="1"/><line x1="0" y1="10" x2="4" y2="10" stroke="#aaa" stroke-width="1.5"/><line x1="0" y1="14" x2="4" y2="14" stroke="#aaa" stroke-width="1.5"/><line x1="0" y1="18" x2="4" y2="18" stroke="#aaa" stroke-width="1.5"/><line x1="36" y1="10" x2="40" y2="10" stroke="#aaa" stroke-width="1.5"/><line x1="36" y1="14" x2="40" y2="14" stroke="#aaa" stroke-width="1.5"/><line x1="36" y1="18" x2="40" y2="18" stroke="#aaa" stroke-width="1.5"/><text x="20" y="17" text-anchor="middle" font-family="monospace" font-size="5.5" fill="#888">EEPROM</text></svg>
+                </div>
+                <h4>Memory ICs</h4>
+              </div>
+              <div class="card-body">
+                <p class="comp-desc">Dedicated memory devices for storing data beyond what fits in a microcontroller's internal flash. EEPROM for small config data (survives power loss, byte-writable). Flash for larger firmware or data storage.</p>
+                <p class="comp-uses">Interfaces: SPI, I²C, parallel · Common: 24LC series (EEPROM), W25Q series (flash) · Code: U</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CONNECTORS -->
+        <div class="tab-panel">
+          <div class="comp-type-grid">
+            <div class="comp-type-card">
+              <div class="card-header">
+                <div class="comp-icon" style="background:var(--bg-code)">
+                  <svg viewBox="0 0 40 28" width="36"><rect x="4" y="8" width="32" height="12" rx="2" fill="#888" stroke="#555" stroke-width="1"/><line x1="10" y1="8" x2="10" y2="20" stroke="#555" stroke-width="1"/><line x1="16" y1="8" x2="16" y2="20" stroke="#555" stroke-width="1"/><line x1="22" y1="8" x2="22" y2="20" stroke="#555" stroke-width="1"/><line x1="28" y1="8" x2="28" y2="20" stroke="#555" stroke-width="1"/><line x1="10" y1="20" x2="10" y2="28" stroke="#aaa" stroke-width="2"/><line x1="16" y1="20" x2="16" y2="28" stroke="#aaa" stroke-width="2"/><line x1="22" y1="20" x2="22" y2="28" stroke="#aaa" stroke-width="2"/><line x1="28" y1="20" x2="28" y2="28" stroke="#aaa" stroke-width="2"/></svg>
+                </div>
+                <h4>Pin Headers &amp; Sockets</h4>
+              </div>
+              <div class="card-body">
+                <p class="comp-desc">The most common way to connect boards to other boards, cables, or components. 2.54mm (0.1") pitch is the standard for through-hole; various smaller pitches for SMD. Male headers have pins, female sockets accept pins.</p>
+                <p class="comp-uses">Pitch: 2.54mm standard, 2.0mm, 1.27mm, 1.0mm · Code: J or P</p>
+                <div class="spec-row"><span class="spec-label">Current per pin</span><span class="spec-val">1A typical for 2.54mm</span></div>
+              </div>
+            </div>
+
+            <div class="comp-type-card">
+              <div class="card-header">
+                <div class="comp-icon" style="background:var(--bg-code)">
+                  <svg viewBox="0 0 40 28" width="36"><rect x="2" y="8" width="36" height="12" rx="4" fill="#666" stroke="#444" stroke-width="1"/><circle cx="12" cy="14" r="3" fill="#c97530"/><circle cx="28" cy="14" r="3" fill="#c97530"/><rect x="0" y="10" width="4" height="8" rx="2" fill="#444"/><rect x="36" y="10" width="4" height="8" rx="2" fill="#444"/></svg>
+                </div>
+                <h4>USB Connectors</h4>
+              </div>
+              <div class="card-body">
+                <p class="comp-desc">For data communication and/or power. Micro-USB was the historical standard; USB-C is now dominant. Mechanically, USB-C is more durable. Electrically, USB-C can support faster data and higher power delivery.</p>
+                <p class="comp-uses">Types: USB-C, Micro-USB, Mini-USB, Type-A · Code: J</p>
+                <div class="spec-row"><span class="spec-label">USB 2.0 data</span><span class="spec-val">D+ / D− differential pair</span></div>
+                <div class="spec-row"><span class="spec-label">Power</span><span class="spec-val">5V VBUS + GND minimum</span></div>
+              </div>
+            </div>
+
+            <div class="comp-type-card">
+              <div class="card-header">
+                <div class="comp-icon" style="background:var(--bg-code)">
+                  <svg viewBox="0 0 40 28" width="36"><rect x="8" y="4" width="24" height="20" rx="3" fill="#555" stroke="#444" stroke-width="1"/><line x1="0" y1="10" x2="8" y2="10" stroke="#ccc" stroke-width="2"/><line x1="0" y1="18" x2="8" y2="18" stroke="#ccc" stroke-width="2"/><line x1="32" y1="10" x2="40" y2="10" stroke="#ccc" stroke-width="2"/><line x1="32" y1="18" x2="40" y2="18" stroke="#ccc" stroke-width="2"/><rect x="14" y="10" width="12" height="8" rx="1" fill="#888"/></svg>
+                </div>
+                <h4>Test Points</h4>
+              </div>
+              <div class="card-body">
+                <p class="comp-desc">Small exposed copper pads (or through-holes) placed on key signals specifically for probing during testing and debugging. Best practice is to place test points on every important net — power rails, clock lines, UART TX/RX.</p>
+                <p class="comp-uses">Types: bare pad, through-hole pad, plated half-hole · Code: TP</p>
+                <p style="font-size:0.85rem;color:var(--green);margin-top:0.5rem">⚑ Critical for debugging. Add them generously.</p>
+              </div>
+            </div>
+
+            <div class="comp-type-card">
+              <div class="card-header">
+                <div class="comp-icon" style="background:var(--bg-code)">
+                  <svg viewBox="0 0 40 28" width="36"><rect x="10" y="6" width="20" height="16" rx="2" fill="#c97530" stroke="#a85a18" stroke-width="1"/><rect x="14" y="9" width="12" height="10" rx="1" fill="#d4a520"/><line x1="20" y1="0" x2="20" y2="6" stroke="#555" stroke-width="2"/><line x1="20" y1="22" x2="20" y2="28" stroke="#555" stroke-width="2"/></svg>
+                </div>
+                <h4>Fuse / Protection</h4>
+              </div>
+              <div class="card-body">
+                <p class="comp-desc">Self-resetting polyfuses (PTCs) protect against overcurrent — they increase resistance dramatically when too much current flows, then reset when cooled. Transient Voltage Suppressors (TVS diodes) clamp voltage spikes protecting against ESD.</p>
+                <p class="comp-uses">PTC: RXEF series · TVS: SMBJ, 1.5KE series · Code: F (fuse), D (TVS)</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- end tabs -->
+    </div>
+  </section>
+
+  <!-- ======== READING COMPONENT MARKINGS ======== -->
+  <section class="section section--white">
+    <div class="container">
+      <p class="section-label">Decoding components</p>
+      <h2 class="section-title">Reading Component Markings</h2>
+      <p class="section-intro">Components are labelled in ways that aren't immediately obvious. Here's how to decode them — a skill you'll use every time you open a bag of parts.</p>
+
+      <div class="tabs">
+        <div class="tab-list">
+          <button class="tab-btn">THT Resistor Colour Bands</button>
+          <button class="tab-btn">SMD Numeric Codes</button>
+          <button class="tab-btn">Capacitor Markings</button>
+          <button class="tab-btn">IC Date / Lot Codes</button>
+        </div>
+
+        <!-- COLOUR BANDS -->
+        <div class="tab-panel">
+          <p>Through-hole resistors are marked with coloured bands. Each colour represents a digit, a multiplier, or a tolerance. Four-band and five-band resistors are the most common.</p>
+
+          <!-- Colour band diagram - clear SVG with no text overlap -->
+          <div class="diagram-wrap">
+            <svg viewBox="0 0 620 160" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:620px">
+              <!-- Resistor body -->
+              <line x1="20" y1="80" x2="80" y2="80" stroke="#888" stroke-width="3" stroke-linecap="round"/>
+              <rect x="80" y="46" width="360" height="68" rx="20" fill="#c8b88a" stroke="#a09070" stroke-width="1.5"/>
+              <line x1="440" y1="80" x2="500" y2="80" stroke="#888" stroke-width="3" stroke-linecap="round"/>
+
+              <!-- Band positions for 4-band: roughly at x=120, 160, 200, 320 -->
+              <!-- Band 1: x=120 -->
+              <rect x="114" y="46" width="22" height="68" rx="2" fill="#8B4513"/>
+              <!-- Band 2: x=160 -->
+              <rect x="154" y="46" width="22" height="68" rx="2" fill="#FF0000"/>
+              <!-- Band 3 (multiplier): x=200 -->
+              <rect x="194" y="46" width="22" height="68" rx="2" fill="#FF8C00"/>
+              <!-- Band 4 (tolerance): x=320, separated gap -->
+              <rect x="320" y="46" width="22" height="68" rx="2" fill="#FFD700"/>
+
+              <!-- Labels below resistor, well-spaced -->
+              <!-- Band 1 label -->
+              <line x1="125" y1="114" x2="125" y2="130" stroke="#5c5545" stroke-width="0.8"/>
+              <text x="125" y="143" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9.5" fill="#1a3d26">Band 1</text>
+              <text x="125" y="155" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#5c5545">1st digit</text>
+
+              <!-- Band 2 label -->
+              <line x1="165" y1="114" x2="165" y2="130" stroke="#5c5545" stroke-width="0.8"/>
+              <text x="165" y="143" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9.5" fill="#1a3d26">Band 2</text>
+              <text x="165" y="155" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#5c5545">2nd digit</text>
+
+              <!-- Band 3 label -->
+              <line x1="205" y1="114" x2="205" y2="130" stroke="#5c5545" stroke-width="0.8"/>
+              <text x="205" y="143" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9.5" fill="#a85a18">Band 3</text>
+              <text x="205" y="155" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#5c5545">multiplier</text>
+
+              <!-- Band 4 label (tolerance) -->
+              <line x1="331" y1="114" x2="331" y2="130" stroke="#5c5545" stroke-width="0.8"/>
+              <text x="331" y="143" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9.5" fill="#b5820a">Band 4</text>
+              <text x="331" y="155" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#5c5545">tolerance</text>
+
+              <!-- Example label top right -->
+              <text x="500" y="60" font-family="'Share Tech Mono',monospace" font-size="10" fill="#1a3d26">Example:</text>
+              <text x="500" y="76" font-family="'Share Tech Mono',monospace" font-size="10" fill="#8B4513">Brown</text>
+              <text x="500" y="91" font-family="'Share Tech Mono',monospace" font-size="10" fill="#FF0000">Red</text>
+              <text x="500" y="106" font-family="'Share Tech Mono',monospace" font-size="10" fill="#FF8C00">Orange</text>
+              <text x="500" y="121" font-family="'Share Tech Mono',monospace" font-size="10" fill="#b5820a">Gold</text>
+              <text x="500" y="140" font-family="'Share Tech Mono',monospace" font-size="10" fill="#1a3d26">= 12 × 10³ Ω = 12kΩ ±5%</text>
+            </svg>
+            <p class="diagram-caption">4-band resistor: two value digits + multiplier + tolerance</p>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Colour</th><th>Digit value</th><th>Multiplier</th><th>Tolerance</th></tr></thead>
+              <tbody>
+                <tr><td style="background:#111;color:#fff;font-weight:600">Black</td><td>0</td><td>×1 (Ω)</td><td>—</td></tr>
+                <tr><td style="background:#8B4513;color:#fff;font-weight:600">Brown</td><td>1</td><td>×10</td><td>±1%</td></tr>
+                <tr><td style="background:#cc0000;color:#fff;font-weight:600">Red</td><td>2</td><td>×100</td><td>±2%</td></tr>
+                <tr><td style="background:#FF8C00;color:#fff;font-weight:600">Orange</td><td>3</td><td>×1k</td><td>—</td></tr>
+                <tr><td style="background:#d4a520;color:#111;font-weight:600">Yellow</td><td>4</td><td>×10k</td><td>—</td></tr>
+                <tr><td style="background:#228B22;color:#fff;font-weight:600">Green</td><td>5</td><td>×100k</td><td>±0.5%</td></tr>
+                <tr><td style="background:#00008B;color:#fff;font-weight:600">Blue</td><td>6</td><td>×1M</td><td>±0.25%</td></tr>
+                <tr><td style="background:#9400D3;color:#fff;font-weight:600">Violet</td><td>7</td><td>×10M</td><td>±0.1%</td></tr>
+                <tr><td style="background:#808080;color:#fff;font-weight:600">Grey</td><td>8</td><td>—</td><td>±0.05%</td></tr>
+                <tr><td style="background:#f0f0f0;color:#111;font-weight:600;border:1px solid #ddd">White</td><td>9</td><td>—</td><td>—</td></tr>
+                <tr><td style="background:#d4a520;color:#111;font-weight:600">Gold</td><td>—</td><td>×0.1</td><td>±5%</td></tr>
+                <tr><td style="background:#C0C0C0;color:#111;font-weight:600">Silver</td><td>—</td><td>×0.01</td><td>±10%</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="callout callout--info" style="margin-top:1rem">
+            <p class="callout-title">5-band resistors (1% precision)</p>
+            <p style="margin:0">Precision metal film resistors use 5 bands: three value digits, a multiplier, and a tolerance band. Read the same way — e.g. Brown·Black·Black·Red·Brown = 1·0·0 × 100 = 10,000Ω = 10kΩ ±1%. The tolerance band is usually silver (±10%), gold (±5%), or a colour (±1% or better) and sits slightly separate from the value bands. Always check the direction — start from the end closest to the first band.</p>
+          </div>
+        </div>
+
+        <!-- SMD CODES -->
+        <div class="tab-panel">
+          <p>SMD resistors are too small for colour bands. Instead they carry a printed numeric code — either a 3-digit EIA code, a 4-digit code, or an EIA-96 alphanumeric code. Capacitors and inductors have their own systems too.</p>
+
+          <h3>3-digit SMD code (standard)</h3>
+          <p>Format: <strong>ABX</strong> where AB is the significant digits and X is the number of zeros to append.</p>
+          <div class="diagram-wrap" style="padding:1rem">
+            <svg viewBox="0 0 500 80" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:500px">
+              <!-- Three example SMD resistor chips -->
+              <rect x="10" y="10" width="60" height="36" rx="4" fill="#2a2a2a" stroke="#444" stroke-width="1"/>
+              <text x="40" y="32" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="13" fill="#fff" font-weight="700">472</text>
+              <text x="40" y="62" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9.5" fill="#1a3d26">4·7 × 10² = 4.7kΩ</text>
+
+              <rect x="100" y="10" width="60" height="36" rx="4" fill="#2a2a2a" stroke="#444" stroke-width="1"/>
+              <text x="130" y="32" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="13" fill="#fff" font-weight="700">103</text>
+              <text x="130" y="62" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9.5" fill="#1a3d26">1·0 × 10³ = 10kΩ</text>
+
+              <rect x="190" y="10" width="60" height="36" rx="4" fill="#2a2a2a" stroke="#444" stroke-width="1"/>
+              <text x="220" y="32" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="13" fill="#fff" font-weight="700">221</text>
+              <text x="220" y="62" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9.5" fill="#1a3d26">2·2 × 10¹ = 220Ω</text>
+
+              <rect x="280" y="10" width="60" height="36" rx="4" fill="#2a2a2a" stroke="#444" stroke-width="1"/>
+              <text x="310" y="32" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="13" fill="#fff" font-weight="700">4R7</text>
+              <text x="310" y="62" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9.5" fill="#a85a18">R = decimal point = 4.7Ω</text>
+
+              <rect x="370" y="10" width="60" height="36" rx="4" fill="#2a2a2a" stroke="#444" stroke-width="1"/>
+              <text x="400" y="32" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="13" fill="#fff" font-weight="700">000</text>
+              <text x="400" y="62" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9.5" fill="#5c5545">jumper = 0Ω wire</text>
+            </svg>
+            <p class="diagram-caption">Common 3-digit SMD resistor codes</p>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Code</th><th>Meaning</th><th>Value</th></tr></thead>
+              <tbody>
+                <tr><td><code>100</code></td><td>1·0 × 10⁰</td><td>10Ω</td></tr>
+                <tr><td><code>470</code></td><td>4·7 × 10⁰</td><td>47Ω</td></tr>
+                <tr><td><code>471</code></td><td>4·7 × 10¹</td><td>470Ω</td></tr>
+                <tr><td><code>472</code></td><td>4·7 × 10²</td><td>4,700Ω = 4.7kΩ</td></tr>
+                <tr><td><code>103</code></td><td>1·0 × 10³</td><td>10,000Ω = 10kΩ</td></tr>
+                <tr><td><code>104</code></td><td>1·0 × 10⁴</td><td>100,000Ω = 100kΩ</td></tr>
+                <tr><td><code>105</code></td><td>1·0 × 10⁵</td><td>1,000,000Ω = 1MΩ</td></tr>
+                <tr><td><code>4R7</code></td><td>R = decimal point</td><td>4.7Ω</td></tr>
+                <tr><td><code>R47</code></td><td>R = decimal point</td><td>0.47Ω</td></tr>
+                <tr><td><code>000</code></td><td>Zero ohm jumper</td><td>0Ω (wire link)</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 style="margin-top:1.5rem">4-digit SMD code (precision, 1%)</h3>
+          <p>Same system but three significant digits: <strong>ABCX</strong> where ABC are the digits and X is the multiplier. Example: <code>4702</code> = 4·7·0 × 10² = 47,000Ω = 47kΩ.</p>
+
+          <h3 style="margin-top:1.5rem">EIA-96 alphanumeric code</h3>
+          <p>Used on tiny 0402 and smaller resistors where even 3-digit codes won't fit. Consists of a two-digit number (from an EIA-96 table) followed by a letter (the multiplier). Example: <code>01A</code> = 100Ω, <code>68C</code> = 499kΩ. Look up the EIA-96 table — it's freely available online and in most component datasheets.</p>
+        </div>
+
+        <!-- CAPACITOR MARKINGS -->
+        <div class="tab-panel">
+          <p>Capacitors have their own marking systems that differ by type. The key thing to remember: capacitor codes are usually in picofarads (pF), not Ohms.</p>
+
+          <h3>Ceramic capacitor codes (SMD and disc)</h3>
+          <p>Uses the same 3-digit system as SMD resistors, but the value is in <strong>picofarads</strong>. Example: <code>104</code> = 1·0 × 10⁴ pF = 100,000 pF = 100 nF = 0.1 µF (the classic decoupling capacitor).</p>
+
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Code</th><th>Value in pF</th><th>Common name</th></tr></thead>
+              <tbody>
+                <tr><td><code>100</code></td><td>10 pF</td><td>10 picofarads</td></tr>
+                <tr><td><code>101</code></td><td>100 pF</td><td>100 picofarads</td></tr>
+                <tr><td><code>102</code></td><td>1,000 pF</td><td>1 nanofarad (1 nF)</td></tr>
+                <tr><td><code>103</code></td><td>10,000 pF</td><td>10 nF</td></tr>
+                <tr><td><code>104</code></td><td>100,000 pF</td><td>100 nF = 0.1 µF ← most common</td></tr>
+                <tr><td><code>105</code></td><td>1,000,000 pF</td><td>1 µF</td></tr>
+                <tr><td><code>106</code></td><td>10,000,000 pF</td><td>10 µF</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 style="margin-top:1.5rem">Electrolytic capacitor markings</h3>
+          <p>Electrolytics are large enough to print directly: value in µF, voltage rating, and a polarity marking. The <strong>negative lead is marked</strong> — look for a stripe with minus signs down the side of the can, or a shorter lead. The positive lead is longer. Always orient correctly: reverse polarity destroys an electrolytic capacitor, sometimes violently.</p>
+
+          <div class="callout callout--warn">
+            <p class="callout-title">Voltage rating is a maximum, not a target</p>
+            <p style="margin:0">A capacitor marked <code>10µF 16V</code> can be used in any circuit where the voltage across it stays below 16V. It won't "run" at 16V — that's just the maximum it can safely see. For reliability, always choose a capacitor with a voltage rating at least <strong>2× your actual operating voltage</strong>. A 5V power rail should have capacitors rated at 10V or 16V minimum.</p>
+          </div>
+        </div>
+
+        <!-- IC DATE CODES -->
+        <div class="tab-panel">
+          <p>Integrated circuits carry a date/lot code that tells you when and where they were manufactured. This matters for tracking batch defects, checking for counterfeit parts, and understanding component age.</p>
+
+          <h3>Standard date code format</h3>
+          <p>Most ICs use a <strong>YYWW</strong> format on their marking: a two-digit year followed by a two-digit week number. Example: <code>2342</code> = year 2023, week 42 (mid-October 2023). This is usually one of several lines of text on the IC body.</p>
+
+          <h3>Reading an IC marking</h3>
+          <p>A typical IC marking has three or four lines:</p>
+          <div style="background:var(--bg-code);border:1px solid var(--border);border-radius:6px;padding:1rem;font-family:var(--font-mono);font-size:0.85rem;margin:1rem 0;line-height:1.9">
+            <div style="color:#2d6a3f">STM32F103C8T6</div>
+            <div style="color:#888">← Part number: STM32F103, package C8T6 (LQFP48, 64KB flash, -40 to 85°C)</div>
+            <div style="color:#2d6a3f">ST</div>
+            <div style="color:#888">← Manufacturer (STMicroelectronics)</div>
+            <div style="color:#2d6a3f">2242</div>
+            <div style="color:#888">← Date code: 2022, week 42</div>
+            <div style="color:#2d6a3f">XXXXXXX</div>
+            <div style="color:#888">← Lot/trace code (factory batch identifier)</div>
+          </div>
+
+          <div class="callout callout--warn">
+            <p class="callout-title">Counterfeit ICs are common on eBay / AliExpress</p>
+            <p style="margin:0">Counterfeit ICs are a real problem — remarked chips (old chips relabelled as newer, higher-spec parts), clones, and outright fakes. Buy from authorised distributors (Mouser, Farnell, Digi-Key, RS) for any critical IC. Suspiciously cheap microcontrollers from third-party Amazon/eBay sellers are often counterfeit. The date code and lot number can sometimes reveal anomalies — codes inconsistent with a claimed genuine part.</p>
+          </div>
+        </div>
+      </div><!-- end tabs -->
+    </div>
+  </section>
+
+  <!-- ======== IC PACKAGES ======== -->
+  <section class="section section--tinted">
+    <div class="container">
+      <p class="section-label">IC Packages</p>
+      <h2 class="section-title">Understanding IC Package Types</h2>
+      <p class="section-intro">Integrated circuits come in many physical packages. The package determines the footprint you need in your PCB design and the soldering method required.</p>
+
+      <div class="package-grid">
+        <div class="package-card">
+          <p class="pkg-name">DIP / PDIP</p>
+          <p class="pkg-desc">Dual Inline Package. Two rows of through-hole pins. The classic hobbyist IC — fits breadboards, easy to solder, easy to socket.</p>
+          <p class="pkg-size">Pitch: 2.54mm · Pin count: 8–40</p>
+        </div>
+        <div class="package-card">
+          <p class="pkg-name">SOIC-8/16</p>
+          <p class="pkg-desc">Small Outline IC. SMD version of DIP. Two rows of gull-wing leads. Very solderable by hand.</p>
+          <p class="pkg-size">Pitch: 1.27mm · Common: op-amps, drivers</p>
+        </div>
+        <div class="package-card">
+          <p class="pkg-name">SOT-23</p>
+          <p class="pkg-desc">Small Outline Transistor. 3–6 pin SMD package for transistors, MOSFETs, regulators.</p>
+          <p class="pkg-size">Body: 2.9 × 1.3mm · Solderable by hand</p>
+        </div>
+        <div class="package-card">
+          <p class="pkg-name">QFP / TQFP</p>
+          <p class="pkg-desc">Quad Flat Package. Four sides of gull-wing leads. Common for microcontrollers. Requires hot air or careful iron work.</p>
+          <p class="pkg-size">Pitch: 0.5–0.8mm · Pins: 32–256</p>
+        </div>
+        <div class="package-card">
+          <p class="pkg-name">QFN / LQFPs</p>
+          <p class="pkg-desc">No leads — pads on the underside rim only, plus a thermal pad below. Compact. Requires hot air or reflow oven.</p>
+          <p class="pkg-size">Pitch: 0.4–0.65mm · Thermally excellent</p>
+        </div>
+        <div class="package-card">
+          <p class="pkg-name">BGA</p>
+          <p class="pkg-desc">Ball Grid Array. Balls of solder underneath the chip in a grid. Cannot be hand-soldered. Requires reflow. Used in processors, FPGAs, memory.</p>
+          <p class="pkg-size">Pitch: 0.4–1.0mm · Expert only</p>
+        </div>
+        <div class="package-card">
+          <p class="pkg-name">TO-220 / TO-92</p>
+          <p class="pkg-desc">Through-hole power device packages. TO-220 is the classic 3-pin package with a metal tab for heatsinking (voltage regulators, power MOSFETs).</p>
+          <p class="pkg-size">Hole pitch: 2.54mm · Power rated</p>
+        </div>
+        <div class="package-card">
+          <p class="pkg-name">SOP / SSOP</p>
+          <p class="pkg-desc">Small Outline Package variants. SSOP is shrunk version. Narrower than SOIC. Common for older comms ICs and ADCs.</p>
+          <p class="pkg-size">Pitch: 0.635–1.27mm · Careful iron work</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

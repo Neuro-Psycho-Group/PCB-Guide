@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Design Workflow — PCB Primer</title>
+  <meta name="description" content="The complete PCB design workflow: schematic capture, component placement, trace routing, design rule checks, and Gerber file generation.">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    .workflow-phase { margin-bottom: 3rem; }
+    .phase-header { display: flex; align-items: center; gap: 1.2rem; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+    .phase-badge { font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; padding: 4px 12px; border-radius: 20px; white-space: nowrap; }
+    .phase-design   { background: var(--green-pale);  color: var(--green-deep);  border: 1px solid rgba(45,106,63,0.3); }
+    .phase-layout   { background: #fdf0e6;             color: var(--copper);      border: 1px solid rgba(168,90,24,0.3); }
+    .phase-fab      { background: #fdf6e6;             color: var(--gold);        border: 1px solid rgba(184,134,15,0.3); }
+    .phase-assembly { background: #eef4ff;             color: #3a6fb8;            border: 1px solid rgba(58,111,184,0.3); }
+    .phase-title { font-family: var(--font-serif); font-size: 1.5rem; font-weight: 700; margin: 0; }
+    .step-card { display: grid; grid-template-columns: 56px 1fr; gap: 1.5rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 1.4rem; margin-bottom: 1rem; }
+    @media(max-width:480px){ .step-card { grid-template-columns: 1fr; } }
+    .step-card-num { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 1.1rem; flex-shrink: 0; }
+    .step-card-body h3 { margin-bottom: 0.4rem; }
+    .step-card-body p  { font-size: 0.93rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+    .step-tips ul { margin: 0.4rem 0 0; padding-left: 1.3rem; font-size: 0.87rem; color: var(--text-muted); line-height: 1.85; }
+    .gerber-layers { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.7rem; margin: 1rem 0; }
+    .gerber-file { background: var(--bg-code); border: 1px solid var(--border-light); border-radius: 4px; padding: 0.7rem; }
+    .gerber-file .filename { font-family: var(--font-mono); font-size: 0.78rem; color: var(--copper); }
+    .gerber-file .filedesc { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem; }
+    .checklist { list-style: none; margin: 0.5rem 0; }
+    .checklist li { display: flex; gap: 0.8rem; padding: 5px 0; font-size: 0.9rem; align-items: baseline; border-bottom: 1px dashed var(--border-light); }
+    .checklist li:last-child { border-bottom: none; }
+    .checklist li::before { content: '☐'; font-family: var(--font-mono); color: var(--green); flex-shrink: 0; }
+  </style>
+</head>
+<body>
+
+  <div class="page-header">
+    <div class="container">
+      <p class="page-label">04 / Workflow</p>
+      <h1>Schematic to Board</h1>
+      <p>The complete nine-step design process. Follow this every time and you won't go wrong.</p>
+    </div>
+  </div>
+
+  <!-- OVERVIEW FLOWCHART -->
+  <section class="section section--white">
+    <div class="container">
+      <p class="section-label">Process overview</p>
+      <h2 class="section-title">The Design Workflow</h2>
+      <p class="section-intro">PCB design follows a strict, linear sequence. Skipping steps — especially doing layout before your schematic is complete — is the number one cause of painful, expensive redesigns.</p>
+
+      <div class="diagram-wrap">
+        <!-- Workflow diagram: 4 phase boxes with numbered step nodes, all text well-spaced -->
+        <svg viewBox="0 0 760 190" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:760px">
+          <!-- Phase backgrounds -->
+          <rect x="4"   y="10" width="192" height="172" rx="6" fill="#edf6ee" stroke="rgba(45,106,63,0.2)" stroke-width="1.2"/>
+          <rect x="204" y="10" width="270" height="172" rx="6" fill="#fdf5ee" stroke="rgba(168,90,24,0.2)" stroke-width="1.2"/>
+          <rect x="482" y="10" width="140" height="172" rx="6" fill="#fdf9ee" stroke="rgba(184,134,15,0.2)" stroke-width="1.2"/>
+          <rect x="630" y="10" width="124" height="172" rx="6" fill="#eef4ff" stroke="rgba(58,111,184,0.2)" stroke-width="1.2"/>
+
+          <!-- Phase labels at top -->
+          <text x="100" y="30"  text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#2d6a3f" letter-spacing="2">DESIGN</text>
+          <text x="339" y="30"  text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#a85a18" letter-spacing="2">LAYOUT</text>
+          <text x="552" y="30"  text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#b5820a" letter-spacing="2">FABRICATION</text>
+          <text x="692" y="30"  text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#3a6fb8" letter-spacing="2">ASSEMBLY</text>
+
+          <!-- Step circles + labels — each step at y=95 (centre), label below -->
+          <!-- Step 1: x=50 -->
+          <circle cx="50"  cy="95" r="26" fill="#fff" stroke="rgba(45,106,63,0.4)" stroke-width="1.5"/>
+          <text x="50"  y="90" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="18" fill="#2d6a3f">1</text>
+          <text x="50"  y="136" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#1a3d26">Concept</text>
+          <text x="50"  y="149" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#5c5545">Block diagram</text>
+          <text x="50"  y="161" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#5c5545">&amp; requirements</text>
+
+          <!-- Arrow 1→2 -->
+          <line x1="76" y1="95" x2="120" y2="95" stroke="#bbb" stroke-width="1.5"/>
+          <polygon points="118,91 124,95 118,99" fill="#bbb"/>
+
+          <!-- Step 2: x=148 -->
+          <circle cx="148" cy="95" r="26" fill="#fff" stroke="rgba(45,106,63,0.4)" stroke-width="1.5"/>
+          <text x="148" y="90" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="18" fill="#2d6a3f">2</text>
+          <text x="148" y="136" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#1a3d26">Schematic</text>
+          <text x="148" y="149" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#5c5545">Capture all</text>
+          <text x="148" y="161" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#5c5545">connections</text>
+
+          <!-- Arrow 2→3 -->
+          <line x1="174" y1="95" x2="214" y2="95" stroke="#bbb" stroke-width="1.5"/>
+          <polygon points="212,91 218,95 212,99" fill="#bbb"/>
+
+          <!-- Step 3: x=248 -->
+          <circle cx="248" cy="95" r="26" fill="#fff" stroke="rgba(168,90,24,0.4)" stroke-width="1.5"/>
+          <text x="248" y="90" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="18" fill="#a85a18">3</text>
+          <text x="248" y="136" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#7a3a10">Footprints</text>
+          <text x="248" y="149" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#5c5545">Assign physical</text>
+          <text x="248" y="161" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#5c5545">packages</text>
+
+          <!-- Arrow 3→4 -->
+          <line x1="274" y1="95" x2="314" y2="95" stroke="#bbb" stroke-width="1.5"/>
+          <polygon points="312,91 318,95 312,99" fill="#bbb"/>
+
+          <!-- Step 4: x=348 -->
+          <circle cx="348" cy="95" r="26" fill="#fff" stroke="rgba(168,90,24,0.4)" stroke-width="1.5"/>
+          <text x="348" y="90" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="18" fill="#a85a18">4</text>
+          <text x="348" y="136" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#7a3a10">Placement</text>
+          <text x="348" y="149" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#5c5545">Position every</text>
+          <text x="348" y="161" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#5c5545">component</text>
+
+          <!-- Arrow 4→5 -->
+          <line x1="374" y1="95" x2="414" y2="95" stroke="#bbb" stroke-width="1.5"/>
+          <polygon points="412,91 418,95 412,99" fill="#bbb"/>
+
+          <!-- Step 5: x=448 -->
+          <circle cx="448" cy="95" r="26" fill="#fff" stroke="rgba(168,90,24,0.4)" stroke-width="1.5"/>
+          <text x="448" y="90" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="18" fill="#a85a18">5</text>
+          <text x="448" y="136" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#7a3a10">Routing</text>
+          <text x="448" y="149" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#5c5545">Draw copper</text>
+          <text x="448" y="161" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#5c5545">traces</text>
+
+          <!-- Arrow 5→6 -->
+          <line x1="474" y1="95" x2="500" y2="95" stroke="#bbb" stroke-width="1.5"/>
+          <polygon points="498,91 504,95 498,99" fill="#bbb"/>
+
+          <!-- Step 6: x=552 -->
+          <circle cx="552" cy="95" r="26" fill="#fff" stroke="rgba(184,134,15,0.4)" stroke-width="1.5"/>
+          <text x="552" y="90" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="18" fill="#b5820a">6</text>
+          <text x="552" y="133" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#8a6010">DRC +</text>
+          <text x="552" y="146" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#8a6010">Gerbers</text>
+          <text x="552" y="160" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#5c5545">Export &amp; check</text>
+
+          <!-- Arrow 6→7 -->
+          <line x1="578" y1="95" x2="616" y2="95" stroke="#bbb" stroke-width="1.5"/>
+          <polygon points="614,91 620,95 614,99" fill="#bbb"/>
+
+          <!-- Step 7: x=655 -->
+          <circle cx="655" cy="95" r="26" fill="#fff" stroke="rgba(58,111,184,0.4)" stroke-width="1.5"/>
+          <text x="655" y="90" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="18" fill="#3a6fb8">7</text>
+          <text x="655" y="136" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#2a5090">Order</text>
+          <text x="655" y="149" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#5c5545">Upload to</text>
+          <text x="655" y="161" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#5c5545">fab house</text>
+
+          <!-- Arrow 7→8 -->
+          <line x1="681" y1="95" x2="704" y2="95" stroke="#bbb" stroke-width="1.5"/>
+          <polygon points="702,91 708,95 702,99" fill="#bbb"/>
+
+          <!-- Step 8: x=732 (small, last) -->
+          <circle cx="730" cy="95" r="22" fill="#fff" stroke="rgba(58,111,184,0.4)" stroke-width="1.5"/>
+          <text x="730" y="90" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="18" fill="#3a6fb8">8</text>
+          <text x="730" y="133" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#2a5090">Solder</text>
+          <text x="730" y="146" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#5c5545">&amp; test</text>
+        </svg>
+        <p class="diagram-caption">Full design-to-board workflow — click each section below for detail on every step</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCHEMATIC BEST PRACTICES -->
+  <section class="section section--white">
+    <div class="container" style="max-width:760px">
+      <p class="section-label">Schematic craft</p>
+      <h2 class="section-title">Schematic Best Practices</h2>
+      <p class="section-intro">A schematic is a communication document — it needs to be readable by someone other than you, six months from now. These conventions are the difference between a professional schematic and a confusing tangle.</p>
+
+      <h3>Reference designators</h3>
+      <p>Every component on your schematic gets a <strong>reference designator</strong> (refdes) — a letter prefix followed by a number. These are printed on the silkscreen too, so they link schematic to physical board.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Prefix</th><th>Component type</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td><code>R</code></td><td>Resistors</td><td>R1, R2, R3…</td></tr>
+            <tr><td><code>C</code></td><td>Capacitors</td><td>C1, C2, C3…</td></tr>
+            <tr><td><code>L</code></td><td>Inductors</td><td>L1, L2…</td></tr>
+            <tr><td><code>U</code></td><td>Integrated circuits</td><td>U1, U2…</td></tr>
+            <tr><td><code>Q</code></td><td>Transistors (BJT, MOSFET)</td><td>Q1, Q2…</td></tr>
+            <tr><td><code>D</code></td><td>Diodes (including LEDs)</td><td>D1, D2…</td></tr>
+            <tr><td><code>J</code> or <code>P</code></td><td>Connectors / headers</td><td>J1, J2…</td></tr>
+            <tr><td><code>SW</code></td><td>Switches, buttons</td><td>SW1, SW2…</td></tr>
+            <tr><td><code>F</code></td><td>Fuses, polyfuses</td><td>F1…</td></tr>
+            <tr><td><code>Y</code></td><td>Crystals, oscillators</td><td>Y1, Y2…</td></tr>
+            <tr><td><code>TP</code></td><td>Test points</td><td>TP1, TP2…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Net naming</h3>
+      <p>Name your power nets meaningfully. Instead of just "VCC" everywhere, use <code>+3V3</code>, <code>+5V</code>, <code>VBAT</code>, <code>USB_VBUS</code>. Name important signal nets too: <code>SPI_CLK</code>, <code>UART_TX</code>, <code>nRESET</code>. This makes the schematic self-documenting and the PCB layout — where these net names appear when you hover over traces — much easier to navigate.</p>
+
+      <p>The <code>n</code> or <code>/</code> prefix conventionally means active-low: <code>nRESET</code> or <code>/CS</code> means the signal is active (does its thing) when pulled low. This is a widely-understood shorthand that communicates signal polarity at a glance.</p>
+
+      <h3 style="margin-top:1.5rem">Schematic layout conventions</h3>
+      <ul style="padding-left:1.3rem;font-size:0.93rem;color:var(--text-muted);line-height:1.9;margin-bottom:1rem">
+        <li><strong>Signal flow left to right</strong> — inputs on the left, outputs on the right</li>
+        <li><strong>Power flows top to bottom</strong> — positive supply at the top, GND at the bottom</li>
+        <li><strong>Group by function</strong> — power supply circuitry together, MCU with its supporting components, each peripheral in its own area</li>
+        <li><strong>Never use 4-way junctions</strong> — a "T" junction (three wires meeting) is clear; a "+" junction (four wires crossing and connecting) is ambiguous. Use two separate T-junctions</li>
+        <li><strong>Avoid long wires crossing everything</strong> — use net labels instead. A label "SPI_CLK" on a pin is clearer than a wire travelling across three blocks of components</li>
+        <li><strong>Add pin numbers to every component</strong> — helps correlate schematic pins to real IC pinouts during debugging</li>
+        <li><strong>Add a title block</strong> — board name, revision (start at Rev 1.0), date, and your name. When you have five versions of the same board, you'll thank yourself</li>
+      </ul>
+
+      <!-- Schematic conventions diagram -->
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 640 215" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:640px">
+          <defs>
+            <marker id="arr-g" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#2d6a3f"/>
+            </marker>
+            <marker id="arr-c" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#c97530"/>
+            </marker>
+          </defs>
+
+          <text x="320" y="15" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="10.5" fill="#1a3d26" font-weight="600">Schematic layout conventions — illustrated</text>
+
+          <!-- Signal flow arrow (horizontal) -->
+          <line x1="30" y1="44" x2="240" y2="44" stroke="#2d6a3f" stroke-width="2" marker-end="url(#arr-g)"/>
+          <text x="135" y="38" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#2d6a3f">signal flow: left → right</text>
+
+          <!-- Power flow arrow (vertical) -->
+          <line x1="24" y1="60" x2="24" y2="206" stroke="#c97530" stroke-width="2" marker-end="url(#arr-c)"/>
+          <text x="12" y="134" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#c97530" transform="rotate(-90,12,134)">power: +V top → GND bottom</text>
+
+          <!-- VCC symbol -->
+          <line x1="370" y1="28" x2="370" y2="48" stroke="#c97530" stroke-width="1.5"/>
+          <polygon points="364,31 370,21 376,31" fill="#c97530"/>
+          <text x="383" y="29" font-family="'Share Tech Mono',monospace" font-size="9" fill="#c97530">+3V3</text>
+
+          <!-- Decoupling cap -->
+          <line x1="370" y1="48" x2="370" y2="60" stroke="#c97530" stroke-width="1.5"/>
+          <line x1="360" y1="60" x2="380" y2="60" stroke="#c97530" stroke-width="2.2"/>
+          <line x1="360" y1="66" x2="380" y2="66" stroke="#c97530" stroke-width="2.2"/>
+          <line x1="370" y1="66" x2="370" y2="76" stroke="#888" stroke-width="1.5"/>
+          <line x1="363" y1="76" x2="377" y2="76" stroke="#888" stroke-width="1.5"/>
+          <line x1="366" y1="81" x2="374" y2="81" stroke="#888" stroke-width="1.2"/>
+          <line x1="369" y1="86" x2="371" y2="86" stroke="#888" stroke-width="1"/>
+          <text x="387" y="67" font-family="'Share Tech Mono',monospace" font-size="8" fill="#5c5545">C1 100nF</text>
+          <text x="387" y="77" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#2d6a3f">← right next to IC pin</text>
+
+          <!-- IC block -->
+          <line x1="370" y1="48" x2="450" y2="48" stroke="#c97530" stroke-width="1.5"/>
+          <rect x="450" y="34" width="110" height="120" rx="4" fill="#2a2a2a" stroke="#555" stroke-width="1.5"/>
+          <text x="505" y="92" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9.5" fill="#888">U1</text>
+          <text x="505" y="106" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#666">ATtiny85</text>
+
+          <!-- Pins label inside IC left -->
+          <text x="456" y="52" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#555">VCC</text>
+          <text x="456" y="65" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#555">PB0</text>
+          <text x="456" y="78" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#555">PB1</text>
+          <text x="456" y="143" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#555">GND</text>
+
+          <!-- Signal output right of IC with net label -->
+          <line x1="560" y1="62" x2="596" y2="62" stroke="#5aad74" stroke-width="1.5"/>
+          <rect x="596" y="55" width="32" height="14" rx="2" fill="#edf6ee" stroke="#2d6a3f" stroke-width="1"/>
+          <text x="612" y="66" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#1a3d26">LED1</text>
+
+          <line x1="560" y1="75" x2="608" y2="75" stroke="#5aad74" stroke-width="1.5"/>
+          <rect x="608" y="68" width="28" height="14" rx="2" fill="#edf6ee" stroke="#2d6a3f" stroke-width="1"/>
+          <text x="622" y="79" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#1a3d26">TX</text>
+
+          <text x="597" y="48" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#5aad74">net labels</text>
+          <text x="597" y="38" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#5c5545">= named connections</text>
+
+          <!-- GND at bottom -->
+          <line x1="505" y1="154" x2="505" y2="172" stroke="#888" stroke-width="1.5"/>
+          <line x1="497" y1="172" x2="513" y2="172" stroke="#888" stroke-width="1.5"/>
+          <line x1="500" y1="177" x2="510" y2="177" stroke="#888" stroke-width="1.2"/>
+          <line x1="503" y1="182" x2="507" y2="182" stroke="#888" stroke-width="1"/>
+
+          <!-- LEFT SIDE: Junction examples -->
+          <text x="155" y="70" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9.5" fill="#2d6a3f">T-junction ✓</text>
+          <line x1="80"  y1="90" x2="230" y2="90" stroke="#2d6a3f" stroke-width="1.5"/>
+          <line x1="155" y1="90" x2="155" y2="120" stroke="#2d6a3f" stroke-width="1.5"/>
+          <circle cx="155" cy="90" r="4.5" fill="#2d6a3f"/>
+          <text x="155" y="135" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#5c5545">dot = junction</text>
+          <text x="155" y="145" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#5c5545">always unambiguous</text>
+
+          <text x="155" y="166" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9.5" fill="#c0392b">+ junction ✗</text>
+          <line x1="80"  y1="185" x2="230" y2="185" stroke="#c97530" stroke-width="1.5"/>
+          <line x1="155" y1="165" x2="155" y2="210" stroke="#c97530" stroke-width="1.5"/>
+          <line x1="149" y1="180" x2="161" y2="190" stroke="#c0392b" stroke-width="2.5"/>
+          <line x1="161" y1="180" x2="149" y2="190" stroke="#c0392b" stroke-width="2.5"/>
+          <text x="155" y="210" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#c0392b">are these connected?</text>
+        </svg>
+        <p class="diagram-caption">Net labels replace long wires · VCC at top, GND at bottom · T-junctions not + junctions</p>
+      </div>
+
+      <h3>Decoupling caps — where to put them in the schematic</h3>
+      <p>Place each decoupling capacitor immediately adjacent to the IC it serves, with its own explicit VCC and GND connections. Don't string decoupling caps on a single long net that connects to all ICs — they should each have a direct, short, obvious connection to their IC's power pin. This also guides your PCB placement correctly.</p>
+
+      <h3 style="margin-top:1.5rem">ERC errors you'll always see as a beginner</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>ERC error</th><th>What it means</th><th>How to fix</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>"Pin unconnected"</td>
+              <td>A component pin with no wire or net attached to it</td>
+              <td>Connect it, or add a "no connect" flag (X symbol in KiCad) if the pin is intentionally unused</td>
+            </tr>
+            <tr>
+              <td>"Power pin not driven"</td>
+              <td>A power rail (like GND or VCC) has no power source</td>
+              <td>Add a PWR_FLAG symbol to the net — this tells ERC "yes, this net is a power source"</td>
+            </tr>
+            <tr>
+              <td>"Wire not connected"</td>
+              <td>A dangling wire end that connects to nothing</td>
+              <td>Delete the wire or connect its loose end to a pin or junction</td>
+            </tr>
+            <tr>
+              <td>"Conflicting net names"</td>
+              <td>Two different net labels are physically connected</td>
+              <td>Remove one label or ensure the nets should actually be the same</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout--tip" style="margin-top:1rem">
+        <p class="callout-title">Version control your schematics</p>
+        <p style="margin:0">Keep your KiCad project in a Git repository from day one. KiCad's file formats are text-based, which means git diffs are readable and meaningful. When you make a mistake on revision 3 that worked in revision 1, being able to <code>git diff</code> and see exactly what changed is invaluable. GitHub offers free private repos.</p>
+      </div>
+    </div>
+  </section>
+    <div class="container" style="max-width:760px">
+
+      <div class="workflow-phase">
+        <div class="phase-header">
+          <span class="phase-badge phase-design">Phase 1 — Design</span>
+          <p class="phase-title">Schematic Capture</p>
+        </div>
+
+        <div class="step-card reveal">
+          <div class="step-card-num" style="background:var(--green-pale);color:var(--green-deep)">1</div>
+          <div class="step-card-body">
+            <p class="step-phase">Before touching the EDA tool</p>
+            <h3>Define your requirements</h3>
+            <p>Write down what the board needs to do before opening any software. What's the supply voltage? Which ICs are you using? What connects to the outside world? A simple block diagram on paper saves hours of redesign later.</p>
+            <div class="step-tips">
+              <ul>
+                <li>List every external connection: power input, outputs, communication interfaces</li>
+                <li>Download datasheets for every IC you'll use <em>before</em> starting the schematic</li>
+                <li>Note the power topology — regulated 3.3V? 5V from USB? Battery + charger?</li>
+                <li>Decide on form factor — does the board need to fit in a specific enclosure?</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card reveal">
+          <div class="step-card-num" style="background:var(--green-pale);color:var(--green-deep)">2</div>
+          <div class="step-card-body">
+            <p class="step-phase">The most critical step</p>
+            <h3>Schematic capture</h3>
+            <p>The schematic is the logical truth of your circuit — every component and every electrical connection, but not physical positions. Think of it as a circuit diagram with real component symbols. <strong>Never open the PCB layout editor until your schematic is complete and correct.</strong> Any error here means rework after layout, which is far more painful.</p>
+            <div class="step-tips">
+              <ul>
+                <li>Use net labels (named wires) instead of drawing long wires across the page</li>
+                <li>Add all power pins explicitly — missing a VCC pin on an IC is a very common beginner mistake</li>
+                <li>Place 100nF decoupling capacitors on every IC power pin in the schematic now</li>
+                <li>Label everything: values, reference designators, voltage rail names</li>
+                <li>Run the ERC (Electrical Rules Check) before leaving the schematic editor</li>
+              </ul>
+            </div>
+            <div class="callout callout--info" style="margin-top:1rem">
+              <p class="callout-title">What is a net?</p>
+              <p style="margin:0;font-size:0.91rem">A <strong>net</strong> is a named electrical node — every pin labelled the same name is connected. In layout, the EDA tool shows thin <em>ratsnest</em> lines between all pads that share a net, telling you which pads need a copper connection.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="workflow-phase">
+        <div class="phase-header">
+          <span class="phase-badge phase-layout">Phase 2 — Layout</span>
+          <p class="phase-title">Placement &amp; Routing</p>
+        </div>
+
+        <div class="step-card reveal">
+          <div class="step-card-num" style="background:#fdf0e6;color:var(--copper)">3</div>
+          <div class="step-card-body">
+            <p class="step-phase">Before routing</p>
+            <h3>Assign footprints</h3>
+            <p>Every schematic symbol must link to a physical footprint — the pad pattern the component sits on. If your footprint is wrong, the component won't fit when you try to assemble the board.</p>
+            <div class="step-tips">
+              <ul>
+                <li>Always verify your chosen footprint against the component's datasheet land pattern</li>
+                <li>Use established library footprints where possible (KiCad's built-in libraries are trustworthy)</li>
+                <li>For unusual components, measure the datasheet dimensions carefully and double-check</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card reveal">
+          <div class="step-card-num" style="background:#fdf0e6;color:var(--copper)">4</div>
+          <div class="step-card-body">
+            <p class="step-phase">80% of the work</p>
+            <h3>Component placement</h3>
+            <p>Placement determines how easy or hard routing will be. Good placement means short, direct traces. Poor placement means crossed traces and layer changes everywhere. <strong>Spend real time on placement before drawing a single trace.</strong></p>
+
+            <!-- Good vs bad placement diagram -->
+            <div class="diagram-wrap" style="margin:1rem 0">
+              <svg viewBox="0 0 620 195" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:620px">
+                <!-- LEFT: Bad placement (scattered) -->
+                <text x="140" y="15" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="10" fill="#c0392b" font-weight="600">✗ Poor placement — scattered</text>
+                <rect x="10" y="22" width="260" height="162" rx="5" fill="#fdf5f5" stroke="#c0392b" stroke-width="1.5"/>
+                <!-- MCU in wrong corner -->
+                <rect x="20" y="140" width="52" height="38" rx="3" fill="#2a2a2a" stroke="#555" stroke-width="1"/>
+                <text x="46" y="163" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#888">MCU</text>
+                <!-- Power supply in opposite corner -->
+                <rect x="198" y="30" width="62" height="28" rx="3" fill="#1a3d26" stroke="#2d6a3f" stroke-width="1"/>
+                <text x="229" y="48" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#5aad74">PWR</text>
+                <!-- Decoupling cap far from MCU -->
+                <rect x="190" y="148" width="16" height="8" rx="1" fill="#777" stroke="#555" stroke-width="0.8"/>
+                <text x="198" y="164" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7" fill="#888">C1</text>
+                <!-- USB connector buried in middle -->
+                <rect x="90" y="75" width="40" height="28" rx="3" fill="#555" stroke="#333" stroke-width="1"/>
+                <text x="110" y="93" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#ccc">USB</text>
+                <!-- Crossing, long ratsnest lines -->
+                <line x1="46" y1="140" x2="229" y2="58" stroke="#c0392b" stroke-width="1" stroke-dasharray="3 2" opacity="0.8"/>
+                <line x1="72" y1="155" x2="198" y2="152" stroke="#c0392b" stroke-width="1" stroke-dasharray="3 2" opacity="0.8"/>
+                <line x1="110" y1="75" x2="46" y2="140" stroke="#c0392b" stroke-width="1" stroke-dasharray="3 2" opacity="0.8"/>
+                <line x1="110" y1="75" x2="229" y2="58" stroke="#c0392b" stroke-width="1" stroke-dasharray="3 2" opacity="0.8"/>
+                <line x1="198" y1="152" x2="20" y2="140" stroke="#c0392b" stroke-width="1" stroke-dasharray="3 2" opacity="0.8"/>
+                <text x="140" y="185" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#c0392b">tangled ratsnest · long traces · routing nightmare</text>
+
+                <!-- Divider -->
+                <line x1="295" y1="10" x2="295" y2="188" stroke="#ddd" stroke-width="1" stroke-dasharray="4 3"/>
+
+                <!-- RIGHT: Good placement (grouped by function) -->
+                <text x="465" y="15" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="10" fill="#2d6a3f" font-weight="600">✓ Good placement — grouped</text>
+                <rect x="310" y="22" width="300" height="162" rx="5" fill="#edf6ee" stroke="#2d6a3f" stroke-width="1.5"/>
+                <!-- Power entry: USB at edge -->
+                <rect x="316" y="80" width="40" height="28" rx="3" fill="#555" stroke="#333" stroke-width="1"/>
+                <text x="336" y="98" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#ccc">USB</text>
+                <text x="320" y="78" font-family="'Share Tech Mono',monospace" font-size="7" fill="#8c8575">← edge</text>
+                <!-- Power supply next to USB -->
+                <rect x="364" y="76" width="58" height="36" rx="3" fill="#1a3d26" stroke="#2d6a3f" stroke-width="1"/>
+                <text x="393" y="98" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#5aad74">PWR</text>
+                <!-- Decoupling cap RIGHT NEXT TO MCU -->
+                <rect x="430" y="88" width="14" height="8" rx="1" fill="#777" stroke="#555" stroke-width="0.8"/>
+                <text x="437" y="104" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7" fill="#5aad74">C1 ↓</text>
+                <!-- MCU in centre -->
+                <rect x="440" y="60" width="64" height="52" rx="3" fill="#2a2a2a" stroke="#555" stroke-width="1"/>
+                <text x="472" y="90" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#888">MCU</text>
+                <!-- Short, clean traces -->
+                <line x1="356" y1="94" x2="364" y2="94" stroke="#c97530" stroke-width="2.5" stroke-linecap="round"/>
+                <line x1="422" y1="90" x2="440" y2="90" stroke="#c97530" stroke-width="2.5" stroke-linecap="round"/>
+                <line x1="444" y1="92" x2="440" y2="92" stroke="#5aad74" stroke-width="2" stroke-linecap="round"/>
+                <!-- Group label: power section -->
+                <rect x="312" y="68" width="170" height="54" rx="4" fill="none" stroke="#2d6a3f" stroke-width="1" stroke-dasharray="3 2" opacity="0.5"/>
+                <text x="397" y="64" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#2d6a3f" opacity="0.8">power section</text>
+                <!-- Output section below -->
+                <rect x="430" y="122" width="170" height="56" rx="4" fill="none" stroke="#3a6fb8" stroke-width="1" stroke-dasharray="3 2" opacity="0.5"/>
+                <text x="515" y="140" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#3a6fb8" opacity="0.8">output section</text>
+                <circle cx="460" cy="155" r="7" fill="none" stroke="#f59e0b" stroke-width="1.5"/>
+                <circle cx="488" cy="155" r="7" fill="none" stroke="#f59e0b" stroke-width="1.5"/>
+                <circle cx="516" cy="155" r="7" fill="none" stroke="#f59e0b" stroke-width="1.5"/>
+                <line x1="504" y1="72"  x2="460" y2="148" stroke="#5aad74" stroke-width="2" stroke-linecap="round"/>
+                <line x1="516" y1="72"  x2="488" y2="148" stroke="#5aad74" stroke-width="2" stroke-linecap="round"/>
+                <line x1="504" y1="72"  x2="516" y2="148" stroke="#5aad74" stroke-width="2" stroke-linecap="round"/>
+                <text x="465" y="185" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#2d6a3f">grouped by function · short traces · clean routing</text>
+              </svg>
+              <p class="diagram-caption">Group power supply, MCU, and outputs separately. Place decoupling caps physically touching their IC. Connectors at the board edge. Short ratsnest lines = good placement.</p>
+            </div>
+
+            <div class="step-tips">
+              <ul>
+                <li>Group by function: power circuitry together, digital logic together, analog separated from digital</li>
+                <li>Place decoupling capacitors immediately adjacent to their IC's power pins</li>
+                <li>Connectors go at the board edge — never buried in the middle</li>
+                <li>Orient ICs so their signal pins face the components they connect to</li>
+                <li>Leave routing channels — don't pack components so tight there's no room for traces</li>
+                <li>Consider mechanical constraints: mounting holes, case walls, connector clearances</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card reveal">
+          <div class="step-card-num" style="background:#fdf0e6;color:var(--copper)">5</div>
+          <div class="step-card-body">
+            <p class="step-phase">Connect the dots</p>
+            <h3>Trace routing</h3>
+            <p>Now you draw copper traces to connect all nets, guided by the ratsnest lines. Route the most critical signals first: power rails, clocks, high-speed data lines.</p>
+            <div class="step-tips">
+              <ul>
+                <li>Power traces: 0.5mm minimum, wider for higher current (see table below)</li>
+                <li>Signal traces: 0.2–0.3mm for typical logic at 3.3V/5V</li>
+                <li>Use 45° bends, not 90° corners (cleaner manufacturing, better signal integrity)</li>
+                <li>Add a ground plane — flood fill the bottom copper with GND polygon</li>
+                <li>USB D+/D− must be routed as equal-length, tightly coupled differential pairs</li>
+              </ul>
+            </div>
+            <div class="table-wrap" style="margin-top:1rem">
+              <table>
+                <thead><tr><th>Signal type</th><th>Minimum width</th><th>Notes</th></tr></thead>
+                <tbody>
+                  <tr><td>Logic signals (3.3V / 5V)</td><td>0.15–0.25mm</td><td>Standard digital I/O</td></tr>
+                  <tr><td>Power (up to 1A)</td><td>0.5mm</td><td>Add margin; err wider</td></tr>
+                  <tr><td>Power (1–3A)</td><td>1.0mm</td><td>Wide pour or polygon fill</td></tr>
+                  <tr><td>High current (3A+)</td><td>2mm+</td><td>Consider 2oz copper weight</td></tr>
+                  <tr><td>USB differential pair</td><td>0.2mm matched-length pair</td><td>90Ω differential impedance target</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card reveal">
+          <div class="step-card-num" style="background:#fdf0e6;color:var(--copper)">6</div>
+          <div class="step-card-body">
+            <p class="step-phase">Catch errors before ordering</p>
+            <h3>Design Rule Check (DRC)</h3>
+            <p>The DRC automatically scans your layout against manufacturing constraints. It flags traces too close together, pads without connections, copper outside the board outline, and much more. <strong>Run the DRC. Fix every error. Run it again.</strong></p>
+            <div class="step-tips">
+              <ul>
+                <li>Download your fab house's design rules file and import it into KiCad before running DRC</li>
+                <li>JLCPCB common minimums: 0.1mm trace width, 0.1mm clearance, 0.2mm drill diameter</li>
+                <li>Errors must be fixed; warnings should be investigated and understood</li>
+                <li>Also run the Footprint vs Netlist check to confirm every pad is on the correct net</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="workflow-phase">
+        <div class="phase-header">
+          <span class="phase-badge phase-fab">Phase 3 — Fabrication</span>
+          <p class="phase-title">Gerbers &amp; Ordering</p>
+        </div>
+
+        <div class="step-card reveal">
+          <div class="step-card-num" style="background:#fdf6e6;color:var(--gold)">7</div>
+          <div class="step-card-body">
+            <p class="step-phase">Export manufacturing files</p>
+            <h3>Generate Gerber files &amp; order</h3>
+            <p>Gerber files are the universal manufacturing format for PCBs. Each layer is a separate file. Bundle them into a ZIP and upload to your fab house.</p>
+            <div class="gerber-layers">
+              <div class="gerber-file"><p class="filename">*.Cu.gtl</p><p class="filedesc">Top copper</p></div>
+              <div class="gerber-file"><p class="filename">*.Cu.gbl</p><p class="filedesc">Bottom copper</p></div>
+              <div class="gerber-file"><p class="filename">*.Mask.gts</p><p class="filedesc">Top solder mask</p></div>
+              <div class="gerber-file"><p class="filename">*.Mask.gbs</p><p class="filedesc">Bottom solder mask</p></div>
+              <div class="gerber-file"><p class="filename">*.SilkS.gto</p><p class="filedesc">Top silkscreen</p></div>
+              <div class="gerber-file"><p class="filename">*.Edge.Cuts</p><p class="filedesc">Board outline</p></div>
+              <div class="gerber-file"><p class="filename">*.drl</p><p class="filedesc">Drill file (Excellon)</p></div>
+            </div>
+            <div class="callout callout--warn" style="margin-top:0.5rem">
+              <p class="callout-title">Always preview your Gerbers first</p>
+              <p style="margin:0;font-size:0.91rem">Open your Gerber files in a viewer (KiCad's built-in viewer or JLCPCB's online Gerber viewer) before uploading. Verify every layer looks correct. A misexported Gerber is invisible until the board arrives wrong.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="workflow-phase">
+        <div class="phase-header">
+          <span class="phase-badge phase-assembly">Phase 4 — Assembly</span>
+          <p class="phase-title">Solder &amp; Test</p>
+        </div>
+
+        <div class="step-card reveal">
+          <div class="step-card-num" style="background:#eef4ff;color:#3a6fb8">8</div>
+          <div class="step-card-body">
+            <p class="step-phase">Physical build &amp; bring-up</p>
+            <h3>Solder, power on, and test</h3>
+            <p>Once your bare boards arrive, solder all components. Then before applying power: visually inspect under good light for solder bridges. Measure resistance between VCC and GND — should not be near zero (indicates a short).</p>
+            <div class="step-tips">
+              <ul>
+                <li>Use a current-limited bench supply for first power-on — limits damage if there's a short</li>
+                <li>Check power rail voltages first, then clock signals, then communication buses</li>
+                <li>UART debug serial output is your best friend — add serial prints to firmware early</li>
+                <li>Probe test points (TP1, TP2…) with a multimeter or oscilloscope</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRE-ORDER CHECKLIST -->
+      <div class="card" style="margin-top:2rem">
+        <h3 style="margin-bottom:1rem">Pre-Order Checklist</h3>
+        <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:1rem">Run through these before uploading Gerbers:</p>
+        <ul class="checklist">
+          <li>Schematic ERC passes with zero errors</li>
+          <li>All footprints verified against datasheets</li>
+          <li>All nets routed — no remaining ratsnest lines</li>
+          <li>DRC passes with zero errors using fab house rules</li>
+          <li>Ground plane poured and stitched</li>
+          <li>Board outline on Edge.Cuts, closed contour</li>
+          <li>Silkscreen text not overlapping pads</li>
+          <li>Gerber files previewed in a viewer</li>
+          <li>Drill file included in the ZIP</li>
+          <li>Ordered 5 boards minimum (cost is nearly the same as 1)</li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 — Page Not Found · PCB Primer</title>
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    body { display: flex; flex-direction: column; min-height: 100vh; }
+    .error-page {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 1.5rem;
+      text-align: center;
+    }
+    .error-content { max-width: 520px; }
+    .error-code {
+      font-family: var(--font-mono);
+      font-size: 6rem;
+      font-weight: 700;
+      color: var(--green-pale);
+      line-height: 1;
+      margin-bottom: 0.5rem;
+      position: relative;
+    }
+    .error-code::after {
+      content: '404';
+      position: absolute;
+      inset: 0;
+      color: var(--green);
+      opacity: 0.15;
+      transform: translate(3px, 3px);
+      z-index: -1;
+    }
+    .error-title {
+      font-family: var(--font-serif);
+      font-size: 2rem;
+      color: var(--text);
+      margin-bottom: 1rem;
+    }
+    .error-sub {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      color: var(--text-light);
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+    .error-desc { color: var(--text-muted); margin-bottom: 2rem; font-size: 0.95rem; }
+    .error-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      justify-content: center;
+      margin-top: 1.5rem;
+    }
+    .error-link {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      padding: 8px 16px;
+      border-radius: 4px;
+      text-decoration: none;
+      transition: all 0.15s;
+      letter-spacing: 0.05em;
+    }
+    .error-link--primary { background: var(--green-deep); color: #fff; }
+    .error-link--primary:hover { background: var(--green); color: #fff; text-decoration: none; }
+    .error-link--outline { border: 1px solid var(--border); color: var(--text-muted); }
+    .error-link--outline:hover { border-color: var(--green); color: var(--green); text-decoration: none; }
+    /* PCB trace decoration */
+    .trace-deco {
+      position: fixed;
+      opacity: 0.04;
+      pointer-events: none;
+    }
+    .trace-deco--tl { top: 60px; left: 0; }
+    .trace-deco--br { bottom: 0; right: 0; transform: rotate(180deg); }
+  </style>
+</head>
+<body>
+  <!-- Nav injected by JS -->
+
+  <!-- PCB trace decorations -->
+  <svg class="trace-deco trace-deco--tl" width="300" height="300" viewBox="0 0 300 300" fill="none">
+    <path d="M0 40 H 80 V 120 H 160 V 200 H 240" stroke="#2d6a3f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M0 100 H 60 V 180" stroke="#c97530" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M20 0 V 60 H 120 V 140" stroke="#2d6a3f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="80" cy="120" r="5" stroke="#2d6a3f" stroke-width="1.5" fill="none"/>
+    <circle cx="160" cy="200" r="4" stroke="#c97530" stroke-width="1.5" fill="none"/>
+  </svg>
+  <svg class="trace-deco trace-deco--br" width="300" height="300" viewBox="0 0 300 300" fill="none">
+    <path d="M0 40 H 80 V 120 H 160 V 200 H 240" stroke="#2d6a3f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M0 100 H 60 V 180" stroke="#c97530" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="80" cy="120" r="5" stroke="#2d6a3f" stroke-width="1.5" fill="none"/>
+  </svg>
+
+  <div class="error-page">
+    <div class="error-content">
+      <!-- PCB-style "component not found" icon -->
+      <div style="margin: 0 auto 1.5rem; width: 80px; height: 80px;">
+        <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:80px;height:80px">
+          <rect x="20" y="20" width="40" height="40" rx="4" stroke="var(--green-pale)" stroke-width="2" fill="none"/>
+          <line x1="0"  y1="28" x2="20" y2="28" stroke="var(--green-pale)" stroke-width="2" stroke-linecap="round"/>
+          <line x1="0"  y1="40" x2="20" y2="40" stroke="var(--green-pale)" stroke-width="2" stroke-linecap="round"/>
+          <line x1="0"  y1="52" x2="20" y2="52" stroke="var(--green-pale)" stroke-width="2" stroke-linecap="round"/>
+          <line x1="60" y1="28" x2="80" y2="28" stroke="var(--green-pale)" stroke-width="2" stroke-linecap="round"/>
+          <line x1="60" y1="40" x2="80" y2="40" stroke="var(--green-pale)" stroke-width="2" stroke-linecap="round"/>
+          <line x1="60" y1="52" x2="80" y2="52" stroke="var(--green-pale)" stroke-width="2" stroke-linecap="round"/>
+          <!-- X mark inside -->
+          <line x1="30" y1="30" x2="50" y2="50" stroke="var(--copper)" stroke-width="2" stroke-linecap="round"/>
+          <line x1="50" y1="30" x2="30" y2="50" stroke="var(--copper)" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+
+      <p class="error-sub">DRC Error · Net not found</p>
+      <div class="error-code">404</div>
+      <h1 class="error-title">Page not found</h1>
+      <p class="error-desc">This trace goes nowhere. The page you're looking for doesn't exist, has been moved, or the URL has a typo. Check the ratsnest and try again.</p>
+
+      <div class="error-links">
+        <a href="index.html" class="error-link error-link--primary">← Home</a>
+        <a href="history.html" class="error-link error-link--outline">History</a>
+        <a href="anatomy.html" class="error-link error-link--outline">Anatomy</a>
+        <a href="components.html" class="error-link error-link--outline">Components</a>
+        <a href="glossary.html" class="error-link error-link--outline">Glossary</a>
+      </div>
+
+      <p style="margin-top:2rem;font-family:var(--font-mono);font-size:0.68rem;color:var(--text-light);letter-spacing:0.05em">
+        ERROR_CODE: 0x194 · COMPONENT_NOT_POPULATED · FOOTPRINT_MISSING
+      </p>
+    </div>
+  </div>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

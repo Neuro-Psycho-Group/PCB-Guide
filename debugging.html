@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PCB Debugging &amp; Testing — PCB Primer</title>
+  <meta name="description" content="What to do when your PCB doesn't work. Systematic bring-up procedure, multimeter and oscilloscope techniques, identifying common failures, and rework.">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    .debug-phase {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+    }
+    .debug-phase-header {
+      display: flex; align-items: center; gap: 1rem;
+      padding: 1.1rem 1.4rem;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .debug-phase-header .ph-num {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-mono); font-size: 0.85rem;
+      flex-shrink: 0; font-weight: 700;
+    }
+    .debug-phase-header h3 { margin: 0; font-size: 1.1rem; }
+    .debug-phase-header .ph-tag {
+      margin-left: auto; font-family: var(--font-mono);
+      font-size: 0.65rem; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--text-light);
+    }
+    .debug-phase-body { padding: 1.3rem 1.4rem; }
+    .debug-phase-body p { font-size: 0.93rem; color: var(--text-muted); line-height: 1.7; }
+    .debug-phase-body ul, .debug-phase-body ol {
+      font-size: 0.93rem; color: var(--text-muted);
+      line-height: 1.85; padding-left: 1.4rem; margin-bottom: 0.8rem;
+    }
+    .debug-phase-body h4 { margin: 1rem 0 0.4rem; color: var(--text); }
+
+    .failure-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 8px; padding: 1.2rem; margin-bottom: 1rem;
+    }
+    .failure-card .f-symptom {
+      font-family: var(--font-serif); font-size: 1.1rem; font-weight: 700;
+      color: var(--text); margin-bottom: 0.3rem;
+    }
+    .failure-card .f-causes {
+      font-family: var(--font-mono); font-size: 0.72rem;
+      color: var(--copper); margin-bottom: 0.6rem; letter-spacing: 0.03em;
+    }
+    .failure-card .f-desc { font-size: 0.9rem; color: var(--text-muted); line-height: 1.65; margin-bottom: 0.8rem; }
+    .failure-card .f-fix {
+      background: var(--green-faint); border-radius: 4px;
+      padding: 0.6rem 0.9rem; font-size: 0.88rem; color: var(--green-deep);
+      border-left: 3px solid var(--green);
+    }
+    .failure-card .f-fix strong { color: var(--green-deep); }
+
+    .meter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+    .meter-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 1.1rem; }
+    .meter-card h4 { font-size: 0.95rem; color: var(--green-deep); margin-bottom: 0.3rem; }
+    .meter-card .mc-mode { font-family: var(--font-mono); font-size: 0.68rem; color: var(--copper); letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+    .meter-card p { font-size: 0.85rem; color: var(--text-muted); margin: 0; line-height: 1.6; }
+
+    .scope-screen {
+      background: #0a1a0a; border: 2px solid #333; border-radius: 6px;
+      padding: 1rem; margin: 1rem 0; position: relative;
+    }
+    .scope-grid-lines { position: absolute; inset: 0; opacity: 0.15; }
+    .scope-label { font-family: var(--font-mono); font-size: 0.72rem; color: #4a8; margin-bottom: 0.5rem; }
+    .scope-desc { font-family: var(--font-mono); font-size: 0.8rem; color: #6b6; line-height: 1.7; }
+
+    .bring-up-steps { counter-reset: step; }
+    .bring-up-step {
+      display: grid; grid-template-columns: 48px 1fr; gap: 1.2rem;
+      padding: 1.1rem 0; border-bottom: 1px solid var(--border-light);
+    }
+    .bring-up-step:last-child { border-bottom: none; }
+    .bus-num {
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-mono); font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+    .bus-num.safe   { background: var(--green-pale); color: var(--green-deep); }
+    .bus-num.check  { background: #fdf6e6; color: var(--gold); }
+    .bus-num.power  { background: #fdf0e6; color: var(--copper); }
+    .bus-num.signal { background: #eef4ff; color: #3a6fb8; }
+    .bring-up-step h4 { margin-bottom: 0.3rem; font-size: 1rem; }
+    .bring-up-step p  { font-size: 0.9rem; color: var(--text-muted); margin: 0; line-height: 1.6; }
+    .bring-up-step .measure { font-family: var(--font-mono); font-size: 0.8rem; background: var(--bg-code); border-radius: 4px; padding: 4px 8px; display: inline-block; margin-top: 0.4rem; color: var(--copper); }
+
+    .rework-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 1.5rem 0; }
+    @media(max-width:580px){ .rework-grid { grid-template-columns: 1fr; } }
+    .rework-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; }
+    .rework-card h4 { color: var(--green-deep); margin-bottom: 0.5rem; }
+    .rework-card p { font-size: 0.88rem; color: var(--text-muted); margin-bottom: 0.5rem; line-height: 1.6; }
+    .rework-card ol { font-size: 0.88rem; color: var(--text-muted); padding-left: 1.2rem; line-height: 1.8; margin: 0; }
+
+    @media(max-width:480px){ .bring-up-step { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+  <div class="page-header">
+    <div class="container">
+      <p class="page-label">12 / Debugging</p>
+      <h1>When It Doesn't Work</h1>
+      <p>A systematic approach to diagnosing and fixing PCB problems. Every board has issues at some point — the skill is knowing exactly where to look.</p>
+    </div>
+  </div>
+
+  <!-- MINDSET -->
+  <section class="section section--white">
+    <div class="container" style="max-width:740px">
+      <p class="section-label">The right approach</p>
+      <h2 class="section-title">Debug Systematically, Not Randomly</h2>
+      <p>The worst thing you can do when a board doesn't work is start randomly probing or swapping components hoping something changes. Debugging is a process of elimination. You start with what you know is correct, identify the first point of failure, and work forward from there.</p>
+      <p>The vast majority of first-board failures fall into one of four categories: power issues, soldering defects, schematic errors, or firmware problems. This order matters — check them in this sequence, because each layer depends on the one before it. There's no point debugging firmware if the power rail is unstable.</p>
+
+      <div class="callout callout--tip">
+        <p class="callout-title">Before you power on for the first time</p>
+        <p style="margin:0">Visual inspection under good light (or a USB microscope) catches the majority of problems before any electricity flows. Look for: solder bridges between adjacent pins, missing components, components placed backwards (LED, electrolytic, diode polarity), and any lifted pads or cracked traces. Five minutes of visual inspection saves an hour of electrical debugging.</p>
+      </div>
+
+      <!-- Multimeter probing diagram -->
+      <div class="diagram-wrap" style="margin-top:1.5rem">
+        <svg viewBox="0 0 660 230" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:660px">
+          <text x="330" y="16" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="10.5" fill="#1a3d26" font-weight="600">Where to probe — systematic voltage check sequence</text>
+
+          <!-- PCB board outline -->
+          <rect x="30" y="28" width="380" height="188" rx="6" fill="#edf6ee" stroke="#2d6a3f" stroke-width="1.5"/>
+
+          <!-- USB connector -->
+          <rect x="44" y="44" width="36" height="52" rx="3" fill="#555" stroke="#333" stroke-width="1"/>
+          <text x="62" y="66" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#aaa">USB</text>
+          <text x="62" y="78" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#aaa">J1</text>
+
+          <!-- Voltage regulator -->
+          <rect x="120" y="50" width="44" height="28" rx="3" fill="#1a3d26" stroke="#2d6a3f" stroke-width="1"/>
+          <text x="142" y="66" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#5aad74">LDO</text>
+          <text x="142" y="76" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7" fill="#3d8855">U2</text>
+
+          <!-- MCU -->
+          <rect x="200" y="90" width="80" height="70" rx="4" fill="#2a2a2a" stroke="#555" stroke-width="1.5"/>
+          <text x="240" y="124" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#888">U1</text>
+          <text x="240" y="136" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#666">ATtiny85</text>
+          <!-- MCU pins stubs -->
+          <line x1="200" y1="100" x2="188" y2="100" stroke="#aaa" stroke-width="1.2"/><!-- VCC pin -->
+          <line x1="200" y1="110" x2="188" y2="110" stroke="#aaa" stroke-width="1.2"/><!-- RST pin -->
+          <line x1="200" y1="146" x2="188" y2="146" stroke="#888" stroke-width="1.2"/><!-- GND pin -->
+          <line x1="280" y1="100" x2="292" y2="100" stroke="#aaa" stroke-width="1.2"/><!-- PB0 -->
+          <line x1="280" y1="114" x2="292" y2="114" stroke="#aaa" stroke-width="1.2"/><!-- PB1 -->
+
+          <!-- Crystal -->
+          <rect x="330" y="82" width="36" height="20" rx="3" fill="#888" stroke="#666" stroke-width="1"/>
+          <text x="348" y="96" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7" fill="#ddd">XTAL</text>
+
+          <!-- Test points (circles) -->
+          <circle cx="172" cy="64"  r="5" fill="#d4a520" stroke="#b5820a" stroke-width="1"/><!-- TP1 VOUT of LDO -->
+          <circle cx="188" cy="100" r="5" fill="#d4a520" stroke="#b5820a" stroke-width="1"/><!-- TP2 VCC at MCU -->
+          <circle cx="188" cy="110" r="5" fill="#d4a520" stroke="#b5820a" stroke-width="1"/><!-- TP3 RESET -->
+          <circle cx="348" cy="88"  r="5" fill="#d4a520" stroke="#b5820a" stroke-width="1"/><!-- TP4 crystal -->
+          <text x="172" y="61"  text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7" fill="#1a3d26">TP1</text>
+          <text x="188" y="97"  text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7" fill="#1a3d26">TP2</text>
+          <text x="188" y="107" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7" fill="#1a3d26">TP3</text>
+          <text x="348" y="85"  text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7" fill="#1a3d26">TP4</text>
+
+          <!-- GND screw terminal / test point -->
+          <rect x="44"  y="168" width="28" height="28" rx="3" fill="#444" stroke="#333" stroke-width="1"/>
+          <text x="58"  y="186" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#aaa">GND</text>
+          <circle cx="58" cy="182" r="4" fill="none" stroke="#888" stroke-width="1"/>
+
+          <!-- LEDs -->
+          <circle cx="330" cy="160" r="7" fill="none" stroke="#f59e0b" stroke-width="1.5"/>
+          <circle cx="355" cy="160" r="7" fill="none" stroke="#f59e0b" stroke-width="1.5"/>
+          <circle cx="380" cy="160" r="7" fill="none" stroke="#f59e0b" stroke-width="1.5"/>
+          <text x="355" y="180" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7" fill="#888">LED1-3</text>
+
+          <!-- Multimeter probes (right side) -->
+          <!-- Black probe on GND -->
+          <line x1="58"  y1="196" x2="58"  y2="210" stroke="#333" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="58" cy="210" r="3" fill="#333"/>
+
+          <!-- Red probe #1: measuring TP1 LDO output -->
+          <path d="M172 72 Q172 210 550 210" stroke="#e00" stroke-width="1.5" stroke-dasharray="5 3"/>
+          <circle cx="172" cy="72" r="3" fill="#e00"/>
+
+          <!-- Numbered probe steps on right -->
+          <rect x="440" y="28" width="210" height="188" rx="6" fill="var(--bg-card)" stroke="var(--border)" stroke-width="1"/>
+          <text x="545" y="48" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9.5" fill="#1a3d26" font-weight="600">Probe sequence</text>
+          <!-- Step list -->
+          <circle cx="455" cy="66"  r="7" fill="#2d6a3f"/>
+          <text x="455" cy="66"  y="70"  text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#fff">1</text>
+          <text x="468" y="62" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#5c5545">Black → GND test point</text>
+          <text x="468" y="73" font-family="'Share Tech Mono',monospace" font-size="8" fill="#8c8575">stays here all session</text>
+
+          <circle cx="455" cy="96"  r="7" fill="#c97530"/>
+          <text x="455" y="100" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#fff">2</text>
+          <text x="468" y="92" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#5c5545">Red → TP1: LDO output</text>
+          <text x="468" y="103" font-family="'Share Tech Mono',monospace" font-size="8" fill="#2d6a3f">expect: 3.30V ±0.1V</text>
+
+          <circle cx="455" cy="124" r="7" fill="#c97530"/>
+          <text x="455" y="128" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#fff">3</text>
+          <text x="468" y="120" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#5c5545">Red → TP2: MCU VCC pin</text>
+          <text x="468" y="131" font-family="'Share Tech Mono',monospace" font-size="8" fill="#2d6a3f">expect: same as LDO out</text>
+
+          <circle cx="455" cy="152" r="7" fill="#3a6fb8"/>
+          <text x="455" y="156" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#fff">4</text>
+          <text x="468" y="148" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#5c5545">Red → TP3: RESET pin</text>
+          <text x="468" y="159" font-family="'Share Tech Mono',monospace" font-size="8" fill="#2d6a3f">expect: VCC (3.3V) — not 0V</text>
+
+          <circle cx="455" cy="180" r="7" fill="#3a6fb8"/>
+          <text x="455" y="184" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#fff">5</div>
+          <text x="468" y="176" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#5c5545">Scope → TP4: crystal</text>
+          <text x="468" y="187" font-family="'Share Tech Mono',monospace" font-size="8" fill="#2d6a3f">expect: oscillating waveform</text>
+          <text x="468" y="198" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#8c8575">(use oscilloscope for this one)</text>
+        </svg>
+        <p class="diagram-caption">Keep the black probe on GND throughout — only move the red probe. Work top-down: supply → regulator → IC power pin → logic signals.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SYSTEMATIC BRING-UP -->
+  <section class="section section--tinted">
+    <div class="container" style="max-width:740px">
+      <p class="section-label">First power-on</p>
+      <h2 class="section-title">Systematic Bring-Up Procedure</h2>
+      <p class="section-intro">Follow this sequence every time you bring up a new board. Each step confirms the layer below before you build on it.</p>
+
+      <div class="bring-up-steps">
+
+        <div class="bring-up-step reveal">
+          <div class="bus-num safe">1</div>
+          <div>
+            <h4>Visual inspection — before any power</h4>
+            <p>Under magnification, inspect every solder joint. Check polarised components (electrolytic caps, diodes, ICs — pin 1 markers). Look for bridges on fine-pitch ICs. Verify the board matches your silkscreen designators. This costs nothing and finds most mistakes.</p>
+            <div class="measure">Tools: loupe or USB microscope</div>
+          </div>
+        </div>
+
+        <div class="bring-up-step reveal">
+          <div class="bus-num check">2</div>
+          <div>
+            <h4>Resistance check: VCC to GND</h4>
+            <p>Before connecting any power supply, measure the resistance between your main power rail and ground with a multimeter on the resistance (Ω) setting. A very low reading — anything under ~10Ω on a digital board — indicates a short circuit. Find and fix it before powering on. A short circuit on first power-on damages the PCB, the supply, and possibly your components.</p>
+            <div class="measure">Multimeter: Ω mode. Expected: 100Ω+ for most digital boards</div>
+          </div>
+        </div>
+
+        <div class="bring-up-step reveal">
+          <div class="bus-num power">3</div>
+          <div>
+            <h4>First power-on with current limit</h4>
+            <p>Use a bench power supply (PSU) with current limiting set to the expected quiescent current plus ~20% margin — or set it low (say 50–100mA) for a first test. Connect power, watch the current meter. If the current immediately slams to the limit and voltage collapses, you have a short. If current is within expected range, voltage is correct at the supply terminals — good.</p>
+            <div class="measure">Bench PSU: current limit 50–100mA initial. Expected: near zero or known quiescent current</div>
+          </div>
+        </div>
+
+        <div class="bring-up-step reveal">
+          <div class="bus-num power">4</div>
+          <div>
+            <h4>Measure all power rails at the load</h4>
+            <p>Don't just check power at the input connector — measure it at the ICs. Place a multimeter probe on test points (or directly on IC power pins) and verify each regulated rail: 3.3V reads 3.3V ± 0.1V, 5V reads 5V ± 0.25V, etc. If a rail measures low, the regulator may be overloaded, oscillating, or have an incorrect feedback network.</p>
+            <div class="measure">Multimeter: DC Voltage mode. Probe IC VCC pins and test points</div>
+          </div>
+        </div>
+
+        <div class="bring-up-step reveal">
+          <div class="bus-num signal">5</div>
+          <div>
+            <h4>Check clock signals</h4>
+            <p>If you have a crystal oscillator or external clock, probe it with an oscilloscope. Verify the expected frequency is present and the waveform looks clean — no missing cycles, no extreme overshoot. A microcontroller with a missing or incorrect clock will appear completely dead. Many MCUs also have internal oscillators; if the external crystal fails, reconfigure firmware to use the internal clock as a diagnostic step.</p>
+            <div class="measure">Oscilloscope: AC coupling, set timebase to show 2–5 cycles</div>
+          </div>
+        </div>
+
+        <div class="bring-up-step reveal">
+          <div class="bus-num signal">6</div>
+          <div>
+            <h4>Check the reset line</h4>
+            <p>Many MCUs fail to start because the reset line is held low (active) by a fault in the reset circuit. Probe the nRESET pin with a multimeter: it should be high (VCC level) in normal operation, and momentarily low only when you press the reset button. If it reads 0V constantly, the pull-up resistor is missing, incorrectly valued, or something is actively pulling it low.</p>
+            <div class="measure">Multimeter: DC Voltage. Expected: VCC (~3.3V or 5V) in normal operation</div>
+          </div>
+        </div>
+
+        <div class="bring-up-step reveal">
+          <div class="bus-num signal">7</div>
+          <div>
+            <h4>Verify UART debug output</h4>
+            <p>If the MCU has firmware with UART output (and it should — always add <code>printf</code> statements to your bring-up firmware), connect a USB-UART adapter to the UART TX pin and open a serial terminal. If you see expected output, the MCU is running correctly. If you see garbled output, the baud rate is wrong. If you see nothing, the MCU isn't running, or UART TX is at a different pin than expected.</p>
+            <div class="measure">USB-UART adapter + serial terminal at the expected baud rate</div>
+          </div>
+        </div>
+
+        <div class="bring-up-step reveal">
+          <div class="bus-num signal">8</div>
+          <div>
+            <h4>Test communication buses (I²C, SPI, UART)</h4>
+            <p>With the MCU running, probe each communication bus. An I²C scan (send addresses 0x00–0x7F and report which ones ACK) immediately reveals whether I²C devices are present and responsive. Probing the SPI clock and data lines with an oscilloscope while the MCU tries to communicate shows whether signals are reaching the peripheral. A logic analyser decodes the protocol to confirm correct data.</p>
+            <div class="measure">Logic analyser or oscilloscope. I²C scan firmware for device detection</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- MULTIMETER TECHNIQUES -->
+  <section class="section section--white">
+    <div class="container">
+      <p class="section-label">Your most important tool</p>
+      <h2 class="section-title">Multimeter Techniques for PCB Debugging</h2>
+      <p class="section-intro">A multimeter is all you need to diagnose 80% of PCB problems. Here's how to use each mode effectively on a populated board.</p>
+
+      <div class="meter-grid stagger-children">
+        <div class="meter-card reveal">
+          <h4>DC Voltage — most-used mode</h4>
+          <p class="mc-mode">Mode: V DC (⎓V)</p>
+          <p>Probe any node on the board to measure its DC level relative to GND. Keep the black probe on a convenient GND point (a GND test point, connector pin, or large GND pad) and touch the red probe to whatever you want to measure. This verifies power rails, logic signal levels, and biasing voltages. The most important tool in your debugging workflow.</p>
+        </div>
+
+        <div class="meter-card reveal">
+          <h4>Continuity — finding connections</h4>
+          <p class="mc-mode">Mode: Continuity (🔊 beep mode)</p>
+          <p>With power OFF, probe two points — the meter beeps if they are connected. Use this to: verify a via actually connects both layers, confirm a trace hasn't cracked, check that a solder joint is actually making contact, and trace where a net goes. Fast and tactile — the audible beep means you don't need to look at the display. Indispensable for shorts diagnosis.</p>
+        </div>
+
+        <div class="meter-card reveal">
+          <h4>Resistance — finding shorts and opens</h4>
+          <p class="mc-mode">Mode: Ω (resistance)</p>
+          <p>With power OFF. Between VCC and GND: a few Ohms or less means a short — something is wrong. Between two points that should be connected: near-zero (good) or high/OL (open circuit — bad joint or broken trace). Between adjacent IC pins that should be isolated: should read high; near-zero means a solder bridge. The resistance between a signal and GND through a pull-down resistor should read approximately that resistor's value.</p>
+        </div>
+
+        <div class="meter-card reveal">
+          <h4>Diode test — checking semiconductors</h4>
+          <p class="mc-mode">Mode: Diode (→|)</p>
+          <p>Tests diodes (and the intrinsic diodes in MOSFETs and BJTs). Forward-biased (red probe to anode, black to cathode) should read the forward voltage drop: ~0.6V for silicon, ~0.2V for Schottky, ~2.0V for red LED. Reverse-biased (probes swapped) should read OL (open). If a diode reads near-zero both ways, it's shorted. Useful for checking if a protection diode is installed correctly.</p>
+        </div>
+
+        <div class="meter-card reveal">
+          <h4>AC Voltage — checking supply ripple</h4>
+          <p class="mc-mode">Mode: V AC (~V)</p>
+          <p>Measures the AC component of a signal. Probe across your power supply output to see how much ripple (AC noise) is on your DC rail. Most meters only read up to 400Hz AC accurately — for higher-frequency switching regulator ripple, use an oscilloscope with AC coupling instead. A rough sanity check: more than a few hundred millivolts of ripple on a 3.3V rail is excessive.</p>
+        </div>
+
+        <div class="meter-card reveal">
+          <h4>Current — with caution</h4>
+          <p class="mc-mode">Mode: mA / A (series measurement)</p>
+          <p>Measuring current requires breaking the circuit and inserting the meter in series — awkward for in-circuit probing. More practical: measure the voltage across a known series resistor and calculate current (I = V/R). Or use your bench PSU's current meter, which shows board current without any additional connections. If a supply rail draws much more current than expected, work methodically: disconnect subsections (use 0Ω jumpers) until the current drops, and you've isolated the problem area.</p>
+        </div>
+      </div>
+
+      <!-- Shorts hunting technique -->
+      <div class="callout callout--info" style="margin-top:0.5rem">
+        <p class="callout-title">Hunting a short circuit systematically</p>
+        <p style="margin:0;font-size:0.91rem">If you have a short between VCC and GND: (1) Apply a small, current-limited voltage across VCC–GND (1–2V, 100–500mA). (2) Use a thermal camera, or carefully touch components to feel for abnormal heat — the short location will get warm first. (3) Alternatively, use a milliohmmeter to measure resistance from the VCC–GND short to various GND points around the board; the lowest resistance reading points toward the short. A solder bridge on an IC power pin is the most common cause.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- OSCILLOSCOPE BASICS -->
+  <section class="section section--tinted">
+    <div class="container" style="max-width:740px">
+      <p class="section-label">The scope</p>
+      <h2 class="section-title">Oscilloscope Basics for PCB Debugging</h2>
+      <p class="section-intro">A multimeter shows steady-state voltages. An oscilloscope shows how voltages change over time — essential for anything that switches, communicates, or oscillates. Even a cheap £30 DSO scope transforms your debugging capability.</p>
+
+      <h3>The key controls you need to understand</h3>
+
+      <div class="debug-phase reveal">
+        <div class="debug-phase-header">
+          <div class="ph-num" style="background:var(--green-pale);color:var(--green-deep)">V</div>
+          <h3>Volts/div — vertical scale</h3>
+        </div>
+        <div class="debug-phase-body">
+          <p>Sets how many volts each grid division represents on the vertical axis. Adjust until the waveform fills roughly half to two-thirds of the screen. For a 3.3V logic signal, 1V/div or 500mV/div works well. If the waveform clips the top or bottom of the screen, reduce the volts/div (zoom out vertically). If it's a tiny flat line, increase volts/div (zoom in vertically).</p>
+        </div>
+      </div>
+
+      <div class="debug-phase reveal">
+        <div class="debug-phase-header">
+          <div class="ph-num" style="background:#fdf0e6;color:var(--copper)">T</div>
+          <h3>Time/div — horizontal scale (timebase)</h3>
+        </div>
+        <div class="debug-phase-body">
+          <p>Sets how much time each horizontal grid division represents. Adjust to show 2–5 complete cycles of your signal. For a 1MHz clock (1µs period): set to 500ns/div or 1µs/div to see 2–4 cycles clearly. For a 9600 baud UART signal (each bit is ~104µs): set to 50µs/div or 100µs/div to see individual bits. If the waveform is a solid block, the timebase is too fast — slow it down.</p>
+        </div>
+      </div>
+
+      <div class="debug-phase reveal">
+        <div class="debug-phase-header">
+          <div class="ph-num" style="background:#fdf6e6;color:var(--gold)">Tr</div>
+          <h3>Trigger — making it stand still</h3>
+        </div>
+        <div class="debug-phase-body">
+          <p>The trigger makes a repeating waveform appear to stand still on screen. Set trigger mode to "Edge", set the trigger source to your channel, and set the trigger level (the voltage threshold) to approximately half the signal amplitude. For a 3.3V logic signal, trigger at 1.65V rising edge. If the display is unstable or rolling, adjust the trigger level until it locks. "Auto" trigger mode captures even DC signals; "Normal" mode only captures when a trigger event occurs.</p>
+        </div>
+      </div>
+
+      <div class="debug-phase reveal">
+        <div class="debug-phase-header">
+          <div class="ph-num" style="background:#eef4ff;color:#3a6fb8">AC</div>
+          <h3>AC coupling vs DC coupling</h3>
+        </div>
+        <div class="debug-phase-body">
+          <p><strong>DC coupling</strong> (default): shows the complete waveform including its DC offset. A 3.3V logic signal swinging from 0V to 3.3V appears as-is. Use this for most PCB work.</p>
+          <p><strong>AC coupling</strong>: blocks the DC component, showing only the AC ripple or signal on top of it. Useful for measuring power supply noise — set AC coupling on the probe, probe the power rail, and zoom in to see the ripple. A 100mV ripple on a 5V rail is invisible in DC coupling at any useful scale but clearly visible with AC coupling.</p>
+        </div>
+      </div>
+
+      <h3 style="margin-top:1.5rem">What healthy vs unhealthy signals look like</h3>
+
+      <!-- Scope diagrams: clean vs bad signals -->
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 680 220" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:680px">
+          <!-- ===== CLEAN CLOCK ===== -->
+          <rect x="10" y="10" width="200" height="90" rx="4" fill="#0a1a0a" stroke="#2a4a2a" stroke-width="1"/>
+          <!-- Grid lines -->
+          <line x1="10" y1="32" x2="210" y2="32" stroke="#1a3a1a" stroke-width="0.5"/>
+          <line x1="10" y1="55" x2="210" y2="55" stroke="#1a3a1a" stroke-width="0.5"/>
+          <line x1="10" y1="78" x2="210" y2="78" stroke="#1a3a1a" stroke-width="0.5"/>
+          <line x1="60" y1="10" x2="60" y2="100" stroke="#1a3a1a" stroke-width="0.5"/>
+          <line x1="110" y1="10" x2="110" y2="100" stroke="#1a3a1a" stroke-width="0.5"/>
+          <line x1="160" y1="10" x2="160" y2="100" stroke="#1a3a1a" stroke-width="0.5"/>
+          <!-- Clean square wave -->
+          <polyline points="10,80 35,80 35,22 85,22 85,80 135,80 135,22 185,22 185,80 210,80" stroke="#4ade80" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <text x="110" y="112" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#4ade80">✓ Clean clock signal</text>
+          <text x="110" y="124" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#5c5545">Sharp edges, consistent period</text>
+
+          <!-- ===== RINGING ===== -->
+          <rect x="230" y="10" width="200" height="90" rx="4" fill="#0a1a0a" stroke="#4a2a1a" stroke-width="1"/>
+          <line x1="230" y1="32" x2="430" y2="32" stroke="#1a3a1a" stroke-width="0.5"/>
+          <line x1="230" y1="55" x2="430" y2="55" stroke="#1a3a1a" stroke-width="0.5"/>
+          <line x1="230" y1="78" x2="430" y2="78" stroke="#1a3a1a" stroke-width="0.5"/>
+          <line x1="280" y1="10" x2="280" y2="100" stroke="#1a3a1a" stroke-width="0.5"/>
+          <line x1="330" y1="10" x2="330" y2="100" stroke="#1a3a1a" stroke-width="0.5"/>
+          <line x1="380" y1="10" x2="380" y2="100" stroke="#1a3a1a" stroke-width="0.5"/>
+          <!-- Square wave with ringing on transitions -->
+          <polyline points="230,80 255,80 255,16 258,10 261,18 264,14 267,20 270,17 273,22 280,22 305,22 305,80 308,86 311,75 314,83 317,79 320,81 325,80 355,80 355,22 358,17 361,25 364,21 367,23 370,22 405,22 405,80 410,80 430,80" stroke="#fb923c" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <text x="330" y="112" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#fb923c">⚠ Ringing on transitions</text>
+          <text x="330" y="124" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#5c5545">Impedance mismatch, no termination</text>
+
+          <!-- ===== POWER RAIL RIPPLE ===== -->
+          <rect x="10" y="140" width="200" height="70" rx="4" fill="#0a1a0a" stroke="#2a4a2a" stroke-width="1"/>
+          <line x1="10" y1="158" x2="210" y2="158" stroke="#1a3a1a" stroke-width="0.5"/>
+          <line x1="10" y1="175" x2="210" y2="175" stroke="#1a3a1a" stroke-width="0.5"/>
+          <line x1="10" y1="192" x2="210" y2="192" stroke="#1a3a1a" stroke-width="0.5"/>
+          <!-- Clean flat DC line -->
+          <line x1="10" y1="175" x2="210" y2="175" stroke="#4ade80" stroke-width="2"/>
+          <text x="110" y="222" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#4ade80">✓ Clean power rail (DC mode)</text>
+
+          <!-- ===== NOISY POWER RAIL ===== -->
+          <rect x="230" y="140" width="200" height="70" rx="4" fill="#0a1a0a" stroke="#4a2a1a" stroke-width="1"/>
+          <line x1="230" y1="158" x2="430" y2="158" stroke="#1a3a1a" stroke-width="0.5"/>
+          <line x1="230" y1="175" x2="430" y2="175" stroke="#1a3a1a" stroke-width="0.5"/>
+          <line x1="230" y1="192" x2="430" y2="192" stroke="#1a3a1a" stroke-width="0.5"/>
+          <!-- Wavy noisy power line -->
+          <polyline points="230,175 240,171 248,179 256,172 264,178 272,170 280,177 288,173 296,180 304,171 312,176 320,170 328,178 336,174 344,181 352,172 360,177 368,173 376,180 384,171 392,176 400,172 408,178 416,174 424,180 430,177" stroke="#f87171" stroke-width="1.8" fill="none"/>
+          <!-- Spike indicator -->
+          <polyline points="300,175 302,155 304,175" stroke="#f87171" stroke-width="1.5" fill="none"/>
+          <text x="330" y="222" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#f87171">✗ Noisy rail — switching spikes</text>
+
+          <!-- ===== MISSING CLOCK ===== -->
+          <rect x="450" y="10" width="220" height="90" rx="4" fill="#0a1a0a" stroke="#2a2a4a" stroke-width="1"/>
+          <line x1="450" y1="32" x2="670" y2="32" stroke="#1a3a1a" stroke-width="0.5"/>
+          <line x1="450" y1="55" x2="670" y2="55" stroke="#1a3a1a" stroke-width="0.5"/>
+          <line x1="450" y1="78" x2="670" y2="78" stroke="#1a3a1a" stroke-width="0.5"/>
+          <!-- Flat line (no clock) -->
+          <line x1="450" y1="80" x2="670" y2="80" stroke="#60a5fa" stroke-width="2"/>
+          <text x="560" y="112" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#60a5fa">✗ Flat line — no clock</text>
+          <text x="560" y="124" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#5c5545">Crystal not oscillating, bad load caps</text>
+
+          <!-- ===== GLITCHY UART ===== -->
+          <rect x="450" y="140" width="220" height="70" rx="4" fill="#0a1a0a" stroke="#2a4a2a" stroke-width="1"/>
+          <line x1="450" y1="158" x2="670" y2="158" stroke="#1a3a1a" stroke-width="0.5"/>
+          <line x1="450" y1="175" x2="670" y2="175" stroke="#1a3a1a" stroke-width="0.5"/>
+          <line x1="450" y1="192" x2="670" y2="192" stroke="#1a3a1a" stroke-width="0.5"/>
+          <!-- UART waveform (9600 baud pattern) -->
+          <polyline points="450,158 460,158 460,192 475,192 475,158 490,158 490,192 500,192 500,158 510,158 510,192 530,192 530,158 560,158 560,192 570,192 570,158 590,158 590,192 610,192 610,158 635,158 635,192 660,192 660,158 670,158" stroke="#4ade80" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <text x="560" y="222" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#4ade80">✓ UART transmission visible</text>
+        </svg>
+        <p class="diagram-caption">Common oscilloscope waveforms: what to look for when debugging</p>
+      </div>
+
+      <div class="callout callout--info" style="margin-top:1rem">
+        <p class="callout-title">Oscilloscope probe compensation</p>
+        <p style="margin:0;font-size:0.91rem">Before measuring anything precise, compensate your probe. Most scopes have a 1kHz square wave test output on the front panel. Connect your probe to it and check that the square wave looks square — flat top, vertical edges. If the corners round (over-compensated) or spike (under-compensated), turn the small trimmer screw on the probe body until the square wave is perfect. An uncompensated probe gives inaccurate readings at high frequencies.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMMON FAILURE MODES -->
+  <section class="section section--white">
+    <div class="container">
+      <p class="section-label">Failure catalogue</p>
+      <h2 class="section-title">Common Failure Modes &amp; How to Fix Them</h2>
+      <p class="section-intro">These are the most common reasons PCBs don't work on first power-on — and their solutions. Most beginners will encounter all of these eventually.</p>
+
+      <div class="failure-card reveal">
+        <p class="f-symptom">Board draws excessive current / fuse blows immediately</p>
+        <p class="f-causes">Causes: solder bridge on power pins · reversed capacitor · wrong component in wrong place · via shorting to adjacent trace</p>
+        <p class="f-desc">The board is drawing far more current than expected. The most common cause is a solder bridge — a blob of solder connecting two adjacent pads that should be separate. On fine-pitch ICs (QFP, SOIC), bridges are common and invisible to the naked eye. Check every IC power pin under magnification. Also check for a reversed electrolytic capacitor — these fail short.</p>
+        <div class="f-fix"><strong>Fix:</strong> Apply flux to the suspected bridge area and press solder wick onto it with a hot iron. The wick absorbs the excess solder. Check each IC under magnification after. For reversed capacitors: desolder, reorient, resolder.</div>
+      </div>
+
+      <div class="failure-card reveal">
+        <p class="f-symptom">Microcontroller appears completely dead — no output, no response</p>
+        <p class="f-causes">Causes: no clock · reset line stuck low · VCC power missing · firmware not loaded · wrong power voltage</p>
+        <p class="f-desc">The MCU receives power but does absolutely nothing. Check in this order: (1) Is VCC at the correct voltage at the MCU power pins? (2) Is the reset line high? (3) Is the clock running? (4) Is firmware actually loaded — did the programming step succeed? (5) Is the correct voltage connected (3.3V MCU fed 5V will likely be destroyed)?</p>
+        <div class="f-fix"><strong>Fix:</strong> Probe VCC, GND, and RESET pins with a multimeter. Check crystal frequency with an oscilloscope. Try re-flashing firmware with the IDE's serial monitor open. Check if the MCU runs on its internal oscillator by configuring firmware to not use the external crystal.</div>
+      </div>
+
+      <div class="failure-card reveal">
+        <p class="f-symptom">Intermittent failures — works sometimes, fails randomly</p>
+        <p class="f-causes">Causes: cold solder joint · marginal trace width creating voltage drop under load · insufficient decoupling · electrostatic discharge damage</p>
+        <p class="f-desc">Intermittent failures are the hardest to diagnose because they're inconsistent. Cold joints fail intermittently because the joint makes contact when cool but expands away under heat or vibration. Marginal power supply voltage affects analog circuits and ADC readings. Missing or inadequate decoupling causes the supply rail to dip during MCU switching, causing resets.</p>
+        <div class="f-fix"><strong>Fix:</strong> Inspect every joint under magnification, re-flowing any that look dull or rough. Measure the power rail under load with an oscilloscope — look for dips and spikes. Add or improve decoupling capacitors near the MCU. For ESD damage, prevention (wrist strap) is the only real fix.</div>
+      </div>
+
+      <div class="failure-card reveal">
+        <p class="f-symptom">I²C / SPI device not found or communication fails</p>
+        <p class="f-causes">Causes: pull-up resistors missing · wrong I²C address · SPI chip-select not active · incorrect voltage level</p>
+        <p class="f-desc">I²C requires pull-up resistors (typically 4.7kΩ) on both SDA and SCL. Without them, the lines never go high and communication fails entirely — the bus idles low rather than high. SPI failures are often caused by the CS (chip-select) line not going low, or the wrong SPI mode (CPOL/CPHA combination). I²C address conflicts are common when multiple devices share the bus.</p>
+
+        <!-- I2C pull-up diagram: with vs without -->
+        <div class="diagram-wrap" style="margin:1rem 0">
+          <svg viewBox="0 0 620 170" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:620px">
+            <!-- LEFT: no pull-ups (WRONG) -->
+            <text x="135" y="14" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="10" fill="#c0392b" font-weight="600">✗ Missing pull-ups — bus stays LOW</text>
+            <!-- MCU -->
+            <rect x="10" y="28" width="50" height="100" rx="4" fill="#2a2a2a" stroke="#555" stroke-width="1.5"/>
+            <text x="35" y="82" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#888">MCU</text>
+            <line x1="60" y1="55" x2="160" y2="55" stroke="#888" stroke-width="1.8" stroke-linecap="round"/><!-- SDA -->
+            <line x1="60" y1="75" x2="160" y2="75" stroke="#888" stroke-width="1.8" stroke-linecap="round"/><!-- SCL -->
+            <text x="38" y="52" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#888">SDA</text>
+            <text x="38" y="72" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#888">SCL</text>
+            <!-- Sensor/Device -->
+            <rect x="160" y="38" width="50" height="60" rx="4" fill="#2a2a2a" stroke="#555" stroke-width="1.5"/>
+            <text x="185" y="72" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#888">SENSOR</text>
+            <!-- No resistors shown — just the bare wires crossing lines (nothing connecting to VCC) -->
+            <!-- GND pulls lines low always -->
+            <line x1="110" y1="55" x2="110" y2="140" stroke="#c0392b" stroke-width="1" stroke-dasharray="3 2"/>
+            <line x1="130" y1="75" x2="130" y2="140" stroke="#c0392b" stroke-width="1" stroke-dasharray="3 2"/>
+            <line x1="95"  y1="140" x2="145" y2="140" stroke="#888" stroke-width="1.5"/>
+            <text x="120" y="155" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#c0392b">lines float low · no communication possible</text>
+
+            <!-- Divider -->
+            <line x1="295" y1="8" x2="295" y2="162" stroke="#ddd" stroke-width="1" stroke-dasharray="4 3"/>
+
+            <!-- RIGHT: with pull-ups (CORRECT) -->
+            <text x="460" y="14" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="10" fill="#2d6a3f" font-weight="600">✓ Pull-ups present — bus idles HIGH</text>
+            <!-- VCC rail -->
+            <line x1="340" y1="28" x2="610" y2="28" stroke="#c97530" stroke-width="1.5" stroke-dasharray="5 3"/>
+            <text x="580" y="24" font-family="'Share Tech Mono',monospace" font-size="8" fill="#c97530">+3.3V</text>
+            <!-- MCU -->
+            <rect x="310" y="38" width="50" height="100" rx="4" fill="#2a2a2a" stroke="#555" stroke-width="1.5"/>
+            <text x="335" y="92" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#888">MCU</text>
+            <line x1="360" y1="65" x2="560" y2="65" stroke="#5aad74" stroke-width="2" stroke-linecap="round"/><!-- SDA -->
+            <line x1="360" y1="85" x2="560" y2="85" stroke="#5aad74" stroke-width="2" stroke-linecap="round"/><!-- SCL -->
+            <text x="338" y="62" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#5aad74">SDA</text>
+            <text x="338" y="82" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#5aad74">SCL</text>
+            <!-- Pull-up resistors (R to VCC) -->
+            <line x1="420" y1="28" x2="420" y2="44" stroke="#c97530" stroke-width="1.5"/>
+            <rect x="412" y="44" width="16" height="22" rx="2" fill="none" stroke="#888" stroke-width="1.5"/>
+            <line x1="420" y1="66" x2="420" y2="60" stroke="#5aad74" stroke-width="1.5"/>
+            <line x1="420" y1="44" x2="420" y2="38" stroke="#c97530" stroke-width="1.5"/>
+            <text x="432" y="57" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#888">4.7kΩ</text>
+            <!-- SDA pull-up join -->
+            <line x1="460" y1="28" x2="460" y2="44" stroke="#c97530" stroke-width="1.5"/>
+            <rect x="452" y="44" width="16" height="22" rx="2" fill="none" stroke="#888" stroke-width="1.5"/>
+            <line x1="460" y1="66" x2="460" y2="80" stroke="#5aad74" stroke-width="1.5"/>
+            <line x1="460" y1="44" x2="460" y2="38" stroke="#c97530" stroke-width="1.5"/>
+            <text x="472" y="57" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#888">4.7kΩ</text>
+            <!-- Sensor/Device -->
+            <rect x="560" y="48" width="50" height="60" rx="4" fill="#2a2a2a" stroke="#555" stroke-width="1.5"/>
+            <text x="585" y="82" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#888">SENSOR</text>
+            <text x="460" y="155" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#2d6a3f">pull-ups hold lines HIGH · devices pull LOW to signal</text>
+          </svg>
+          <p class="diagram-caption">I²C is an open-drain bus — devices can only pull lines LOW, never HIGH. Pull-up resistors to VCC are mandatory to return lines to idle state.</p>
+        </div>
+
+        <div class="f-fix"><strong>Fix:</strong> For I²C: probe SDA and SCL with the scope while attempting communication — you should see activity. Verify pull-up resistors are present and correctly valued. Run an I²C address scan from your MCU. For SPI: probe CS, SCK, MOSI, MISO and verify CS goes low during each transaction.</div>
+      </div>
+
+      <p class="video-section-label">Recommended watch — essential debugging skills</p>
+      <a href="https://www.youtube.com/results?search_query=EEVblog+multimeter+tutorial+PCB+debugging" target="_blank" rel="noopener" class="video-card">
+        <div class="video-thumb" style="background:#1a2a3a;display:flex;align-items:center;justify-content:center;">
+          <svg width="60" height="60" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="28" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/><polygon points="22,16 50,30 22,44" fill="white" opacity="0.9"/></svg>
+        </div>
+        <div class="video-info">
+          <p class="video-channel">EEVblog · YouTube</p>
+          <p class="video-title">EEVblog #279 — How to Use an Oscilloscope / Dave's Lab</p>
+          <p class="video-desc">Dave Jones' practical oscilloscope tutorial covers every control explained in this section — trigger, timebase, coupling — with hands-on demonstrations on real signals. His "Lab Tips" and "Fundamentals Friday" series are packed with the practical debugging instincts that turn confusion into diagnosis. Essential viewing for anyone holding a probe for the first time.</p>
+          <span class="video-cta">▶ Search on YouTube →</span>
+        </div>
+      </a>
+
+      <div class="failure-card reveal">
+        <p class="f-symptom">Voltage regulator outputs wrong voltage or gets hot</p>
+        <p class="f-causes">Causes: incorrect feedback resistors (for adjustable regulators) · output capacitor wrong type or missing · overloaded beyond rated current · thermal shutdown</p>
+        <p class="f-desc">An LDO outputting the wrong voltage usually means the feedback resistors are wrong (for adjustable types) or the fixed-voltage type was misidentified. An LDO that's warm or hot may be dissipating significant power — this is normal for LDOs (they convert excess voltage to heat), but excessive heat means either too much current draw or too large an input-output voltage difference. A switching regulator outputting wrong voltage usually indicates an incorrect inductor or feedback component.</p>
+        <div class="f-fix"><strong>Fix:</strong> For LDOs: verify the output voltage formula and check resistor values with a multimeter. Add a heatsink or improve thermal relief if the LDO is hot. Consider a switching regulator if the efficiency loss is unacceptable. For switching regulators: check inductor value and current rating, verify feedback resistors match the design equations in the datasheet.</div>
+      </div>
+
+      <div class="failure-card reveal">
+        <p class="f-symptom">ADC readings noisy or inaccurate</p>
+        <p class="f-causes">Causes: noisy power supply · digital noise coupling to analog input · missing AVCC decoupling · fast signal source not matched to ADC input capacitance</p>
+        <p class="f-desc">ADC problems are almost always power and layout related. A switching regulator powering an MCU's analog supply creates ripple at the switching frequency that shows up directly in ADC readings. High-speed digital signals running near analog input traces capacitively couple noise. The AVCC pin (analog VCC) of an MCU needs its own dedicated decoupling — typically 100nF ceramic plus 10µF electrolytic — even if it's connected to the same rail as DVCC.</p>
+        <div class="f-fix"><strong>Fix:</strong> Add a small RC filter (10Ω + 10µF) between the digital supply and AVCC. Add 100nF decoupling directly on AVCC. Route analog input traces away from digital signals, especially clock lines. Consider filtering the analog signal source before the ADC input. Use an LDO (cleaner than switching) for the analog supply if accuracy is critical.</div>
+      </div>
+
+      <div class="failure-card reveal">
+        <p class="f-symptom">USB not recognised by host computer</p>
+        <p class="f-causes">Causes: D+/D- swapped · missing or wrong pull-up resistor · ESD protection diodes wrong polarity · bad differential pair routing · VBUS power missing</p>
+        <p class="f-desc">USB Full Speed requires a 1.5kΩ pull-up on D+ (or D- for Low Speed). Without it, the host doesn't detect the device. D+ and D− swapped is a common schematic error — double-check the USB connector pinout, which varies between Micro-B, Mini-B, and USB-C. ESD protection TVS diodes mounted backwards act as shorts on the data lines.</p>
+        <div class="f-fix"><strong>Fix:</strong> Verify D+ and D- with a multimeter: in idle state D+ should be pulled to ~3.3V (through the 1.5kΩ pull-up). Probe D+ and D- with an oscilloscope while connecting to a host — you should see USB signalling. Check TVS diode orientation. If using a USB-C connector, ensure CC1 and CC2 each have 5.1kΩ pull-downs for correct detection.</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- REWORK TECHNIQUES -->
+  <section class="section section--tinted">
+    <div class="container">
+      <p class="section-label">Fixing it</p>
+      <h2 class="section-title">Rework Techniques</h2>
+      <p class="section-intro">Rework is modifying or repairing a populated PCB. Every engineer spends time doing this — it's a real skill worth practising.</p>
+
+      <div class="rework-grid stagger-children">
+        <div class="rework-card reveal">
+          <h4>Removing a through-hole component</h4>
+          <p>Apply flux generously to all pins on the solder side. Heat each pin in turn while pulling the component from the opposite side. For multi-pin components (headers, ICs), use a desoldering pump (solder sucker) or wick to clear each hole before attempting removal — trying to pull a component while solder is still in the holes tears pads.</p>
+          <ol>
+            <li>Apply flux to all joints</li>
+            <li>Heat each joint individually and remove solder with wick or pump</li>
+            <li>Verify all holes are clear by trying to push a lead through</li>
+            <li>Gently work the component free with minimal force</li>
+          </ol>
+        </div>
+
+        <div class="rework-card reveal">
+          <h4>Removing an SMD IC (SOIC / QFP) with hot air</h4>
+          <p>Apply flux to all pins. Set hot air to 350°C (lead-free) or 300°C (leaded), medium flow. Move the nozzle in circles over all pins simultaneously. Watch for the solder to go bright and liquid (typically 20–40 seconds). Once all pins are molten, slide the IC sideways off the board with tweezers. Never pull upward — slide off.</p>
+          <ol>
+            <li>Apply flux to all pins on both sides of IC</li>
+            <li>Heat evenly in slow circles</li>
+            <li>Watch for simultaneous reflow on all pins</li>
+            <li>Slide IC sideways — don't pull up</li>
+            <li>Clean pads with wick before replacing</li>
+          </ol>
+        </div>
+
+        <div class="rework-card reveal">
+          <h4>Adding a bodge wire</h4>
+          <p>A bodge wire (or rework wire) connects two points that the PCB doesn't connect, or reconnects a broken trace. Use 30 AWG (0.25mm) wire-wrap wire — thin enough to lie flat. Scrape the solder mask from the two trace endpoints or vias, tin them, solder the wire, and secure with a dab of clear nail varnish or UV-cure adhesive. Document it in your schematic as a revision note.</p>
+          <ol>
+            <li>Identify the two points to connect</li>
+            <li>Scrape mask from each endpoint (razor blade, gently)</li>
+            <li>Tin both endpoints with solder</li>
+            <li>Solder 30AWG wire between them, keeping it flat</li>
+            <li>Secure with clear adhesive</li>
+          </ol>
+        </div>
+
+        <div class="rework-card reveal">
+          <h4>Repairing a lifted pad</h4>
+          <p>A lifted pad — where the copper pad has delaminated from the substrate — cannot be reattached. But you can usually restore functionality by soldering to the trace instead. Scrape the solder mask 2–3mm back along the trace leading to the lifted pad, exposing bare copper. Solder the component lead directly to the exposed trace. Use UV-cure glue to mechanically secure the component body.</p>
+          <ol>
+            <li>Locate the trace connecting to the lifted pad</li>
+            <li>Scrape mask 2–3mm back along the trace</li>
+            <li>Tin the exposed trace carefully</li>
+            <li>Solder the component lead to the exposed trace</li>
+            <li>Secure with UV-cure adhesive or epoxy</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="callout callout--tip">
+        <p class="callout-title">The golden rework rule</p>
+        <p style="margin:0">Flux solves almost every rework problem. Whatever you're trying to do — removing a component, clearing a bridge, reflowing a cold joint — apply fresh flux first. Flux cleans oxidation from the surfaces, dramatically improving solder flow and making the iron's job far easier. Running out of flux mid-rework is like trying to paint without cleaning the surface first.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- DEBUG FIRMWARE -->
+  <section class="section section--white">
+    <div class="container" style="max-width:740px">
+      <p class="section-label">Software side</p>
+      <h2 class="section-title">Bring-Up Firmware Strategy</h2>
+      <p>Hardware debugging without suitable firmware is nearly impossible. Write dedicated bring-up firmware before you write your application firmware — it's the equivalent of testing each circuit section in isolation.</p>
+
+      <h3>What bring-up firmware should do</h3>
+      <ul style="padding-left:1.3rem;font-size:0.93rem;color:var(--text-muted);line-height:1.95;margin-bottom:1.5rem">
+        <li><strong>Blink an LED on the first GPIO pin</strong> — this is the "hello world" of hardware. If an LED blinks, the MCU is running, the clock is working, and GPIO output works.</li>
+        <li><strong>Print to UART immediately on boot</strong> — something like <code>"Board v1.0 starting..."</code>. If you see this, the MCU started, clock works, and UART output works.</li>
+        <li><strong>Report power rail voltages via ADC</strong> — measure your own supply rails and print them. Catches wrong regulator output or overloaded rails immediately.</li>
+        <li><strong>Scan the I²C bus and print found addresses</strong> — a 10-line I²C scan that tries every address from 0x00 to 0x7F reveals what's on the bus. Compare against expected addresses.</li>
+        <li><strong>Read and print any SPI device ID registers</strong> — most SPI devices have a "who am I" register. Read it and verify it matches the datasheet value.</li>
+        <li><strong>Toggle each GPIO output</strong> — systematically toggle every output and probe it. Confirms pin assignments are correct and GPIOs actually drive the expected traces.</li>
+      </ul>
+
+      <div class="callout callout--info">
+        <p class="callout-title">Hardware abstraction in bring-up</p>
+        <p style="margin:0;font-size:0.91rem">Write bring-up firmware that tests one thing at a time and clearly communicates what it's testing and the result via UART. Comments like <code>// Testing I2C bus...</code> followed by <code>printf("Found device at 0x%02X\n", addr)</code> make the output self-explanatory. If bring-up firmware is silent or garbled, that itself tells you something important about where the failure is. Bring-up firmware is throw-away code — don't optimise it; make it readable and explicit.</p>
+      </div>
+    </div>
+  </section>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

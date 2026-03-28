@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Advanced PCB Design — PCB Primer</title>
+  <meta name="description" content="Advanced PCB design concepts: signal integrity, controlled impedance, EMC, differential pairs, decoupling strategy, ground planes, and power integrity.">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    .adv-topic-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 3rem;
+      overflow: hidden;
+    }
+    .adv-topic-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+    .adv-topic-num {
+      font-family: var(--font-mono);
+      font-size: 2.2rem;
+      color: var(--green-pale);
+      line-height: 1;
+      flex-shrink: 0;
+      width: 3rem;
+      font-weight: 700;
+    }
+    .adv-topic-header h2 { font-size: 1.6rem; margin-bottom: 0.3rem; }
+    .adv-topic-header p { font-size: 0.93rem; color: var(--text-muted); margin: 0; }
+    .adv-topic-body { padding: 1.5rem; }
+    .adv-topic-body p { font-size: 0.93rem; color: var(--text-muted); line-height: 1.75; }
+    .adv-topic-body h3 { margin: 1.5rem 0 0.5rem; color: var(--green-deep); font-size: 1.2rem; }
+    .adv-topic-body h4 { margin: 1rem 0 0.3rem; color: var(--text); font-size: 1rem; }
+    .adv-topic-body ul, .adv-topic-body ol { padding-left: 1.4rem; font-size: 0.93rem; color: var(--text-muted); line-height: 1.85; margin-bottom: 1rem; }
+    .rule-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin: 1rem 0; }
+    .rule-card { background: var(--bg); border: 1px solid var(--border-light); border-radius: 6px; padding: 1rem; }
+    .rule-card .rule-title { font-family: var(--font-mono); font-size: 0.78rem; color: var(--copper); margin-bottom: 0.4rem; letter-spacing: 0.04em; }
+    .rule-card p { font-size: 0.85rem; color: var(--text-muted); margin: 0; line-height: 1.6; }
+    .impedance-formula {
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1.2rem 1.4rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      margin: 1rem 0;
+      line-height: 2;
+    }
+    .impedance-formula .formula { color: var(--green-deep); font-size: 1rem; font-weight: 700; }
+    .impedance-formula .vars { color: var(--text-muted); font-size: 0.78rem; }
+    .freq-table td { font-size: 0.88rem; }
+    .freq-table td:first-child { font-family: var(--font-mono); }
+    .level-badge {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-left: 0.5rem;
+    }
+    .level-inter { background: #fdf6e6; color: var(--gold); border: 1px solid rgba(184,134,15,0.25); }
+    .level-adv   { background: #fdf0f0; color: #c0392b; border: 1px solid rgba(192,57,43,0.25); }
+    .level-expert{ background: #f0f0fd; color: #6c3483; border: 1px solid rgba(108,52,131,0.25); }
+    .em-diagram { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; margin: 1rem 0; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 1rem 0; }
+    @media(max-width:640px){ .two-col { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+  <div class="page-header">
+    <div class="container">
+      <p class="page-label">09 / Advanced</p>
+      <h1>Beyond the Basics</h1>
+      <p>Signal integrity, impedance control, EMC, decoupling strategy, and differential pairs. The topics that separate good boards from boards that actually work reliably.</p>
+    </div>
+  </div>
+
+  <section class="section section--white">
+    <div class="container">
+      <p class="section-label">Reading guide</p>
+      <div class="callout callout--info">
+        <p class="callout-title">Who this section is for</p>
+        <p style="margin:0">You've successfully designed and ordered at least one board. Everything here goes wrong silently — boards that fail intermittently, that fail at higher temperatures or in noisy environments, or that fail EMC testing. Understanding these topics turns "it sort of works" into "it works every time".</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--tinted">
+    <div class="container">
+
+      <!-- 1. DECOUPLING STRATEGY -->
+      <div class="adv-topic-card reveal">
+        <div class="adv-topic-header">
+          <div class="adv-topic-num">01</div>
+          <div>
+            <h2>Decoupling Strategy <span class="level-badge level-inter">Intermediate</span></h2>
+            <p>Why 100nF isn't always enough, how to choose capacitor values, and why placement is as important as value.</p>
+          </div>
+        </div>
+        <div class="adv-topic-body">
+          <p>When a digital IC switches state, it draws a brief surge of current from its power supply — the logic gates charge and discharge their internal capacitances. This surge happens in nanoseconds. The power supply (which may be centimetres away) cannot respond quickly enough due to the inductance of the traces between it and the IC. The result: a voltage dip on the supply rail, visible as noise on an oscilloscope.</p>
+          <p><strong>Decoupling capacitors</strong> are small local charge reservoirs placed right next to the IC's power pins. When the IC switches and demands a current surge, the capacitor supplies it locally before the main supply has time to respond. The capacitor recharges slowly between switching events.</p>
+
+          <h3>Capacitor selection</h3>
+          <p>Capacitors have a parasitic series inductance (ESL — Equivalent Series Inductance) that limits how fast they can supply charge. At high frequencies, the inductance dominates and the capacitor becomes useless. This is why you need multiple capacitor values in parallel:</p>
+
+          <div class="rule-grid">
+            <div class="rule-card">
+              <p class="rule-title">100nF ceramic (0402 or 0603)</p>
+              <p>The fundamental decoupling capacitor. Effective up to ~100MHz. Place one within 1–2mm of every VCC pin on every IC. This is non-negotiable.</p>
+            </div>
+            <div class="rule-card">
+              <p class="rule-title">10µF ceramic (0805 or 1206)</p>
+              <p>Bulk local decoupling for ICs that switch large currents (motor drivers, FPGAs, MCUs with high clock speeds). Catches lower-frequency supply fluctuations.</p>
+            </div>
+            <div class="rule-card">
+              <p class="rule-title">1µF ceramic</p>
+              <p>The middle-frequency workhorse. Often used in addition to 100nF for high-speed MCUs. Bridges the gap between 100nF and 10µF.</p>
+            </div>
+            <div class="rule-card">
+              <p class="rule-title">100µF+ electrolytic</p>
+              <p>Bulk reservoir capacitance at the power entry point (where supply enters the board). Catches power supply glitches and sudden load changes affecting the whole board.</p>
+            </div>
+          </div>
+
+          <h3>Placement is everything</h3>
+          <p>A 100nF capacitor placed 20mm from the IC it decouples is nearly useless at high frequencies — the trace inductance between the cap and the IC pin is comparable to the cap's own ESL. The capacitor must be as physically close to the power pin as possible, with short, wide traces to both VCC and GND. Ideally the cap sits between the IC power pin and a via to the ground plane, with VCC connecting through the cap rather than around it.</p>
+
+          <!-- Decoupling cap placement diagram: near vs far -->
+          <div class="diagram-wrap">
+            <svg viewBox="0 0 640 170" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:640px">
+              <!-- LEFT: correct placement (cap close to IC) -->
+              <text x="148" y="16" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="10" fill="#2d6a3f" font-weight="600">✓ Correct — cap right next to IC</text>
+              <!-- VCC supply -->
+              <rect x="20" y="48" width="40" height="20" rx="3" fill="#c97530" opacity="0.7"/>
+              <text x="40" y="62" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#fff">VCC</text>
+              <!-- Short trace to cap -->
+              <line x1="60" y1="58" x2="88" y2="58" stroke="#c97530" stroke-width="2" stroke-linecap="round"/>
+              <!-- Capacitor C1 (close) -->
+              <line x1="88" y1="44" x2="88" y2="54" stroke="#c97530" stroke-width="1.5"/>
+              <line x1="82" y1="54" x2="94" y2="54" stroke="#c97530" stroke-width="2.5"/>
+              <line x1="82" y1="60" x2="94" y2="60" stroke="#c97530" stroke-width="2.5"/>
+              <line x1="88" y1="60" x2="88" y2="90" stroke="#888" stroke-width="1.5"/>
+              <!-- GND via (small circle with X) -->
+              <circle cx="88" cy="96" r="6" fill="#d4a520" stroke="#b5820a" stroke-width="1"/>
+              <text x="88" y="99" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7" fill="#1a3d26">V</text>
+              <text x="88" y="112" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7" fill="#8c8575">via→GND</text>
+              <!-- Short trace from cap to IC -->
+              <line x1="88" y1="58" x2="110" y2="58" stroke="#c97530" stroke-width="2" stroke-linecap="round"/>
+              <!-- IC -->
+              <rect x="110" y="40" width="80" height="70" rx="4" fill="#2a2a2a" stroke="#555" stroke-width="1.5"/>
+              <text x="150" y="78" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#888">IC</text>
+              <line x1="110" y1="58" x2="100" y2="58" stroke="#c97530" stroke-width="1.5"/><!-- VCC pin stub -->
+              <text x="100" y="50" text-anchor="end" font-family="'Share Tech Mono',monospace" font-size="8" fill="#c97530">VCC</text>
+              <!-- Distance label -->
+              <line x1="88" y1="130" x2="110" y2="130" stroke="#2d6a3f" stroke-width="1"/>
+              <line x1="88" y1="126" x2="88" y2="134" stroke="#2d6a3f" stroke-width="1"/>
+              <line x1="110" y1="126" x2="110" y2="134" stroke="#2d6a3f" stroke-width="1"/>
+              <text x="99" y="144" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#2d6a3f">≤2mm</text>
+              <text x="148" y="162" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#2d6a3f">minimal parasitic inductance · cap works effectively</text>
+
+              <!-- Divider -->
+              <line x1="315" y1="8" x2="315" y2="168" stroke="#ddd" stroke-width="1" stroke-dasharray="4 3"/>
+
+              <!-- RIGHT: wrong — cap far from IC -->
+              <text x="475" y="16" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="10" fill="#c0392b" font-weight="600">✗ Wrong — cap far from IC</text>
+              <!-- VCC supply -->
+              <rect x="330" y="48" width="40" height="20" rx="3" fill="#c97530" opacity="0.7"/>
+              <text x="350" y="62" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#fff">VCC</text>
+              <!-- Long trace with inductance markers -->
+              <line x1="370" y1="58" x2="540" y2="58" stroke="#c97530" stroke-width="2" stroke-linecap="round" stroke-dasharray="1 0"/>
+              <!-- Inductance symbols on the long trace -->
+              <path d="M396,58 Q399,52 402,58 Q405,64 408,58" stroke="#c0392b" stroke-width="1.5" fill="none"/>
+              <path d="M416,58 Q419,52 422,58 Q425,64 428,58" stroke="#c0392b" stroke-width="1.5" fill="none"/>
+              <path d="M436,58 Q439,52 442,58 Q445,64 448,58" stroke="#c0392b" stroke-width="1.5" fill="none"/>
+              <text x="420" y="45" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#c0392b">trace inductance</text>
+              <!-- Capacitor C1 (far - at the end near supply) -->
+              <line x1="370" y1="44" x2="370" y2="54" stroke="#c97530" stroke-width="1.5"/>
+              <line x1="364" y1="54" x2="376" y2="54" stroke="#c97530" stroke-width="2.5"/>
+              <line x1="364" y1="60" x2="376" y2="60" stroke="#c97530" stroke-width="2.5"/>
+              <line x1="370" y1="60" x2="370" y2="90" stroke="#888" stroke-width="1.5"/>
+              <circle cx="370" cy="96" r="6" fill="#d4a520" stroke="#b5820a" stroke-width="1"/>
+              <text x="370" y="99" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7" fill="#1a3d26">V</text>
+              <text x="370" y="112" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7" fill="#8c8575">via→GND</text>
+              <!-- IC (far right) -->
+              <rect x="540" y="40" width="80" height="70" rx="4" fill="#2a2a2a" stroke="#555" stroke-width="1.5"/>
+              <text x="580" y="78" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#888">IC</text>
+              <line x1="540" y1="58" x2="530" y2="58" stroke="#c97530" stroke-width="1.5"/>
+              <text x="528" y="50" text-anchor="end" font-family="'Share Tech Mono',monospace" font-size="8" fill="#c97530">VCC</text>
+              <!-- Distance label -->
+              <line x1="370" y1="130" x2="540" y2="130" stroke="#c0392b" stroke-width="1"/>
+              <line x1="370" y1="126" x2="370" y2="134" stroke="#c0392b" stroke-width="1"/>
+              <line x1="540" y1="126" x2="540" y2="134" stroke="#c0392b" stroke-width="1"/>
+              <text x="455" y="144" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#c0392b">20mm+</text>
+              <text x="475" y="162" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#c0392b">trace inductance defeats capacitor at high frequency</text>
+            </svg>
+            <p class="diagram-caption">At 100MHz, even 1cm of trace between a decoupling cap and its IC has ~10nH of inductance — comparable to the cap's own ESL, making it effectively useless.</p>
+          </div>
+
+          <div class="callout callout--warn">
+            <p class="callout-title">Via placement for decoupling caps</p>
+            <p style="margin:0;font-size:0.91rem">Place the GND via for each decoupling cap as close to the cap's GND pad as possible — not somewhere else on the ground plane. The return current path matters. A GND via 5mm away from the cap means 5mm of trace inductance in the return path, defeating the purpose.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. GROUND PLANES & RETURN CURRENTS -->
+      <div class="adv-topic-card reveal">
+        <div class="adv-topic-header">
+          <div class="adv-topic-num">02</div>
+          <div>
+            <h2>Ground Planes &amp; Return Currents <span class="level-badge level-inter">Intermediate</span></h2>
+            <p>Why a ground plane isn't just convenient — it's essential for controlling where current actually flows.</p>
+          </div>
+        </div>
+        <div class="adv-topic-body">
+          <p>Every signal current needs a return path. When you route a trace from point A to point B, the current doesn't just disappear at B — it has to return to A somehow. Where does it go?</p>
+          <p>At DC and low frequencies, current takes the path of least resistance. At high frequencies (and "high" here means anything above a few kHz), current takes the path of <strong>least inductance</strong> — which is directly beneath the signal trace, in the ground plane immediately below it.</p>
+          <p>This is why a continuous ground plane under all signal traces is so powerful: it provides every signal with a controlled, low-inductance return path. The signal and its return current form a tightly coupled pair — a transmission line — which has well-defined impedance and minimal radiation.</p>
+
+          <h3>What breaks a ground plane</h3>
+          <p>Any slot, cut, or gap in the ground plane forces the return current to detour around it. A signal trace crossing a gap in the ground plane has no coherent return path — its return current must find a long, high-inductance route around the gap. This causes:</p>
+          <ul>
+            <li>Increased radiated emissions (EMI problems)</li>
+            <li>Crosstalk between signals sharing the same detoured return path</li>
+            <li>Signal integrity degradation at higher speeds</li>
+          </ul>
+          <p><strong>Never route a signal trace across a gap, slot, or split in the ground plane.</strong> If you must have a split (e.g. separating analog and digital ground regions), bridge the gap with a single-point connection and ensure no signal crosses it.</p>
+
+          <!-- Return current path diagram: good vs split ground plane -->
+          <div class="diagram-wrap">
+            <svg viewBox="0 0 640 200" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:640px">
+              <!-- LEFT: Good continuous ground plane -->
+              <text x="148" y="16" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="10" fill="#2d6a3f" font-weight="600">✓ Continuous ground plane</text>
+              <!-- Signal trace (top layer, orange) -->
+              <text x="20" y="50" font-family="'Share Tech Mono',monospace" font-size="8" fill="#a85a18">signal trace (top Cu)</text>
+              <rect x="20" y="56" width="256" height="10" rx="1" fill="#c8c3a0" opacity="0.5"/><!-- substrate hint -->
+              <line x1="20" y1="52" x2="276" y2="52" stroke="#c97530" stroke-width="3" stroke-linecap="round"/>
+              <!-- Signal arrow direction -->
+              <polygon points="260,49 270,52 260,55" fill="#c97530"/>
+              <!-- Ground plane (bottom layer, green fill) -->
+              <rect x="20" y="82" width="256" height="24" rx="2" fill="#2d6a3f" opacity="0.25" stroke="#2d6a3f" stroke-width="1" stroke-dasharray="4 2"/>
+              <text x="148" y="98" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#2d6a3f">GND plane (bottom Cu)</text>
+              <!-- Return current: tight loop directly below trace -->
+              <line x1="270" y1="90" x2="26" y2="90" stroke="#5aad74" stroke-width="2.5" stroke-linecap="round"/>
+              <polygon points="42,87 30,90 42,93" fill="#5aad74"/>
+              <text x="148" y="120" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#5aad74">return current flows directly below signal</text>
+              <text x="148" y="131" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#5aad74">→ tight loop · low inductance · minimal radiation</text>
+              <!-- Loop area indicator -->
+              <rect x="20" y="48" width="255" height="48" rx="2" fill="rgba(45,106,63,0.05)" stroke="rgba(45,106,63,0.2)" stroke-width="1" stroke-dasharray="3 2"/>
+              <text x="148" y="155" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#2d6a3f">small loop area</text>
+
+              <!-- Divider -->
+              <line x1="315" y1="8" x2="315" y2="190" stroke="#ddd" stroke-width="1" stroke-dasharray="4 3"/>
+
+              <!-- RIGHT: Split/gapped ground plane -->
+              <text x="475" y="16" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="10" fill="#c0392b" font-weight="600">✗ Split / gapped ground plane</text>
+              <!-- Signal trace crosses the gap -->
+              <line x1="335" y1="52" x2="605" y2="52" stroke="#c97530" stroke-width="3" stroke-linecap="round"/>
+              <polygon points="589,49 601,52 589,55" fill="#c97530"/>
+              <!-- Ground plane with gap in middle -->
+              <rect x="335" y="82" width="112" height="24" rx="2" fill="#2d6a3f" opacity="0.25" stroke="#2d6a3f" stroke-width="1" stroke-dasharray="4 2"/>
+              <!-- Gap -->
+              <rect x="448" y="82" width="30" height="24" fill="var(--bg-card)" stroke="#c0392b" stroke-width="1" stroke-dasharray="2 2"/>
+              <text x="463" y="97" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7" fill="#c0392b">GAP</text>
+              <rect x="479" y="82" width="126" height="24" rx="2" fill="#2d6a3f" opacity="0.25" stroke="#2d6a3f" stroke-width="1" stroke-dasharray="4 2"/>
+              <!-- Return current must detour around gap -->
+              <path d="M595,90 L535,90 L535,90 L480,90" stroke="#5aad74" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+              <!-- At gap: must go around -->
+              <path d="M447,90 Q447,140 415,140 L360,140 Q340,140 340,108 L340,90 L337,90" stroke="#c0392b" stroke-width="2" stroke-linecap="round" fill="none" stroke-dasharray="4 2"/>
+              <polygon points="352,87 340,90 352,93" fill="#c0392b"/>
+              <text x="390" y="152" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#c0392b">return current forced to detour</text>
+              <text x="475" y="120" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#c0392b">→ giant loop · high inductance · EMI antenna!</text>
+              <!-- Large loop area indicator -->
+              <rect x="337" y="48" width="260" height="100" rx="2" fill="rgba(192,57,43,0.05)" stroke="rgba(192,57,43,0.2)" stroke-width="1" stroke-dasharray="3 2"/>
+              <text x="475" y="162" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#c0392b">huge loop area — radiates proportionally to area²</text>
+            </svg>
+            <p class="diagram-caption">Return current always takes the path of least inductance — directly below the signal trace when the ground plane is solid. A gap forces a massive detour, creating a large antenna loop.</p>
+          </div>
+
+          <div class="two-col">
+            <div>
+              <div class="callout callout--tip">
+                <p class="callout-title">Ground plane stitching vias</p>
+                <p style="margin:0;font-size:0.88rem">On a 2-layer board, if you have copper pours on both layers (signal routing on top, ground plane on bottom), add stitching vias throughout — small vias connecting the top copper ground islands to the bottom ground plane. This reduces the loop area for return currents and improves HF performance.</p>
+              </div>
+            </div>
+            <div>
+              <div class="callout callout--warn">
+                <p class="callout-title">Split ground planes (analog/digital)</p>
+                <p style="margin:0;font-size:0.88rem">Old advice said to split ground planes between analog and digital sections. Modern guidance (IPC-2141, Henry Ott) says to use a single unified ground plane and keep analog and digital signals physically separated instead. Splitting a ground plane almost always makes things worse.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. CONTROLLED IMPEDANCE -->
+      <div class="adv-topic-card reveal">
+        <div class="adv-topic-header">
+          <div class="adv-topic-num">03</div>
+          <div>
+            <h2>Controlled Impedance <span class="level-badge level-adv">Advanced</span></h2>
+            <p>Why trace width affects signal quality at high speeds, and how to design 50Ω and 90Ω traces.</p>
+          </div>
+        </div>
+        <div class="adv-topic-body">
+          <p>At low frequencies, a trace is just a conductor — its width affects resistance, but nothing else matters much. At high frequencies (above ~50–100MHz, or with rise times shorter than ~1ns), a trace becomes a <strong>transmission line</strong>. Its characteristic impedance — determined by its physical geometry and the dielectric properties of the substrate — must match the source and load impedance, or signal reflections occur.</p>
+          <p>A mismatch causes the signal to reflect back from the load toward the source, creating ringing and overshoot on the signal waveform. At high enough speeds, this causes bit errors, excess noise, or IC damage.</p>
+
+          <h3>Microstrip vs Stripline</h3>
+          <div class="two-col">
+            <div>
+              <h4>Microstrip (outer layer)</h4>
+              <p>A trace on the outer copper layer with a reference (ground or power) plane below it, separated by FR4. The trace is exposed to air on top. Used for most single-ended signals on 2-layer boards. Typical impedance target: 50Ω.</p>
+            </div>
+            <div>
+              <h4>Stripline (inner layer)</h4>
+              <p>A trace on an inner layer sandwiched between two reference planes. Fully enclosed in dielectric. Better shielding than microstrip — used in high-performance 4+ layer designs for critical signals.</p>
+            </div>
+          </div>
+
+          <h3>The impedance equation (microstrip approximation)</h3>
+          <div class="impedance-formula">
+            <div class="formula">Z₀ ≈ 87 / √(εᵣ + 1.41) × ln(5.98h / (0.8w + t))</div>
+            <div class="vars">
+              where: Z₀ = characteristic impedance (Ω)<br>
+              εᵣ = dielectric constant of substrate (FR4 ≈ 4.5)<br>
+              h = height of dielectric (distance to ground plane, mm)<br>
+              w = trace width (mm)<br>
+              t = trace thickness (copper thickness, ~0.035mm for 1oz)
+            </div>
+          </div>
+          <p>For standard 1.6mm FR4 boards with 1oz copper and a ground plane directly below the trace, a 50Ω microstrip trace is approximately <strong>2.8–3.0mm wide</strong>. This seems very wide — which is why controlled impedance work drives designers toward 4-layer boards, where the tighter layer separation allows 50Ω at more practical widths (0.2–0.3mm).</p>
+
+          <h3>When do you need controlled impedance?</h3>
+          <div class="table-wrap">
+            <table class="freq-table">
+              <thead><tr><th>Interface</th><th>Impedance target</th><th>Required from</th></tr></thead>
+              <tbody>
+                <tr><td>USB 2.0 Full/High Speed</td><td>90Ω differential</td><td>Always for HS; recommended for FS</td></tr>
+                <tr><td>USB 3.x / USB-C</td><td>85–90Ω differential</td><td>Always</td></tr>
+                <tr><td>HDMI</td><td>100Ω differential</td><td>Always</td></tr>
+                <tr><td>PCIe</td><td>85Ω differential</td><td>Always</td></tr>
+                <tr><td>Ethernet (100Base-T)</td><td>100Ω differential</td><td>Always</td></tr>
+                <tr><td>RF antenna traces</td><td>50Ω single-ended</td><td>Always</td></tr>
+                <tr><td>SPI, I²C, UART</td><td>Not critical</td><td>Not typically required under 50MHz</td></tr>
+                <tr><td>DDR memory bus</td><td>50Ω single-ended, 100Ω diff</td><td>Always</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. DIFFERENTIAL PAIRS -->
+      <div class="adv-topic-card reveal">
+        <div class="adv-topic-header">
+          <div class="adv-topic-num">04</div>
+          <div>
+            <h2>Differential Pairs <span class="level-badge level-adv">Advanced</span></h2>
+            <p>How USB, Ethernet, HDMI, and LVDS signals work — and the specific routing rules they require.</p>
+          </div>
+        </div>
+        <div class="adv-topic-body">
+          <p>Many high-speed interfaces use <strong>differential signalling</strong>: instead of sending a signal on one wire referenced to ground, two wires carry opposite-polarity signals. The receiver measures the <em>difference</em> between the two.</p>
+          <p>This has a remarkable property: any noise picked up by the cable couples onto <em>both</em> wires equally (common-mode noise). Since the receiver looks at the difference, equal noise on both wires cancels perfectly. Differential signals are far more noise-immune than single-ended signals, which is why USB, Ethernet, HDMI, PCIe, and LVDS all use differential pairs.</p>
+
+          <h3>Differential pair routing rules</h3>
+
+          <!-- Differential pair diagram: two parallel traces with tight coupling -->
+          <div class="em-diagram">
+            <svg viewBox="0 0 600 120" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:600px">
+              <!-- Labels -->
+              <text x="10" y="35" font-family="'Share Tech Mono',monospace" font-size="10" fill="#2d6a3f">D+</text>
+              <text x="10" y="85" font-family="'Share Tech Mono',monospace" font-size="10" fill="#2d6a3f">D−</text>
+
+              <!-- Tightly coupled pair (correct) -->
+              <text x="80" y="14" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#2d6a3f">✓ CORRECT: tightly coupled</text>
+              <rect x="28" y="18" width="200" height="8" rx="2" fill="#5aad74" opacity="0.9"/>
+              <rect x="28" y="68" width="200" height="8" rx="2" fill="#5aad74" opacity="0.9"/>
+              <!-- Spacing indicator -->
+              <line x1="120" y1="28" x2="120" y2="66" stroke="#2d6a3f" stroke-width="0.8" stroke-dasharray="2 2"/>
+              <text x="125" y="51" font-family="'Share Tech Mono',monospace" font-size="8" fill="#2d6a3f">≤2×w</text>
+              <!-- Electromagnetic coupling arrow -->
+              <path d="M80 30 Q90 50 80 68" stroke="#2d6a3f" stroke-width="1" fill="none" stroke-dasharray="3 2"/>
+              <text x="44" y="52" font-family="'Share Tech Mono',monospace" font-size="8" fill="#2d6a3f" opacity="0.8">EM coupled</text>
+
+              <!-- Divider -->
+              <line x1="250" y1="10" x2="250" y2="110" stroke="#ddd" stroke-width="1" stroke-dasharray="3 2"/>
+
+              <!-- Wrong: loosely coupled pair -->
+              <text x="420" y="14" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#c0392b">✗ WRONG: too far apart</text>
+              <rect x="270" y="18" width="200" height="8" rx="2" fill="#c97530" opacity="0.6"/>
+              <rect x="270" y="88" width="200" height="8" rx="2" fill="#c97530" opacity="0.6"/>
+              <!-- Gap indicator -->
+              <line x1="370" y1="28" x2="370" y2="86" stroke="#c0392b" stroke-width="0.8" stroke-dasharray="2 2"/>
+              <text x="375" y="60" font-family="'Share Tech Mono',monospace" font-size="8" fill="#c0392b">too large</text>
+              <text x="375" y="71" font-family="'Share Tech Mono',monospace" font-size="8" fill="#c0392b">gap → noise</text>
+              <!-- Noise coupling to each separately -->
+              <path d="M330 10 L330 18" stroke="#c0392b" stroke-width="1" marker-end="url(#arr)"/>
+              <path d="M330 100 L330 110" stroke="#c0392b" stroke-width="1"/>
+              <text x="280" y="110" font-family="'Share Tech Mono',monospace" font-size="8" fill="#c0392b">external noise couples differently to each trace</text>
+            </svg>
+          </div>
+
+          <ul>
+            <li><strong>Keep them tightly coupled:</strong> the separation between the two traces should be ≤ 2× the trace width (e.g. 0.2mm traces with ≤0.2mm gap). Tight coupling ensures common-mode noise hits both traces equally.</li>
+            <li><strong>Match lengths exactly:</strong> both traces in the pair must be the same length. A length mismatch introduces a time skew — one signal arrives before the other — which degrades the differential signal. KiCad's Differential Pair router handles this automatically.</li>
+            <li><strong>Route as a pair:</strong> never split the pair and route them separately. They must travel together throughout, staying the same distance apart.</li>
+            <li><strong>Avoid vias where possible:</strong> each via adds inductance and is a potential impedance discontinuity. If vias are unavoidable, use matching vias on both traces simultaneously.</li>
+            <li><strong>Keep them away from other signals:</strong> maintain at least 3× trace width clearance from any adjacent signals. Nearby parallel signals can couple crosstalk into the pair.</li>
+            <li><strong>No 90° corners:</strong> use 45° or curved bends, and apply them identically to both traces.</li>
+          </ul>
+
+          <div class="kicad-note callout callout--info" style="margin-top:1rem">
+            <p class="callout-title">KiCad differential pair routing</p>
+            <p style="margin:0;font-size:0.91rem">In KiCad, press <strong>X</strong> then select the "Differential Pair" mode in the toolbar (or press <strong>Ctrl+X</strong> in newer versions). The router will automatically maintain the set spacing and add length tuning meanders to match the lengths. Set the pair clearance and width in Board Setup → Net Classes before routing.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. EMC BASICS -->
+      <div class="adv-topic-card reveal">
+        <div class="adv-topic-header">
+          <div class="adv-topic-num">05</div>
+          <div>
+            <h2>EMC — Electromagnetic Compatibility <span class="level-badge level-adv">Advanced</span></h2>
+            <p>Why boards radiate, why they're susceptible to noise, and how to design for compliance before the lab test.</p>
+          </div>
+        </div>
+        <div class="adv-topic-body">
+          <p>EMC is the science of ensuring your board neither emits electromagnetic interference that disrupts other equipment (emissions), nor is disrupted by external EM fields (immunity). In the UK and EU, the CE mark requires EMC compliance. In the US, FCC Part 15 applies. Failing EMC testing is expensive — it means redesigning and retesting.</p>
+          <p>The good news: most EMC problems are caused by a small number of well-understood mechanisms. Design them out from the start and you'll pass first time (or close to it).</p>
+
+          <h3>The three causes of radiated emissions</h3>
+          <div class="rule-grid">
+            <div class="rule-card">
+              <p class="rule-title">Loop area</p>
+              <p>Every current loop radiates like a small antenna. Radiation is proportional to loop area × frequency². Minimise loop area by keeping signal traces and their return paths (in the ground plane) as close together as possible. This is the single most effective EMC design technique.</p>
+            </div>
+            <div class="rule-card">
+              <p class="rule-title">Common-mode currents</p>
+              <p>Current returning via an unintended path (a cable, a chassis connection, the air) rather than the designed return path. Caused by impedance imbalances, gaps in ground planes, or parasitic capacitances. Fix by improving ground plane continuity and filtering cable connections.</p>
+            </div>
+            <div class="rule-card">
+              <p class="rule-title">High dI/dt nodes</p>
+              <p>Nodes that switch fast with high current — clock signals, switching regulator outputs, motor PWM outputs. These are the primary EMI sources. Keep them short, well-decoupled, and away from long traces that could act as antennas.</p>
+            </div>
+          </div>
+
+          <h3>Practical EMC design rules</h3>
+          <ul>
+            <li><strong>Continuous ground plane:</strong> solid copper ground plane with no gaps beneath all signal layers — the single highest-impact EMC rule</li>
+            <li><strong>Decoupling caps on every IC:</strong> already covered — reduces supply transients which are a major radiation source</li>
+            <li><strong>Keep switching nodes small:</strong> the high-side node of a buck converter (where the inductor connects to the switching MOSFET) switches at full supply voltage — keep this copper pour small and compact</li>
+            <li><strong>Filter at board entry:</strong> add common-mode chokes and filter capacitors on every cable interface (USB, HDMI, power input) right at the connector</li>
+            <li><strong>Crystal guard rings:</strong> surround crystals with a shielding ring of ground vias to prevent radiated emissions from the clock source</li>
+            <li><strong>Stitch vias around the board perimeter:</strong> a row of GND vias around the board edge reduces edge-radiated emissions significantly</li>
+            <li><strong>Separate analog and digital physically:</strong> keep high-speed digital circuitry away from sensitive analog circuits (ADC inputs, RF sections) even if they share a ground plane</li>
+          </ul>
+
+          <div class="callout callout--warn">
+            <p class="callout-title">EMC is required for commercial products</p>
+            <p style="margin:0;font-size:0.91rem">If you intend to sell any electronic device in the UK or EU, CE marking (including EMC testing under EN 55032/55035) is a legal requirement. Using pre-certified modules (ESP32 modules, Raspberry Pi modules) can transfer the EMC burden to the module manufacturer — a significant advantage for startups. Testing a custom board at an accredited EMC lab typically costs £2,000–£8,000 per test run.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. POWER INTEGRITY -->
+      <div class="adv-topic-card reveal">
+        <div class="adv-topic-header">
+          <div class="adv-topic-num">06</div>
+          <div>
+            <h2>Power Integrity <span class="level-badge level-expert">Expert</span></h2>
+            <p>Ensuring clean, stable voltage everywhere on the board under all load conditions.</p>
+          </div>
+        </div>
+        <div class="adv-topic-body">
+          <p>Power integrity (PI) is the discipline of ensuring every IC on your board receives a clean, stable supply voltage under all operating conditions — including peak load currents, transient demands, and varying temperature. Poor power integrity manifests as random resets, bit errors in communication buses, and unreliable operation at production volume even when prototypes worked fine.</p>
+
+          <h3>The power delivery network (PDN)</h3>
+          <p>The PDN is everything between your voltage regulator and an IC's power pin: the regulator output capacitors, the power plane or traces, the via(s) carrying power to the layer with the IC, the IC's decoupling capacitors, and the traces between decoupling cap and power pin. Each element contributes inductance and resistance. The goal is to minimise the impedance of this network across all frequencies.</p>
+
+          <h3>PDN design guidelines</h3>
+          <ul>
+            <li><strong>Target impedance:</strong> calculate your target PDN impedance as Vripple / Imax (e.g. for 50mV ripple tolerance on a 1A load: 50mΩ target). Your capacitor network must achieve this across the relevant frequency range.</li>
+            <li><strong>Wide power traces or planes:</strong> use polygon pours for power rails rather than traces where possible. On 4-layer boards, dedicate an entire inner layer to the power plane.</li>
+            <li><strong>Multiple vias for power:</strong> a single via has ~0.5–1nH of inductance. For high-current connections, use 2–4 parallel vias to reduce inductance. Place vias directly adjacent to the capacitor pads, not metres away on the trace.</li>
+            <li><strong>Thermal management:</strong> power dissipation creates temperature gradients. Hot ICs have higher leakage and can fail earlier. Add thermal relief for through-hole pads on power planes, but ensure SMD power pads have good thermal contact to the plane for heat spreading.</li>
+          </ul>
+
+          <div class="callout callout--info">
+            <p class="callout-title">Free PDN analysis tools</p>
+            <p style="margin:0;font-size:0.91rem">The free PDN analyser at <strong>pdncalc.com</strong> (or the EDA software packages Sigrity, HyperLynx for professional work) can model your capacitor network's impedance vs frequency. Target flat impedance well below your target value across the frequency range of your ICs' switching activity.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 7. FURTHER READING -->
+      <div class="card reveal" style="background:var(--bg-card)">
+        <p class="video-section-label">Recommended watch — signal integrity in practice</p>
+        <a href="https://www.youtube.com/@RobertFeranec/search?query=PCB+layout+signal+integrity" target="_blank" rel="noopener" class="video-card" style="margin-bottom:0.8rem">
+          <div class="video-thumb" style="background:#1a2030;display:flex;align-items:center;justify-content:center;">
+            <svg width="60" height="60" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="28" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/><polygon points="22,16 50,30 22,44" fill="white" opacity="0.9"/></svg>
+          </div>
+          <div class="video-info">
+            <p class="video-channel">Robert Feranec · YouTube</p>
+            <p class="video-title">PCB Layout for High Speed Signals — Real Board Walkthroughs</p>
+            <p class="video-desc">Robert Feranec reviews real commercial PCB designs on camera, explaining exactly why specific layout decisions were made — trace routing, ground plane strategy, via placement, differential pairs. Watching him analyse actual boards is the fastest way to develop the instincts described in this section. His "How to Design PCB Layout" series is essential.</p>
+            <span class="video-cta">▶ Watch on YouTube →</span>
+          </div>
+        </a>
+        <a href="https://www.youtube.com/@PhilsLab/search?query=signal+integrity+EMC" target="_blank" rel="noopener" class="video-card">
+          <div class="video-thumb" style="background:#0f1f18;display:flex;align-items:center;justify-content:center;">
+            <svg width="60" height="60" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="28" fill="rgba(255,255,255,0.08)" stroke="rgba(90,173,116,0.3)" stroke-width="1.5"/><polygon points="22,16 50,30 22,44" fill="white" opacity="0.9"/></svg>
+          </div>
+          <div class="video-info">
+            <p class="video-channel">Phil's Lab · YouTube</p>
+            <p class="video-title">PCB Signal Integrity &amp; EMC Design — From Principles to Practice</p>
+            <p class="video-desc">Phil Salmony's signal integrity series bridges the gap between theory and the KiCad PCB editor — he sets up controlled impedance calculations, shows matched-length differential pair routing, and demonstrates how to use a VNA to verify impedance on real boards. Exactly the applied version of what's taught in this section.</p>
+            <span class="video-cta">▶ Watch on YouTube →</span>
+          </div>
+        </a>
+
+        <h3 style="margin-bottom:1rem;margin-top:1.5rem">Recommended Further Reading</h3>
+        <div class="rule-grid">
+          <div class="rule-card">
+            <p class="rule-title">Books</p>
+            <p><strong>Signal and Power Integrity — Simplified</strong> by Eric Bogatin. The clearest introduction to SI/PI in print. Start here.<br><br><strong>EMC Design Techniques for Electronic Engineers</strong> by William Kimmel. Practical, PCB-focused.</p>
+          </div>
+          <div class="rule-card">
+            <p class="rule-title">Online resources</p>
+            <p><strong>betheengineer.com</strong> — Eric Bogatin's free SI articles<br><strong>emcfastpass.com</strong> — EMC design tutorials<br><strong>phil's lab (YouTube)</strong> — Practical signal integrity walkthroughs on real designs<br><strong>eevblog forum</strong> — Ask any specific design question</p>
+          </div>
+          <div class="rule-card">
+            <p class="rule-title">Application notes</p>
+            <p>Every major IC manufacturer publishes application notes for their high-speed devices. Texas Instruments' App Notes on power supply decoupling (SLOA069, SLPA010) and layout guidelines are excellent. Read the layout section of any IC's datasheet before starting your design.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

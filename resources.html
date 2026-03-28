@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PCB Resources — PCB Primer</title>
+  <meta name="description" content="Curated PCB design resources: books, YouTube channels, online communities, component suppliers, and free tools.">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    .resource-section { margin-bottom: 3rem; }
+    .resource-card {
+      display: grid;
+      grid-template-columns: 52px 1fr;
+      gap: 1.2rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.2rem;
+      margin-bottom: 0.8rem;
+      align-items: start;
+      transition: box-shadow 0.2s;
+    }
+    .resource-card:hover { box-shadow: var(--shadow); }
+    .resource-icon {
+      width: 44px; height: 44px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+    .resource-card h4 { margin-bottom: 0.2rem; font-size: 1rem; }
+    .resource-card .r-meta {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--text-light);
+      letter-spacing: 0.05em;
+      margin-bottom: 0.4rem;
+    }
+    .resource-card p { font-size: 0.87rem; color: var(--text-muted); margin: 0; line-height: 1.6; }
+    .resource-card a.ext-link {
+      display: inline-block;
+      margin-top: 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--green);
+      text-decoration: none;
+    }
+    .resource-card a.ext-link:hover { text-decoration: underline; }
+    .rec-badge {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: var(--green-pale);
+      color: var(--green-deep);
+      border: 1px solid rgba(45,106,63,0.25);
+      padding: 2px 7px;
+      border-radius: 20px;
+      margin-left: 0.5rem;
+      vertical-align: middle;
+    }
+    .supplier-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+    .supplier-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; }
+    .supplier-card h4 { color: var(--green-deep); margin-bottom: 0.3rem; }
+    .supplier-card .supplier-type { font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-light); margin-bottom: 0.5rem; }
+    .supplier-card p { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+    .supplier-card a { font-family: var(--font-mono); font-size: 0.72rem; }
+    .tool-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+    .tool-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; }
+    .tool-card h4 { color: var(--green-deep); margin-bottom: 0.2rem; font-size: 0.98rem; }
+    .tool-card .tool-type { font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-light); margin-bottom: 0.4rem; }
+    .tool-card p { font-size: 0.83rem; color: var(--text-muted); margin-bottom: 0.5rem; line-height: 1.6; }
+    .tool-card a { font-family: var(--font-mono); font-size: 0.72rem; }
+    .free-badge { font-family: var(--font-mono); font-size: 0.6rem; background: #edf6ee; color: var(--green); border: 1px solid rgba(45,106,63,0.2); padding: 1px 6px; border-radius: 10px; margin-left: 6px; }
+    .path-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 1.4rem; margin-bottom: 1rem; }
+    .path-card .path-level { font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-light); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.5rem; }
+    .path-card h3 { margin-bottom: 0.6rem; font-size: 1.1rem; }
+    .path-card ul { padding-left: 1.2rem; font-size: 0.9rem; color: var(--text-muted); line-height: 1.85; margin: 0; }
+  </style>
+</head>
+<body>
+
+  <div class="page-header">
+    <div class="container">
+      <p class="page-label">10 / Resources</p>
+      <h1>Curated Resources</h1>
+      <p>The best books, channels, communities, suppliers, and tools — filtered for quality. No filler.</p>
+    </div>
+  </div>
+
+  <!-- BOOKS -->
+  <section class="section section--white">
+    <div class="container">
+      <p class="section-label">Books worth owning</p>
+      <h2 class="section-title">Reading List</h2>
+
+      <div class="resource-section">
+        <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:1.2rem;font-style:italic">A short, opinionated list. Each book earns its place.</p>
+
+        <div class="resource-card reveal">
+          <div class="resource-icon" style="background:#fdf0e6;font-size:1.6rem">📗</div>
+          <div>
+            <h4>The Art of Electronics <span class="rec-badge">Essential</span></h4>
+            <p class="r-meta">Horowitz &amp; Hill · 3rd Edition · Cambridge University Press</p>
+            <p>The definitive reference for analogue and digital electronics. Not a PCB design book specifically, but understanding the circuits you're building makes your layout decisions ten times better. Covers everything from op-amps to transistors to microprocessors. Buy it. It never goes out of date.</p>
+          </div>
+        </div>
+
+        <div class="resource-card reveal">
+          <div class="resource-icon" style="background:#edf6ee;font-size:1.6rem">📘</div>
+          <div>
+            <h4>Signal and Power Integrity — Simplified <span class="rec-badge">Highly recommended</span></h4>
+            <p class="r-meta">Eric Bogatin · 3rd Edition · Pearson</p>
+            <p>The clearest introduction to signal integrity, transmission lines, and power delivery networks in print. Written for practising engineers, not academics. If your boards operate above 50MHz or use USB/Ethernet/PCIe, this is essential reading. Bogatin explains complex concepts with physical intuition rather than mathematics.</p>
+          </div>
+        </div>
+
+        <div class="resource-card reveal">
+          <div class="resource-icon" style="background:#fdf6e6;font-size:1.6rem">📙</div>
+          <div>
+            <h4>PCB Design for Real-World EMI Control</h4>
+            <p class="r-meta">Bruce Archambeault · Kluwer Academic Publishers</p>
+            <p>The best practical guide to designing boards that pass EMC testing first time. Covers ground planes, decoupling, filtering, and layout techniques with measured results showing what actually works. More practical and less mathematical than most EMC texts.</p>
+          </div>
+        </div>
+
+        <div class="resource-card reveal">
+          <div class="resource-icon" style="background:#eef4ff;font-size:1.6rem">📕</div>
+          <div>
+            <h4>High Speed Signal Propagation</h4>
+            <p class="r-meta">Howard Johnson &amp; Martin Graham · Prentice Hall</p>
+            <p>The companion to their classic "High Speed Digital Design". Goes deeper on transmission line theory and board stackup effects. Reference material for 4+ layer board design with DDR memory, PCIe, or SERDES interfaces. Not beginner material — read Bogatin first.</p>
+          </div>
+        </div>
+
+        <div class="resource-card reveal">
+          <div class="resource-icon" style="background:#f5f0f5;font-size:1.6rem">📓</div>
+          <div>
+            <h4>KiCad Like a Pro</h4>
+            <p class="r-meta">Peter Dalmaris · Tech Explorations</p>
+            <p>The best step-by-step KiCad tutorial in book form. Takes you from installation through a complete board design. Available as a book or online course. Recommended if you prefer structured written instruction over YouTube tutorials.</p>
+            <a href="https://techexplorations.com/guides/kicad/" class="ext-link" target="_blank" rel="noopener">techexplorations.com ↗</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- YOUTUBE -->
+  <section class="section section--tinted">
+    <div class="container">
+      <p class="section-label">Video learning</p>
+      <h2 class="section-title">YouTube Channels</h2>
+
+      <div class="resource-card reveal">
+        <div class="resource-icon" style="background:#fdf0e6">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="6" fill="#FF0000"/><polygon points="11,8 22,14 11,20" fill="white"/></svg>
+        </div>
+        <div>
+          <h4>Phil's Lab <span class="rec-badge">Essential for beginners</span></h4>
+          <p class="r-meta">Phillip Salmony · Electronics Engineer · ~500k subscribers</p>
+          <p>The single best channel for learning PCB design with KiCad. Phil designs real professional boards on camera — STM32 projects, audio DSP boards, RF designs — and explains every decision as he makes it. His "STM32 PCB Design" series is the perfect companion to your first real board. Also covers signal integrity, SPICE simulation, and embedded firmware.</p>
+          <a href="https://www.youtube.com/@PhilsLab" class="ext-link" target="_blank" rel="noopener">youtube.com/@PhilsLab ↗</a>
+        </div>
+      </div>
+
+      <div class="resource-card reveal">
+        <div class="resource-icon" style="background:#edf6ee">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="6" fill="#FF0000"/><polygon points="11,8 22,14 11,20" fill="white"/></svg>
+        </div>
+        <div>
+          <h4>Robert Feranec</h4>
+          <p class="r-meta">Robert Feranec · Professional PCB Designer · ~250k subscribers</p>
+          <p>Deep dives into professional PCB design — layer stackups, high-speed routing, design reviews of real commercial products. His "How to Design PCB Layout" series is excellent. More intermediate/advanced than Phil's Lab but very practical. Also does design reviews of viewer-submitted boards, which are educational in themselves.</p>
+          <a href="https://www.youtube.com/@RobertFeranec" class="ext-link" target="_blank" rel="noopener">youtube.com/@RobertFeranec ↗</a>
+        </div>
+      </div>
+
+      <div class="resource-card reveal">
+        <div class="resource-icon" style="background:#fff5f0">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="6" fill="#FF0000"/><polygon points="11,8 22,14 11,20" fill="white"/></svg>
+        </div>
+        <div>
+          <h4>EEVblog</h4>
+          <p class="r-meta">Dave Jones · Electronic Engineer · ~900k subscribers</p>
+          <p>The longest-running electronics engineering YouTube channel. Teardowns, design reviews, multimeter reviews, and educational "EEVblog 101" fundamentals. Less PCB-design-specific, but invaluable for building general electronics intuition. Dave's no-nonsense approach and willingness to show failures makes the channel uniquely valuable.</p>
+          <a href="https://www.youtube.com/@EEVblog" class="ext-link" target="_blank" rel="noopener">youtube.com/@EEVblog ↗</a>
+        </div>
+      </div>
+
+      <div class="resource-card reveal">
+        <div class="resource-icon" style="background:#eef4ff">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="6" fill="#FF0000"/><polygon points="11,8 22,14 11,20" fill="white"/></svg>
+        </div>
+        <div>
+          <h4>Altium Academy</h4>
+          <p class="r-meta">Altium · Official channel</p>
+          <p>Despite being Altium's marketing channel, much of the content is software-agnostic and genuinely educational. Their "PCB Design Principles" series covers controlled impedance, stackup design, and differential pairs well. Worth watching for concept explanations even if you use KiCad.</p>
+          <a href="https://www.youtube.com/@AltiumAcademy" class="ext-link" target="_blank" rel="noopener">youtube.com/@AltiumAcademy ↗</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMMUNITIES -->
+  <section class="section section--white">
+    <div class="container">
+      <p class="section-label">Ask questions, get answers</p>
+      <h2 class="section-title">Online Communities</h2>
+
+      <div class="resource-card reveal">
+        <div class="resource-icon" style="background:#ff6314;color:white;font-family:var(--font-mono);font-size:1.1rem;font-weight:700">r/</div>
+        <div>
+          <h4>r/PrintedCircuitBoard <span class="rec-badge">Most active for design review</span></h4>
+          <p class="r-meta">Reddit · ~130k members</p>
+          <p>Post your schematic or layout for review before ordering and experienced members will find the issues. The community is friendly, thorough, and fast. Highly recommended for every board before you order your first run. Search the subreddit before asking — most common questions have been answered many times.</p>
+          <a href="https://www.reddit.com/r/PrintedCircuitBoard/" class="ext-link" target="_blank" rel="noopener">reddit.com/r/PrintedCircuitBoard ↗</a>
+        </div>
+      </div>
+
+      <div class="resource-card reveal">
+        <div class="resource-icon" style="background:#fdf0e6;font-size:1.4rem">🐝</div>
+        <div>
+          <h4>EEVblog Forums</h4>
+          <p class="r-meta">forum.eevblog.com · Long-running professional community</p>
+          <p>The best text-based community for electronics engineering. Deep expertise available across every subdomain. More formal and higher signal-to-noise than Reddit, but also slower to respond. Good for complex, nuanced questions where you need a thorough answer rather than a quick response. Dave Jones actively participates.</p>
+          <a href="https://www.eevblog.com/forum/" class="ext-link" target="_blank" rel="noopener">forum.eevblog.com ↗</a>
+        </div>
+      </div>
+
+      <div class="resource-card reveal">
+        <div class="resource-icon" style="background:#edf6ee;font-size:1.4rem">🔌</div>
+        <div>
+          <h4>KiCad Discord</h4>
+          <p class="r-meta">Official KiCad community Discord server</p>
+          <p>Real-time help with KiCad-specific questions. The official developers are active here. Good for "how do I do X in KiCad" questions where you need an immediate answer. Also useful for reporting bugs or learning about upcoming features.</p>
+          <a href="https://go.kicad.org/discord" class="ext-link" target="_blank" rel="noopener">go.kicad.org/discord ↗</a>
+        </div>
+      </div>
+
+      <div class="resource-card reveal">
+        <div class="resource-icon" style="background:#eef4ff;font-size:1.4rem">💬</div>
+        <div>
+          <h4>Hackaday.io</h4>
+          <p class="r-meta">Project sharing and discussion platform</p>
+          <p>An enormous library of open-source hardware projects. Search for boards similar to what you're designing and study how others solved the same problems. Also a good place to share your own completed designs and get feedback from the community.</p>
+          <a href="https://hackaday.io" class="ext-link" target="_blank" rel="noopener">hackaday.io ↗</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPONENT SUPPLIERS -->
+  <section class="section section--tinted">
+    <div class="container">
+      <p class="section-label">Where to buy components</p>
+      <h2 class="section-title">UK &amp; European Component Suppliers</h2>
+      <p class="section-intro">Component availability and pricing varies significantly between distributors. Check multiple sources — the same chip can vary 5× in price between distributors.</p>
+
+      <div class="supplier-grid stagger-children">
+        <div class="supplier-card reveal">
+          <h4>RS Components</h4>
+          <p class="supplier-type">UK distributor · same-day dispatch</p>
+          <p>The go-to for UK professional and hobbyist orders. Huge stock, fast delivery (next day on most items), reliable. More expensive than LCSC for small quantities but you get it tomorrow. Good for urgent components and anything not on LCSC.</p>
+          <a href="https://uk.rs-online.com" target="_blank" rel="noopener">uk.rs-online.com ↗</a>
+        </div>
+        <div class="supplier-card reveal">
+          <h4>Farnell</h4>
+          <p class="supplier-type">UK distributor · same-day dispatch</p>
+          <p>RS Components' main UK competitor. Similar range and pricing. Worth checking both RS and Farnell — each has exclusives and sometimes significantly different pricing on the same part. Element14 is their international brand.</p>
+          <a href="https://uk.farnell.com" target="_blank" rel="noopener">uk.farnell.com ↗</a>
+        </div>
+        <div class="supplier-card reveal">
+          <h4>Mouser</h4>
+          <p class="supplier-type">US distributor · worldwide shipping</p>
+          <p>Enormous selection, often the best option for newer or niche components not stocked in the UK. Ships from the US but usually arrives within a week. No minimum order. Excellent part search and parametric filtering.</p>
+          <a href="https://mouser.co.uk" target="_blank" rel="noopener">mouser.co.uk ↗</a>
+        </div>
+        <div class="supplier-card reveal">
+          <h4>Digi-Key</h4>
+          <p class="supplier-type">US distributor · worldwide shipping</p>
+          <p>Similar to Mouser — vast selection, ships from Minnesota, USA. Often has better pricing than Mouser on certain product lines. UK site avoids customs on most orders. Their parametric search is particularly powerful.</p>
+          <a href="https://www.digikey.co.uk" target="_blank" rel="noopener">digikey.co.uk ↗</a>
+        </div>
+        <div class="supplier-card reveal">
+          <h4>LCSC</h4>
+          <p class="supplier-type">Chinese distributor · JLCPCB sister company</p>
+          <p>The cheapest source for SMD passives and common ICs. Ships from China (1–3 weeks). Tightly integrated with JLCPCB's PCBA service — their part numbers map directly into JLCPCB's component library. Best for bulk orders of standard parts.</p>
+          <a href="https://www.lcsc.com" target="_blank" rel="noopener">lcsc.com ↗</a>
+        </div>
+        <div class="supplier-card reveal">
+          <h4>Pimoroni / The Pi Hut</h4>
+          <p class="supplier-type">UK hobbyist suppliers</p>
+          <p>UK-based hobbyist suppliers with good stock of development boards, modules, sensors, and accessories. Fast UK delivery. Not for raw components — but excellent for Raspberry Pi, breakout boards, and development kits. Pimoroni also sells their own excellent hardware designs.</p>
+          <a href="https://pimoroni.com" target="_blank" rel="noopener">pimoroni.com ↗</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FREE TOOLS -->
+  <section class="section section--white">
+    <div class="container">
+      <p class="section-label">Your toolkit</p>
+      <h2 class="section-title">Free Tools for PCB Designers</h2>
+
+      <div class="tool-grid stagger-children">
+        <div class="tool-card reveal">
+          <h4>KiCad <span class="free-badge">Free</span></h4>
+          <p class="tool-type">EDA / PCB Design</p>
+          <p>The full professional EDA suite — schematic editor, PCB layout editor, 3D viewer, and Gerber viewer. The tool to learn first and the tool most hobbyist designers use professionally.</p>
+          <a href="https://kicad.org" target="_blank" rel="noopener">kicad.org ↗</a>
+        </div>
+        <div class="tool-card reveal">
+          <h4>EasyEDA <span class="free-badge">Free</span></h4>
+          <p class="tool-type">Web-based EDA</p>
+          <p>Browser-based EDA with massive component library. Best for absolute beginners — zero setup, instant access. Direct ordering to JLCPCB from within the tool.</p>
+          <a href="https://easyeda.com" target="_blank" rel="noopener">easyeda.com ↗</a>
+        </div>
+        <div class="tool-card reveal">
+          <h4>LTspice <span class="free-badge">Free</span></h4>
+          <p class="tool-type">Circuit Simulation (SPICE)</p>
+          <p>Simulate circuits before building them. Check your power supply's transient response, verify filter roll-off frequencies, or test your LED resistor calculation. Made by Analog Devices, free forever.</p>
+          <a href="https://www.analog.com/ltspice" target="_blank" rel="noopener">analog.com/ltspice ↗</a>
+        </div>
+        <div class="tool-card reveal">
+          <h4>Saturn PCB Toolkit <span class="free-badge">Free</span></h4>
+          <p class="tool-type">PCB Calculators</p>
+          <p>A collection of PCB design calculators: trace width for current capacity, via current, microstrip impedance, differential pair spacing, thermal resistance. Essential reference tool. Windows application, also available as a web version.</p>
+          <a href="https://saturnpcb.com/pcb_toolkit/" target="_blank" rel="noopener">saturnpcb.com ↗</a>
+        </div>
+        <div class="tool-card reveal">
+          <h4>JLCPCB Gerber Viewer <span class="free-badge">Free</span></h4>
+          <p class="tool-type">Gerber Verification</p>
+          <p>Upload your Gerber zip and view every layer before ordering. The best free online Gerber viewer — cleaner and more reliable than most desktop alternatives. Always check your files here before submitting an order.</p>
+          <a href="https://jlcpcb.com/quote#/" target="_blank" rel="noopener">jlcpcb.com ↗</a>
+        </div>
+        <div class="tool-card reveal">
+          <h4>Component Search Engine <span class="free-badge">Free</span></h4>
+          <p class="tool-type">Part Sourcing</p>
+          <p>Searches Digi-Key, Mouser, Farnell, RS, LCSC, and others simultaneously. Find the cheapest or fastest-available option for any component across all major distributors in one search.</p>
+          <a href="https://componentsearchengine.com" target="_blank" rel="noopener">componentsearchengine.com ↗</a>
+        </div>
+        <div class="tool-card reveal">
+          <h4>Octopart <span class="free-badge">Free</span></h4>
+          <p class="tool-type">Part Search &amp; Comparison</p>
+          <p>Multi-distributor component search engine. Great for comparing prices and availability across distributors, and finding datasheet links. Owned by Altium but free to use.</p>
+          <a href="https://octopart.com" target="_blank" rel="noopener">octopart.com ↗</a>
+        </div>
+        <div class="tool-card reveal">
+          <h4>SnapEDA / Ultra Librarian <span class="free-badge">Free</span></h4>
+          <p class="tool-type">Component Libraries</p>
+          <p>Free libraries of schematic symbols and PCB footprints for thousands of components, downloadable in KiCad format. Essential when a component isn't in KiCad's built-in library. Always verify downloaded footprints against the datasheet.</p>
+          <a href="https://www.snapeda.com" target="_blank" rel="noopener">snapeda.com ↗</a>
+        </div>
+        <div class="tool-card reveal">
+          <h4>Falstad Circuit Simulator <span class="free-badge">Free · Browser</span></h4>
+          <p class="tool-type">Interactive Circuit Simulator</p>
+          <p>A browser-based circuit simulator with animated current flow. Excellent for quickly visualising how a circuit works. Not as rigorous as SPICE but much faster to set up. Great for understanding new circuits before implementing them.</p>
+          <a href="https://falstad.com/circuit/" target="_blank" rel="noopener">falstad.com/circuit ↗</a>
+        </div>
+        <div class="tool-card reveal">
+          <h4>KiCad Footprint Generator <span class="free-badge">Free</span></h4>
+          <p class="tool-type">Footprint Creation</p>
+          <p>KiCad's built-in "Footprint Wizard" and the community KiCad Footprint Generator scripts on GitHub can automatically generate footprints for ICs from their datasheet parameters. Useful for unusual packages not in the standard library.</p>
+          <a href="https://kicad.org/libraries/" target="_blank" rel="noopener">kicad.org/libraries ↗</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LEARNING PATH SUMMARY -->
+  <section class="section section--tinted">
+    <div class="container" style="max-width:740px">
+      <p class="section-label">Putting it together</p>
+      <h2 class="section-title">A Structured Learning Path</h2>
+      <p class="section-intro">There's no single right order, but this progression takes you from absolute beginner to confident designer in the most efficient way.</p>
+
+      <div class="path-card reveal">
+        <p class="path-level">Month 1 · Zero to first board</p>
+        <h3>Install KiCad, design, and order one board</h3>
+        <ul>
+          <li>Work through this site cover to cover: History → Anatomy → Components → Workflow</li>
+          <li>Watch Phil's Lab "KiCad 6 STM32 Hardware Design" series on YouTube</li>
+          <li>Design the LED blinker from the <a href="first-board.html">First Board</a> tutorial</li>
+          <li>Order from JLCPCB, solder it, make it work</li>
+        </ul>
+      </div>
+      <div class="path-card reveal">
+        <p class="path-level">Months 2–3 · Build confidence</p>
+        <h3>Progressively more complex boards</h3>
+        <ul>
+          <li>Rebuild the blinker using SMD 0805 components — same circuit, new skills</li>
+          <li>Design a simple breakout board for a microcontroller you use (RP2040, STM32, ESP32)</li>
+          <li>Post your layouts to r/PrintedCircuitBoard for review before ordering</li>
+          <li>Read Horowitz &amp; Hill Chapter 1–5 (passive components, amplifiers, logic)</li>
+        </ul>
+      </div>
+      <div class="path-card reveal">
+        <p class="path-level">Months 4–6 · Intermediate skills</p>
+        <h3>Power circuits and communication interfaces</h3>
+        <ul>
+          <li>Design a board with a switching regulator (LM2596, TPS6300x)</li>
+          <li>Add USB-C — implement the differential pair routing properly</li>
+          <li>Read the <a href="advanced.html">Advanced Topics</a> section of this site</li>
+          <li>Start reading Bogatin's "Signal and Power Integrity — Simplified"</li>
+        </ul>
+      </div>
+      <div class="path-card reveal">
+        <p class="path-level">Year 1+ · Serious designer</p>
+        <h3>4-layer boards, high-speed signals, EMC</h3>
+        <ul>
+          <li>Design your first 4-layer board — the extra cost at JLCPCB is minimal, the learning is enormous</li>
+          <li>Tackle a DDR interface or gigabit Ethernet design</li>
+          <li>Learn LTspice for power supply and filter simulation</li>
+          <li>Study IPC-2221 (Generic Standard on Printed Board Design)</li>
+          <li>Consider open-sourcing your designs on GitHub — community feedback accelerates learning dramatically</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

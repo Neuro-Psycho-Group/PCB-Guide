@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your First Board — PCB Primer</title>
+  <meta name="description" content="A complete step-by-step tutorial: design your first PCB in KiCad — an LED blinker with ATtiny85. From blank canvas to Gerbers ready to order.">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    .tutorial-step {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+    }
+    .tutorial-step-header {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      padding: 1.2rem 1.5rem;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-light);
+    }
+    .tutorial-step-header .t-num {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      flex-shrink: 0;
+      font-weight: 700;
+    }
+    .tutorial-step-header h3 { margin: 0; font-size: 1.15rem; }
+    .tutorial-step-header .t-tag {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-light);
+      margin-left: auto;
+      white-space: nowrap;
+    }
+    .tutorial-step-body { padding: 1.4rem 1.5rem; }
+    .tutorial-step-body p { font-size: 0.93rem; color: var(--text-muted); }
+    .tutorial-step-body ul, .tutorial-step-body ol { padding-left: 1.4rem; font-size: 0.93rem; color: var(--text-muted); line-height: 1.85; }
+    .tutorial-step-body li { margin-bottom: 0.2rem; }
+    .bom-table th { background: var(--green-deep); }
+    .bom-table td { font-size: 0.88rem; }
+    .bom-table td:first-child { font-family: var(--font-mono); font-size: 0.82rem; }
+    .kicad-tip {
+      background: var(--bg-code);
+      border-left: 3px solid var(--copper);
+      border-radius: 0 4px 4px 0;
+      padding: 0.7rem 1rem;
+      margin: 0.8rem 0;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+    .kicad-tip strong { color: var(--copper); }
+    .why-box {
+      background: var(--green-faint);
+      border-left: 3px solid var(--green);
+      border-radius: 0 4px 4px 0;
+      padding: 0.7rem 1rem;
+      margin: 0.8rem 0;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+    }
+    .why-box strong { color: var(--green-deep); }
+    .circuit-calc {
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1.2rem;
+      margin: 1rem 0;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      line-height: 2;
+    }
+    .circuit-calc .calc-line { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .circuit-calc .result { color: var(--green); font-weight: 700; }
+    .project-header-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      align-items: start;
+      margin-bottom: 2rem;
+    }
+    @media(max-width:640px){ .project-header-grid { grid-template-columns: 1fr; } }
+    .project-spec { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; }
+    .project-spec h4 { color: var(--green-deep); margin-bottom: 0.8rem; }
+    .milestone-bar {
+      display: flex;
+      gap: 0;
+      margin: 2rem 0;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .milestone {
+      flex: 1;
+      padding: 0.6rem 0.4rem;
+      text-align: center;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.04em;
+      color: var(--text-light);
+      border-right: 1px solid var(--border-light);
+      background: var(--bg-card);
+      transition: background 0.2s;
+    }
+    .milestone:last-child { border-right: none; }
+    .milestone.done { background: var(--green-faint); color: var(--green-deep); }
+    .milestone.current { background: var(--green-pale); color: var(--green-deep); font-weight: 700; }
+    .schematic-svg { display: block; margin: 0 auto; }
+    .next-steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+    .next-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 1.1rem; }
+    .next-card .next-num { font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-light); margin-bottom: 0.4rem; }
+    .next-card h4 { font-size: 0.95rem; margin-bottom: 0.3rem; }
+    .next-card p { font-size: 0.83rem; color: var(--text-muted); margin: 0; }
+  </style>
+</head>
+<body>
+
+  <div class="page-header">
+    <div class="container">
+      <p class="page-label">08 / First Board</p>
+      <h1>Your First PCB</h1>
+      <p>A complete walkthrough: design a real board in KiCad, generate Gerbers, and order it. Every single step, nothing assumed.</p>
+    </div>
+  </div>
+
+  <!-- PROJECT OVERVIEW -->
+  <section class="section section--white">
+    <div class="container">
+      <p class="section-label">The project</p>
+      <h2 class="section-title">What We're Building</h2>
+      <p class="section-intro">An LED blinker: an ATtiny85 microcontroller that blinks three LEDs in a pattern. Simple enough to finish in an evening, complex enough to teach every step of the design process — schematic, layout, routing, Gerber export, and ordering.</p>
+
+      <div class="project-header-grid">
+        <div>
+          <div class="project-spec">
+            <h4>Project Specs</h4>
+            <div class="spec-row"><span class="spec-label">Microcontroller</span><span class="spec-val">ATtiny85</span></div>
+            <div class="spec-row"><span class="spec-label">Supply</span><span class="spec-val">5V via USB Micro-B</span></div>
+            <div class="spec-row"><span class="spec-label">Outputs</span><span class="spec-val">3× LEDs (GPIO pins)</span></div>
+            <div class="spec-row"><span class="spec-label">Reset</span><span class="spec-val">Tactile button</span></div>
+            <div class="spec-row"><span class="spec-label">Power LED</span><span class="spec-val">1× power indicator</span></div>
+            <div class="spec-row"><span class="spec-label">ISP header</span><span class="spec-val">6-pin for programming</span></div>
+            <div class="spec-row"><span class="spec-label">Board size</span><span class="spec-val">~40×30mm</span></div>
+            <div class="spec-row"><span class="spec-label">Component style</span><span class="spec-val">Through-hole only</span></div>
+          </div>
+        </div>
+        <div>
+          <!-- Schematic preview SVG - ATtiny85 blinker circuit -->
+          <div class="diagram-wrap" style="margin:0;padding:1.2rem">
+            <svg viewBox="0 0 380 280" fill="none" xmlns="http://www.w3.org/2000/svg" class="schematic-svg" style="width:100%;max-width:380px">
+              <!-- USB connector -->
+              <rect x="10" y="110" width="36" height="50" rx="3" fill="none" stroke="#888" stroke-width="1.5"/>
+              <text x="28" y="132" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#888">USB</text>
+              <text x="28" y="143" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#888">Micro</text>
+              <text x="28" y="155" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7" fill="#aaa">J1</text>
+              <!-- VBUS line -->
+              <line x1="46" y1="118" x2="80" y2="118" stroke="#c97530" stroke-width="1.5"/>
+              <text x="62" y="113" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7" fill="#c97530">+5V</text>
+              <!-- GND line from USB -->
+              <line x1="46" y1="152" x2="80" y2="152" stroke="#888" stroke-width="1.5"/>
+              <line x1="80" y1="152" x2="80" y2="168" stroke="#888" stroke-width="1.5"/>
+              <!-- GND symbol -->
+              <line x1="72" y1="168" x2="88" y2="168" stroke="#888" stroke-width="1.5"/>
+              <line x1="75" y1="173" x2="85" y2="173" stroke="#888" stroke-width="1.2"/>
+              <line x1="78" y1="178" x2="82" y2="178" stroke="#888" stroke-width="1"/>
+              <text x="80" y="188" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7" fill="#888">GND</text>
+
+              <!-- Decoupling cap C1 -->
+              <line x1="80" y1="118" x2="108" y2="118" stroke="#c97530" stroke-width="1.5"/>
+              <line x1="108" y1="108" x2="108" y2="128" stroke="#c97530" stroke-width="2"/>
+              <line x1="114" y1="108" x2="114" y2="128" stroke="#c97530" stroke-width="2"/>
+              <line x1="114" y1="118" x2="130" y2="118" stroke="#c97530" stroke-width="1.5"/>
+              <text x="111" y="103" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#5c5545">C1</text>
+              <text x="111" y="100" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="6.5" fill="#aaa">100nF</text>
+              <!-- Cap to GND -->
+              <line x1="108" y1="128" x2="108" y2="152" stroke="#888" stroke-width="1.5"/>
+              <line x1="108" y1="152" x2="80" y2="152" stroke="#888" stroke-width="1.5"/>
+
+              <!-- ATtiny85 IC -->
+              <rect x="130" y="80" width="100" height="110" rx="4" fill="#2a2a2a" stroke="#444" stroke-width="1.5"/>
+              <text x="180" y="130" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#aaa">ATtiny85</text>
+              <text x="180" y="143" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#666">U1</text>
+              <!-- Pin notch -->
+              <path d="M170 80 Q180 86 190 80" stroke="#555" stroke-width="1" fill="none"/>
+
+              <!-- Pins left side: PB5(RST),PB3,PB4,GND  at y=98,112,126,140,154,168 -->
+              <line x1="110" y1="98"  x2="130" y2="98"  stroke="#aaa" stroke-width="1.2"/>
+              <line x1="110" y1="112" x2="130" y2="112" stroke="#aaa" stroke-width="1.2"/>
+              <line x1="110" y1="126" x2="130" y2="126" stroke="#aaa" stroke-width="1.2"/>
+              <line x1="110" y1="154" x2="130" y2="154" stroke="#aaa" stroke-width="1.2"/>
+              <text x="134" y="101" font-family="'Share Tech Mono',monospace" font-size="6.5" fill="#666">RST</text>
+              <text x="134" y="115" font-family="'Share Tech Mono',monospace" font-size="6.5" fill="#666">PB3</text>
+              <text x="134" y="129" font-family="'Share Tech Mono',monospace" font-size="6.5" fill="#666">PB4</text>
+              <text x="134" y="157" font-family="'Share Tech Mono',monospace" font-size="6.5" fill="#666">GND</text>
+
+              <!-- Pins right side: VCC,PB0,PB1,PB2 -->
+              <line x1="230" y1="98"  x2="250" y2="98"  stroke="#aaa" stroke-width="1.2"/>
+              <line x1="230" y1="112" x2="250" y2="112" stroke="#aaa" stroke-width="1.2"/>
+              <line x1="230" y1="126" x2="250" y2="126" stroke="#aaa" stroke-width="1.2"/>
+              <line x1="230" y1="140" x2="250" y2="140" stroke="#aaa" stroke-width="1.2"/>
+              <text x="206" y="101" font-family="'Share Tech Mono',monospace" font-size="6.5" fill="#666">VCC</text>
+              <text x="206" y="115" font-family="'Share Tech Mono',monospace" font-size="6.5" fill="#666">PB0</text>
+              <text x="206" y="129" font-family="'Share Tech Mono',monospace" font-size="6.5" fill="#666">PB1</text>
+              <text x="206" y="143" font-family="'Share Tech Mono',monospace" font-size="6.5" fill="#666">PB2</text>
+
+              <!-- VCC to ATtiny -->
+              <line x1="130" y1="118" x2="130" y2="98" stroke="#c97530" stroke-width="1.5"/>
+              <line x1="250" y1="98"  x2="270" y2="98" stroke="#c97530" stroke-width="1.5"/>
+              <line x1="270" y1="98"  x2="270" y2="118" stroke="#c97530" stroke-width="1.5"/>
+              <line x1="270" y1="118" x2="130" y2="118" stroke="#c97530" stroke-width="1.5"/>
+
+              <!-- GND to ATtiny -->
+              <line x1="110" y1="154" x2="92" y2="154" stroke="#888" stroke-width="1.5"/>
+              <line x1="92"  y1="154" x2="92" y2="168" stroke="#888" stroke-width="1.5"/>
+              <line x1="84"  y1="168" x2="100" y2="168" stroke="#888" stroke-width="1.2"/>
+              <line x1="87"  y1="173" x2="97"  y2="173" stroke="#888" stroke-width="1"/>
+              <line x1="90"  y1="178" x2="94"  y2="178" stroke="#888" stroke-width="0.8"/>
+
+              <!-- LED1 from PB0 -->
+              <line x1="250" y1="112" x2="276" y2="112" stroke="#5aad74" stroke-width="1.5"/>
+              <!-- Resistor R1 -->
+              <rect x="276" y="107" width="22" height="10" rx="2" fill="none" stroke="#888" stroke-width="1.2"/>
+              <text x="287" y="103" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="6.5" fill="#888">R1 470Ω</text>
+              <line x1="298" y1="112" x2="316" y2="112" stroke="#5aad74" stroke-width="1.5"/>
+              <!-- LED triangle -->
+              <polygon points="316,106 316,118 326,112" fill="none" stroke="#5aad74" stroke-width="1.2"/>
+              <line x1="326" y1="106" x2="326" y2="118" stroke="#5aad74" stroke-width="1.5"/>
+              <line x1="326" y1="112" x2="340" y2="112" stroke="#5aad74" stroke-width="1.5"/>
+              <!-- LED glow lines -->
+              <line x1="320" y1="102" x2="325" y2="96" stroke="#5aad74" stroke-width="0.8" stroke-dasharray="2 1"/>
+              <line x1="325" y1="104" x2="332" y2="99" stroke="#5aad74" stroke-width="0.8" stroke-dasharray="2 1"/>
+              <text x="321" y="95" font-family="'Share Tech Mono',monospace" font-size="6.5" fill="#5aad74">LED1</text>
+              <!-- GND for LED1 -->
+              <line x1="340" y1="112" x2="340" y2="168" stroke="#888" stroke-width="1.2"/>
+              <line x1="332" y1="168" x2="348" y2="168" stroke="#888" stroke-width="1.2"/>
+              <line x1="335" y1="173" x2="345" y2="173" stroke="#888" stroke-width="1"/>
+              <line x1="338" y1="178" x2="342" y2="178" stroke="#888" stroke-width="0.8"/>
+
+              <!-- LED2 from PB1 (simplified, same pattern) -->
+              <line x1="250" y1="126" x2="360" y2="126" stroke="#5aad74" stroke-width="1" stroke-dasharray="4 2" opacity="0.6"/>
+              <text x="310" y="122" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="6.5" fill="#5aad74" opacity="0.8">R2+LED2</text>
+
+              <!-- LED3 from PB2 -->
+              <line x1="250" y1="140" x2="360" y2="140" stroke="#5aad74" stroke-width="1" stroke-dasharray="4 2" opacity="0.5"/>
+              <text x="310" y="136" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="6.5" fill="#5aad74" opacity="0.7">R3+LED3</text>
+
+              <!-- Reset button at RST pin -->
+              <line x1="110" y1="98" x2="60" y2="98" stroke="#3a6fb8" stroke-width="1.2"/>
+              <!-- Pullup resistor -->
+              <rect x="55" y="82" width="10" height="22" rx="2" fill="none" stroke="#888" stroke-width="1.2"/>
+              <line x1="60" y1="82" x2="60" y2="72" stroke="#c97530" stroke-width="1.2"/>
+              <text x="72" y="87" font-family="'Share Tech Mono',monospace" font-size="6.5" fill="#888">R4</text>
+              <text x="72" y="95" font-family="'Share Tech Mono',monospace" font-size="6.5" fill="#aaa">10kΩ</text>
+              <line x1="60" y1="104" x2="60" y2="115" stroke="#888" stroke-width="1.2"/>
+              <!-- Button SW1 -->
+              <line x1="54" y1="115" x2="66" y2="115" stroke="#3a6fb8" stroke-width="1.2"/>
+              <circle cx="55" cy="115" r="3" fill="none" stroke="#3a6fb8" stroke-width="1.2"/>
+              <circle cx="65" cy="115" r="3" fill="none" stroke="#3a6fb8" stroke-width="1.2"/>
+              <line x1="54" y1="122" x2="66" y2="122" stroke="#3a6fb8" stroke-width="1"/>
+              <line x1="60" y1="125" x2="60" y2="140" stroke="#888" stroke-width="1.2"/>
+              <line x1="52" y1="140" x2="68" y2="140" stroke="#888" stroke-width="1.2"/>
+              <line x1="55" y1="145" x2="65" y2="145" stroke="#888" stroke-width="1"/>
+              <line x1="58" y1="150" x2="62" y2="150" stroke="#888" stroke-width="0.8"/>
+              <text x="40" y="110" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="6.5" fill="#3a6fb8">SW1</text>
+
+              <text x="190" y="268" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#8c8575">ATtiny85 LED Blinker — schematic overview</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Why this project -->
+      <div class="callout callout--tip">
+        <p class="callout-title">Why this specific project?</p>
+        <p style="margin:0">This board is perfectly calibrated for a first build. It's simple enough that you can finish it in one session, but it covers <em>everything</em>: a power circuit, passive components, an IC with decoupling, GPIO outputs with calculated resistors, a user input, and a programming header. Every subsequent board you design will use these same building blocks.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- BILL OF MATERIALS -->
+  <section class="section section--tinted">
+    <div class="container">
+      <p class="section-label">Shopping list</p>
+      <h2 class="section-title">Bill of Materials</h2>
+      <p class="section-intro">Everything you need. All components are available from RS Components, Farnell, Mouser, or on LCSC if ordering with JLCPCB assembly. Total component cost: approximately £3–5.</p>
+
+      <div class="table-wrap">
+        <table class="bom-table">
+          <thead><tr><th>Ref</th><th>Component</th><th>Value / Part</th><th>Package</th><th>Qty</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>U1</td><td>Microcontroller</td><td>ATtiny85-20PU</td><td>DIP-8</td><td>1</td><td>Use a DIP socket so you can swap chips</td></tr>
+            <tr><td>J1</td><td>USB Micro-B connector</td><td>Any USB Micro-B THT</td><td>Through-hole</td><td>1</td><td>For power only — no D+/D− needed</td></tr>
+            <tr><td>J2</td><td>ISP header</td><td>2×3 pin header, 2.54mm</td><td>Through-hole</td><td>1</td><td>For programming the ATtiny85</td></tr>
+            <tr><td>SW1</td><td>Reset button</td><td>6mm tactile switch</td><td>Through-hole</td><td>1</td><td>Any 6×6mm THT momentary</td></tr>
+            <tr><td>LED1–LED3</td><td>LEDs (blink)</td><td>Any 5mm LED</td><td>Through-hole</td><td>3</td><td>Choose your colours</td></tr>
+            <tr><td>LED4</td><td>Power indicator LED</td><td>Any 3mm or 5mm LED</td><td>Through-hole</td><td>1</td><td>Green suggested</td></tr>
+            <tr><td>R1–R3</td><td>LED resistors</td><td>470Ω</td><td>Through-hole axial</td><td>3</td><td>See calculation below</td></tr>
+            <tr><td>R4</td><td>RST pull-up</td><td>10kΩ</td><td>Through-hole axial</td><td>1</td><td>Keeps reset line high normally</td></tr>
+            <tr><td>R5</td><td>Power LED resistor</td><td>1kΩ</td><td>Through-hole axial</td><td>1</td><td>For power indicator LED</td></tr>
+            <tr><td>C1</td><td>Decoupling cap</td><td>100nF ceramic</td><td>Through-hole radial</td><td>1</td><td>Place as close to U1 VCC pin as possible</td></tr>
+            <tr><td>C2</td><td>Bulk cap</td><td>10µF electrolytic</td><td>Through-hole radial</td><td>1</td><td>Observe polarity — + to +5V</td></tr>
+            <tr><td>—</td><td>DIP-8 socket</td><td>DIP-8 IC socket</td><td>Through-hole</td><td>1</td><td>Strongly recommended for U1</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- LED resistor calculation -->
+      <h3 style="margin:2rem 0 0.5rem">LED Resistor Calculation</h3>
+      <p style="font-size:0.93rem;color:var(--text-muted);margin-bottom:1rem">Never connect an LED directly to a microcontroller pin without a resistor — it will burn out instantly. The resistor limits current to a safe level.</p>
+      <div class="circuit-calc">
+        <p style="margin:0 0 0.5rem;font-size:0.8rem;color:var(--text-light)">// For a red/yellow LED on 5V supply, 10mA target current</p>
+        <div class="calc-line"><span>Supply voltage (Vsupply)</span><span>=</span><span>5V</span></div>
+        <div class="calc-line"><span>LED forward voltage (Vf)</span><span>=</span><span>2.0V (red/yellow) · 3.0V (blue/white)</span></div>
+        <div class="calc-line"><span>Target current (If)</span><span>=</span><span>10mA = 0.010A</span></div>
+        <div class="calc-line"><span style="font-weight:700">R = (Vsupply − Vf) / If</span><span>=</span><span class="result">(5 − 2.0) / 0.010 = 300Ω → use 330Ω or 470Ω (nearest E24 values)</span></div>
+        <div class="calc-line"><span style="color:var(--text-light)">// For blue/white LEDs: (5 − 3.0) / 0.010 = 200Ω → use 220Ω</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP BY STEP KICAD TUTORIAL -->
+  <section class="section section--white">
+    <div class="container" style="max-width:780px">
+      <p class="section-label">Step by step</p>
+      <h2 class="section-title">Building It in KiCad</h2>
+      <p class="section-intro">These steps assume KiCad 7 or 8. If you haven't installed it yet — download it free from <a href="https://kicad.org" target="_blank" rel="noopener">kicad.org</a>. The interface looks complex at first; don't let that put you off. You'll only use about 10% of it for this project.</p>
+
+      <!-- KiCad 3-tool pipeline diagram -->
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 680 140" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:680px">
+          <!-- Boxes: Project Manager, Schematic Editor, PCB Editor, Gerbers -->
+          <!-- Box 1: Project Manager -->
+          <rect x="10" y="30" width="130" height="80" rx="7" fill="#edf6ee" stroke="rgba(45,106,63,0.4)" stroke-width="1.5"/>
+          <text x="75" y="58" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#2d6a3f" font-weight="600">PROJECT</text>
+          <text x="75" y="70" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#2d6a3f" font-weight="600">MANAGER</text>
+          <text x="75" y="86" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#5c5545">kicad launcher</text>
+          <text x="75" y="99" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#5c5545">start here</text>
+
+          <!-- Arrow 1→2 -->
+          <line x1="140" y1="70" x2="168" y2="70" stroke="#8c8575" stroke-width="1.5"/>
+          <polygon points="166,66 174,70 166,74" fill="#8c8575"/>
+          <text x="154" y="63" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7" fill="#8c8575">open</text>
+
+          <!-- Box 2: Schematic Editor -->
+          <rect x="174" y="30" width="148" height="80" rx="7" fill="#edf6ee" stroke="rgba(45,106,63,0.4)" stroke-width="1.5"/>
+          <!-- Schematic mini-icon inside box -->
+          <line x1="200" y1="60" x2="220" y2="60" stroke="#5aad74" stroke-width="1.2"/>
+          <rect x="216" y="55" width="14" height="10" rx="1" fill="none" stroke="#5aad74" stroke-width="1"/>
+          <line x1="230" y1="60" x2="250" y2="60" stroke="#5aad74" stroke-width="1.2"/>
+          <line x1="225" y1="60" x2="225" y2="75" stroke="#5aad74" stroke-width="1"/>
+          <line x1="218" y1="75" x2="232" y2="75" stroke="#888" stroke-width="1"/>
+          <line x1="221" y1="79" x2="229" y2="79" stroke="#888" stroke-width="0.8"/>
+          <text x="248" y="58" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#888">GND</text>
+          <text x="248" y="94" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#888">ERC →</text>
+          <text x="248" y="103" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#888">must pass</text>
+          <text x="248" y="47" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#c97530">+5V ▲</text>
+          <text x="248" y="72" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#2d6a3f" font-weight="600">SCHEMATIC</text>
+          <text x="248" y="83" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#5c5545">draw circuit · A=add</text>
+
+          <!-- Arrow 2→3 -->
+          <line x1="322" y1="70" x2="350" y2="70" stroke="#8c8575" stroke-width="1.5"/>
+          <polygon points="348,66 356,70 348,74" fill="#8c8575"/>
+          <text x="336" y="63" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7" fill="#8c8575">update PCB</text>
+
+          <!-- Box 3: PCB Editor -->
+          <rect x="356" y="30" width="148" height="80" rx="7" fill="#fdf5ee" stroke="rgba(168,90,24,0.4)" stroke-width="1.5"/>
+          <!-- PCB mini-icon: board outline with traces -->
+          <rect x="374" y="48" width="50" height="38" rx="2" fill="none" stroke="#c97530" stroke-width="1.2"/>
+          <rect x="378" y="52" width="14" height="8" rx="1" fill="#2a2a2a" stroke="#555" stroke-width="0.8"/>
+          <line x1="392" y1="56" x2="415" y2="56" stroke="#c97530" stroke-width="1.2"/>
+          <line x1="415" y1="56" x2="415" y2="68" stroke="#c97530" stroke-width="1.2"/>
+          <rect x="378" y="68" width="10" height="10" rx="1" fill="none" stroke="#2d6a3f" stroke-width="0.8"/>
+          <!-- Ratsnest lines (thin dashed) -->
+          <line x1="392" y1="78" x2="415" y2="78" stroke="#5aad74" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.6"/>
+          <text x="430" y="58" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#a85a18" font-weight="600">PCB EDITOR</text>
+          <text x="430" y="70" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#5c5545">place · route · DRC</text>
+          <text x="430" y="83" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#5c5545">X=route B=fill</text>
+          <text x="430" y="97" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#a85a18">DRC must pass →</text>
+
+          <!-- Arrow 3→4 -->
+          <line x1="504" y1="70" x2="532" y2="70" stroke="#8c8575" stroke-width="1.5"/>
+          <polygon points="530,66 538,70 530,74" fill="#8c8575"/>
+          <text x="518" y="63" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7" fill="#8c8575">plot/export</text>
+
+          <!-- Box 4: Gerbers -->
+          <rect x="538" y="30" width="130" height="80" rx="7" fill="#fdf6e6" stroke="rgba(184,134,15,0.4)" stroke-width="1.5"/>
+          <!-- File stack icon -->
+          <rect x="555" y="48" width="34" height="40" rx="2" fill="#fff" stroke="#b5820a" stroke-width="1"/>
+          <rect x="560" y="44" width="34" height="40" rx="2" fill="#fff" stroke="#b5820a" stroke-width="1"/>
+          <rect x="565" y="40" width="34" height="40" rx="2" fill="#fdf9ee" stroke="#b5820a" stroke-width="1"/>
+          <text x="582" y="57" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7" fill="#b5820a">.gtl</text>
+          <text x="582" y="67" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7" fill="#b5820a">.gbl</text>
+          <text x="582" y="77" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7" fill="#b5820a">.drl</text>
+          <text x="617" y="58" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#8a6010" font-weight="600">GERBERS</text>
+          <text x="617" y="70" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#5c5545">zip + upload</text>
+          <text x="617" y="82" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#5c5545">to JLCPCB</text>
+          <text x="617" y="94" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7" fill="#2d6a3f">↓ boards arrive ↓</text>
+          <!-- Step numbers under each box -->
+          <text x="75"  y="124" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#8c8575">Step 1</text>
+          <text x="248" y="124" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#8c8575">Steps 2–3</text>
+          <text x="430" y="124" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#8c8575">Steps 4–6</text>
+          <text x="603" y="124" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#8c8575">Step 7</text>
+        </svg>
+        <p class="diagram-caption">KiCad workflow: three tools used in sequence — each feeds into the next</p>
+      </div>
+
+      <p class="video-section-label">Recommended watch — before you start</p>
+      <a href="https://www.youtube.com/@PhilsLab/search?query=kicad+pcb+design" target="_blank" rel="noopener" class="video-card">
+        <div class="video-thumb">
+          <img src="https://img.youtube.com/vi/aVUqaB0IMh4/mqdefault.jpg" alt="Phil's Lab KiCad PCB Design Tutorial" loading="lazy" onerror="this.style.display='none'">
+          <div class="video-play">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="white"><polygon points="5,2 16,9 5,16"/></svg>
+          </div>
+        </div>
+        <div class="video-info">
+          <p class="video-channel">Phil's Lab · YouTube</p>
+          <p class="video-title">KiCad PCB Design — Full Beginner Tutorial Series</p>
+          <p class="video-desc">Phillip Salmony designs real boards on camera with narrated explanations at every step. The KiCad STM32 hardware design series covers schematic, layout, routing, and Gerber export — everything in this tutorial but with live visual walkthrough. Watching one of his videos alongside this guide is the fastest way to learn.</p>
+          <span class="video-cta">▶ Watch on YouTube →</span>
+        </div>
+      </a>
+
+      <!-- Step 1 -->
+      <div class="tutorial-step reveal">
+        <div class="tutorial-step-header">
+          <div class="t-num" style="background:var(--green-pale);color:var(--green-deep)">1</div>
+          <h3>Create a new project</h3>
+          <span class="t-tag">~2 min</span>
+        </div>
+        <div class="tutorial-step-body">
+          <ol>
+            <li>Open KiCad. Click <strong>File → New Project</strong></li>
+            <li>Create a folder called <code>attiny85-blinker</code> and save the project inside it</li>
+            <li>KiCad creates two files: <code>.kicad_sch</code> (schematic) and <code>.kicad_pcb</code> (layout). You'll work in both.</li>
+          </ol>
+          <div class="kicad-tip"><strong>KiCad tip:</strong> Save often. Ctrl+S works everywhere in KiCad. The tool does not autosave by default.</div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="tutorial-step reveal">
+        <div class="tutorial-step-header">
+          <div class="t-num" style="background:var(--green-pale);color:var(--green-deep)">2</div>
+          <h3>Draw the schematic</h3>
+          <span class="t-tag">~30 min</span>
+        </div>
+        <div class="tutorial-step-body">
+          <p>Double-click the <code>.kicad_sch</code> file to open the Schematic Editor. This is where you place component symbols and draw connections.</p>
+          <ol>
+            <li>Press <strong>A</strong> to open the component picker. Search for <code>ATtiny85</code> and place it in the centre of the canvas.</li>
+            <li>Search and place all other components: <code>LED</code>, <code>R</code> (resistor), <code>C</code> (capacitor), <code>USB_B_Micro</code>, <code>SW_Push</code>, <code>Conn_02x03_Odd_Even</code> (ISP header).</li>
+            <li>Press <strong>W</strong> to draw wires. Connect pins as per the schematic above.</li>
+            <li>Add power symbols: press <strong>P</strong>, search <code>+5V</code> for the positive rail and <code>GND</code> for ground. Place these on every VCC and GND pin.</li>
+            <li>Add component values: double-click each component and fill in the <strong>Value</strong> field (470, 10k, 100n, etc.)</li>
+          </ol>
+          <div class="kicad-tip"><strong>KiCad tip:</strong> Press <strong>E</strong> on any component to edit its properties. Press <strong>R</strong> to rotate before placing. Press <strong>G</strong> while hovering a component to grab and move it with wires attached.</div>
+          <div class="why-box"><strong>Why power symbols?</strong> Instead of drawing a wire from +5V all the way across the schematic to every VCC pin, you place a +5V symbol on each pin. KiCad knows that all +5V symbols are connected — cleaner schematic, same electrical result.</div>
+          <ol start="6">
+            <li>Run the Electrical Rules Check: <strong>Inspect → Electrical Rules Checker → Run ERC</strong>. Fix all errors before proceeding. Common first-timer issues: missing power pins, unconnected component pins.</li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="tutorial-step reveal">
+        <div class="tutorial-step-header">
+          <div class="t-num" style="background:var(--green-pale);color:var(--green-deep)">3</div>
+          <h3>Assign footprints</h3>
+          <span class="t-tag">~15 min</span>
+        </div>
+        <div class="tutorial-step-body">
+          <p>Open <strong>Tools → Assign Footprints</strong>. For each component, select a physical footprint from KiCad's built-in library.</p>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Component</th><th>Footprint to use</th></tr></thead>
+              <tbody>
+                <tr><td>U1 ATtiny85</td><td><code>Package_DIP:DIP-8_W7.62mm</code></td></tr>
+                <tr><td>LED1–LED4</td><td><code>LED_THT:LED_D5.0mm</code></td></tr>
+                <tr><td>R1–R5</td><td><code>Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm</code></td></tr>
+                <tr><td>C1 (100nF)</td><td><code>Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm</code></td></tr>
+                <tr><td>C2 (10µF)</td><td><code>Capacitor_THT:CP_Radial_D5.0mm_P2.50mm</code></td></tr>
+                <tr><td>SW1</td><td><code>Button_Switch_THT:SW_PUSH_6mm</code></td></tr>
+                <tr><td>J1 USB Micro-B</td><td><code>Connector_USB:USB_Micro-B_Molex-105017</code> (or similar)</td></tr>
+                <tr><td>J2 ISP header</td><td><code>Connector_PinHeader_2.54mm:PinHeader_2x03_P2.54mm</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="kicad-tip"><strong>KiCad tip:</strong> You can preview any footprint by clicking it and selecting "Preview". Always verify the footprint pad pattern matches the component's actual dimensions before ordering.</div>
+        </div>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="tutorial-step reveal">
+        <div class="tutorial-step-header">
+          <div class="t-num" style="background:#fdf0e6;color:var(--copper)">4</div>
+          <h3>Set board outline and place components</h3>
+          <span class="t-tag">~20 min</span>
+        </div>
+        <div class="tutorial-step-body">
+          <p>Open the PCB Editor (<strong>Tools → Open PCB in Editor</strong> or click the PCB file). Import the schematic netlist: <strong>Tools → Update PCB from Schematic</strong>. All your components appear in a pile. Now arrange them.</p>
+          <ol>
+            <li>Draw the board outline: switch to the <code>Edge.Cuts</code> layer, press <strong>R</strong>, draw a 40×30mm rectangle. This defines your physical board boundary.</li>
+            <li>Drag components inside the outline. Suggested placement:
+              <ul>
+                <li>USB connector: bottom edge, centred</li>
+                <li>ISP header: top-right corner</li>
+                <li>ATtiny85: centre of board</li>
+                <li>Reset button: top-left area</li>
+                <li>LEDs: spread across the top</li>
+                <li>Resistors and capacitors: close to the components they connect to</li>
+              </ul>
+            </li>
+            <li>Place C1 (100nF decoupling cap) physically as close to the ATtiny85's VCC pin as possible — ideally within 2mm.</li>
+          </ol>
+          <div class="why-box"><strong>Why placement matters so much:</strong> Good placement means short traces, which means less resistance, less noise, and easier routing. The ratsnest lines (thin grey lines showing unrouted connections) should look tidy and un-crossed after good placement. If they look like a tangled mess, rearrange components until they don't.</div>
+        </div>
+      </div>
+
+      <!-- Step 5 -->
+      <div class="tutorial-step reveal">
+        <div class="tutorial-step-header">
+          <div class="t-num" style="background:#fdf0e6;color:var(--copper)">5</div>
+          <h3>Route traces</h3>
+          <span class="t-tag">~25 min</span>
+        </div>
+        <div class="tutorial-step-body">
+          <!-- Ratsnest vs routed diagram -->
+          <div class="diagram-wrap" style="margin-bottom:1.2rem">
+            <svg viewBox="0 0 580 165" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:580px">
+              <text x="135" y="15" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="10" fill="#b5820a" font-weight="600">Before routing — ratsnest</text>
+              <rect x="20" y="22" width="230" height="132" rx="4" fill="#edf6ee" stroke="#2d6a3f" stroke-width="1.5"/>
+              <rect x="36"  y="36" width="30" height="18" rx="2" fill="#555" stroke="#333" stroke-width="1"/>
+              <text x="51"  y="49" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7" fill="#ccc">USB</text>
+              <rect x="98" y="68" width="42" height="42" rx="2" fill="#2a2a2a" stroke="#555" stroke-width="1"/>
+              <text x="119" y="93" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7" fill="#aaa">MCU</text>
+              <rect x="168" y="36" width="18" height="10" rx="1" fill="#777" stroke="#555" stroke-width="0.8"/>
+              <rect x="168" y="52" width="18" height="10" rx="1" fill="#777" stroke="#555" stroke-width="0.8"/>
+              <rect x="168" y="68" width="18" height="10" rx="1" fill="#777" stroke="#555" stroke-width="0.8"/>
+              <circle cx="198" cy="41"  r="6" fill="none" stroke="#f59e0b" stroke-width="1.5"/>
+              <circle cx="198" cy="57"  r="6" fill="none" stroke="#f59e0b" stroke-width="1.5"/>
+              <circle cx="198" cy="73"  r="6" fill="none" stroke="#f59e0b" stroke-width="1.5"/>
+              <rect x="36"  y="116" width="24" height="24" rx="2" fill="#666" stroke="#444" stroke-width="1"/>
+              <text x="48"  y="132" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="6.5" fill="#ccc">ISP</text>
+              <!-- Ratsnest lines -->
+              <line x1="66"  y1="45" x2="98"  y2="78"  stroke="#5aad74" stroke-width="0.9" stroke-dasharray="3 2" opacity="0.8"/>
+              <line x1="66"  y1="45" x2="98"  y2="90"  stroke="#5aad74" stroke-width="0.9" stroke-dasharray="3 2" opacity="0.8"/>
+              <line x1="140" y1="78" x2="168" y2="41"  stroke="#c97530" stroke-width="0.9" stroke-dasharray="3 2" opacity="0.8"/>
+              <line x1="140" y1="85" x2="168" y2="57"  stroke="#c97530" stroke-width="0.9" stroke-dasharray="3 2" opacity="0.8"/>
+              <line x1="140" y1="91" x2="168" y2="73"  stroke="#c97530" stroke-width="0.9" stroke-dasharray="3 2" opacity="0.8"/>
+              <line x1="186" y1="41" x2="198" y2="41"  stroke="#5aad74" stroke-width="0.9" stroke-dasharray="3 2" opacity="0.8"/>
+              <line x1="186" y1="57" x2="198" y2="57"  stroke="#5aad74" stroke-width="0.9" stroke-dasharray="3 2" opacity="0.8"/>
+              <line x1="186" y1="73" x2="198" y2="73"  stroke="#5aad74" stroke-width="0.9" stroke-dasharray="3 2" opacity="0.8"/>
+              <line x1="60"  y1="128" x2="98" y2="102" stroke="#3a6fb8" stroke-width="0.9" stroke-dasharray="3 2" opacity="0.8"/>
+              <text x="135" y="155" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#b5820a">thin dashed lines = unrouted connections</text>
+              <!-- Divider -->
+              <line x1="288" y1="8" x2="288" y2="158" stroke="#ddd" stroke-width="1" stroke-dasharray="4 3"/>
+              <!-- AFTER: routed -->
+              <text x="433" y="15" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="10" fill="#2d6a3f" font-weight="600">After routing — copper traces</text>
+              <rect x="308" y="22" width="230" height="132" rx="4" fill="#edf6ee" stroke="#2d6a3f" stroke-width="1.5"/>
+              <rect x="324" y="36" width="30" height="18" rx="2" fill="#555" stroke="#333" stroke-width="1"/>
+              <text x="339" y="49" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7" fill="#ccc">USB</text>
+              <rect x="386" y="68" width="42" height="42" rx="2" fill="#2a2a2a" stroke="#555" stroke-width="1"/>
+              <text x="407" y="93" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7" fill="#aaa">MCU</text>
+              <rect x="456" y="36" width="18" height="10" rx="1" fill="#777" stroke="#555" stroke-width="0.8"/>
+              <rect x="456" y="52" width="18" height="10" rx="1" fill="#777" stroke="#555" stroke-width="0.8"/>
+              <rect x="456" y="68" width="18" height="10" rx="1" fill="#777" stroke="#555" stroke-width="0.8"/>
+              <circle cx="486" cy="41" r="6" fill="none" stroke="#f59e0b" stroke-width="1.5"/>
+              <circle cx="486" cy="57" r="6" fill="none" stroke="#f59e0b" stroke-width="1.5"/>
+              <circle cx="486" cy="73" r="6" fill="none" stroke="#f59e0b" stroke-width="1.5"/>
+              <rect x="324" y="116" width="24" height="24" rx="2" fill="#666" stroke="#444" stroke-width="1"/>
+              <text x="336" y="132" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="6.5" fill="#ccc">ISP</text>
+              <!-- Copper traces (proper routes) -->
+              <path d="M354 45 Q368 45 378 60 L386 76" stroke="#c97530" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M354 45 L376 45 L376 82 L386 82" stroke="#c97530" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M428 76 L442 76 L442 41 L456 41" stroke="#d4a520" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M428 84 L448 84 L448 57 L456 57" stroke="#d4a520" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M428 91 L452 91 L452 73 L456 73" stroke="#d4a520" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M474 41 L486 41" stroke="#5aad74" stroke-width="2" fill="none" stroke-linecap="round"/>
+              <path d="M474 57 L486 57" stroke="#5aad74" stroke-width="2" fill="none" stroke-linecap="round"/>
+              <path d="M474 73 L486 73" stroke="#5aad74" stroke-width="2" fill="none" stroke-linecap="round"/>
+              <!-- GND pour hint -->
+              <rect x="310" y="24" width="226" height="128" rx="3" fill="rgba(45,106,63,0.06)" stroke="none"/>
+              <text x="433" y="148" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#2d6a3f">solid copper traces · GND pour on bottom</text>
+            </svg>
+            <p class="diagram-caption">Your goal: replace every ratsnest line with a routed copper trace. No thin lines remaining = fully routed.</p>
+          </div>
+          <p>Set your trace widths before starting. Go to <strong>Board Setup → Design Rules → Net Classes</strong>:</p>
+          <ul>
+            <li>Default net class: 0.25mm trace width, 0.25mm clearance</li>
+            <li>Create a "Power" net class, assign +5V and GND: 0.5mm trace width</li>
+          </ul>
+          <p>Now route traces. Press <strong>X</strong> to start routing. Click a pad to begin, route to the other pad, click to finish. Follow these routing rules:</p>
+          <ol>
+            <li>Route power first: +5V from USB → C2 → C1 → ATtiny85 VCC, then ISP header VCC</li>
+            <li>Route GND: use the bottom copper layer for a ground plane (see step 6)</li>
+            <li>Route ATtiny85 PB0/PB1/PB2 to LED resistors, then to LED anodes</li>
+            <li>Route LED cathodes to GND</li>
+            <li>Route reset button, pull-up resistor, and ISP header RST pin</li>
+          </ol>
+          <div class="kicad-tip"><strong>KiCad tip:</strong> Press <strong>/</strong> while routing to switch between top copper (F.Cu) and bottom copper (B.Cu) — KiCad automatically adds a via at the layer transition. Use this to avoid crossing traces.</div>
+          <div class="callout callout--tip" style="margin-top:1rem">
+            <p class="callout-title">Don't panic about perfection</p>
+            <p style="margin:0;font-size:0.91rem">Your first board will not be perfectly routed. Traces will be longer than ideal, some will take detours. That's fine — this is a learning exercise. As long as the DRC passes and all nets are connected, the board will work.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 6 -->
+      <div class="tutorial-step reveal">
+        <div class="tutorial-step-header">
+          <div class="t-num" style="background:#fdf0e6;color:var(--copper)">6</div>
+          <h3>Add ground plane and finishing touches</h3>
+          <span class="t-tag">~10 min</span>
+        </div>
+        <div class="tutorial-step-body">
+          <ol>
+            <li>Select the B.Cu (bottom copper) layer. Press <strong>Z</strong> to add a filled zone. Draw a rectangle covering the entire board area inside the Edge.Cuts boundary. Set the zone net to <strong>GND</strong>. Press <strong>B</strong> to fill all zones.</li>
+            <li>The bottom copper layer now floods with GND copper everywhere it can fit. This is your ground plane.</li>
+            <li>Add silkscreen labels: switch to F.Silkscreen, add text for board name, revision, and any labels you want (+ polarity on C2, etc.)</li>
+            <li>Add mounting holes if desired: <strong>Add Footprint</strong> → search <code>MountingHole</code> → place in corners</li>
+          </ol>
+          <div class="why-box"><strong>Why a ground plane?</strong> Instead of routing individual GND traces to every component, a copper pour on the bottom layer connects all GND pads automatically (via their connection to the flood). Lower impedance, less noise, and your routing becomes much simpler — any GND pad is automatically connected by the nearest via to the pour.</div>
+        </div>
+      </div>
+
+      <!-- Step 7 -->
+      <div class="tutorial-step reveal">
+        <div class="tutorial-step-header">
+          <div class="t-num" style="background:#fdf6e6;color:var(--gold)">7</div>
+          <h3>Run DRC and generate Gerbers</h3>
+          <span class="t-tag">~10 min</span>
+        </div>
+        <div class="tutorial-step-body">
+          <ol>
+            <li>Run <strong>Inspect → Design Rules Checker → Run DRC</strong>. Fix every error. Common issues: traces too close to board edge, unconnected nets (you missed routing something), clearance violations.</li>
+            <li>Go to <strong>File → Fabrication Outputs → Gerbers</strong>. Make sure all layers are ticked: F.Cu, B.Cu, F.Mask, B.Mask, F.Silkscreen, Edge.Cuts. Click Generate.</li>
+            <li>Also generate: <strong>File → Fabrication Outputs → Drill Files</strong>. Use Excellon format.</li>
+            <li>Put all generated files in a zip archive.</li>
+            <li><strong>Preview the Gerbers</strong> by uploading the zip to <a href="https://jlcpcb.com" target="_blank" rel="noopener">JLCPCB's Gerber viewer</a>. Verify each layer looks correct before ordering.</li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- Step 8 -->
+      <div class="tutorial-step reveal">
+        <div class="tutorial-step-header">
+          <div class="t-num" style="background:#eef4ff;color:#3a6fb8">8</div>
+          <h3>Order and wait</h3>
+          <span class="t-tag">~5 min + shipping</span>
+        </div>
+        <div class="tutorial-step-body">
+          <ol>
+            <li>Go to <a href="https://jlcpcb.com" target="_blank" rel="noopener">jlcpcb.com</a>. Click "Order Now".</li>
+            <li>Upload your Gerber zip. Their system auto-detects layers, board size, and drill count.</li>
+            <li>Settings: 5 boards · 1.6mm FR4 · Green solder mask · HASL lead-free · 1oz copper. Leave everything else as default.</li>
+            <li>Add to cart, checkout. Shipping to UK via DHL: approximately 7–14 days.</li>
+            <li>While you wait: write the ATtiny85 firmware. A simple blink sketch in the Arduino IDE with ATtiny85 board support takes about 10 minutes.</li>
+          </ol>
+          <div class="callout callout--info">
+            <p class="callout-title">Programming the ATtiny85</p>
+            <p style="margin:0;font-size:0.91rem">The ATtiny85 is programmed via its ISP header (J2 on your board) using a programmer like a USBasp or another Arduino acting as "Arduino as ISP". Install ATtinyCore in the Arduino IDE board manager, select ATtiny85, set clock to 8MHz internal, and upload. Your ISP header pinout should follow the standard AVRISP/USBasp 6-pin layout.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- WHAT'S NEXT -->
+  <section class="section section--tinted">
+    <div class="container">
+      <p class="section-label">After your first board</p>
+      <h2 class="section-title">What to Build Next</h2>
+      <p class="section-intro">You've now done everything once. Every subsequent board uses the same skills — just more of them, and more complex. Here's a suggested progression.</p>
+
+      <div class="next-steps-grid stagger-children">
+        <div class="next-card reveal">
+          <p class="next-num">Project 2</p>
+          <h4>SMD LED blinker</h4>
+          <p>Rebuild the same board using 0805 SMD components instead of through-hole. Same circuit, different soldering challenge. Teaches SMD footprints and soldering technique.</p>
+        </div>
+        <div class="next-card reveal">
+          <p class="next-num">Project 3</p>
+          <h4>STM32 or RP2040 breakout</h4>
+          <p>A 32-bit microcontroller breakout with USB, decoupling, crystal, and GPIO headers. Introduces multi-layer concepts and more complex IC packages (QFP/QFN).</p>
+        </div>
+        <div class="next-card reveal">
+          <p class="next-num">Project 4</p>
+          <h4>Custom power supply</h4>
+          <p>A buck converter (e.g. LM2596 or MP2307) stepping 12V down to 5V. Introduces power design, inductor selection, and thermal management.</p>
+        </div>
+        <div class="next-card reveal">
+          <p class="next-num">Project 5</p>
+          <h4>Sensor + display board</h4>
+          <p>I²C sensor (BME280 temperature/humidity) feeding an OLED display via a microcontroller. Introduces I²C routing, pull-up resistors, and display interfaces.</p>
+        </div>
+        <div class="next-card reveal">
+          <p class="next-num">Project 6</p>
+          <h4>Motor driver</h4>
+          <p>An H-bridge (DRV8833 or L298N) controlling DC motors with PWM. Teaches high-current trace sizing, flyback diodes, and mixed power/signal design.</p>
+        </div>
+        <div class="next-card reveal">
+          <p class="next-num">Long-term</p>
+          <h4>4-layer design</h4>
+          <p>When a 2-layer board starts to feel cramped or noisy, move to 4 layers: dedicated ground and power planes sandwiched inside. Transforms signal integrity.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

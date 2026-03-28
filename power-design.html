@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Power Supply Design — PCB Primer</title>
+  <meta name="description" content="PCB power supply design: LDO regulators, buck converters, USB power input, capacitor selection, thermal management, and common power mistakes.">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    .topology-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin: 1.5rem 0; }
+    .topology-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .topology-card .tc-header { padding: 0.9rem 1.2rem; border-bottom: 1px solid var(--border-light); }
+    .topology-card .tc-name { font-family: var(--font-serif); font-size: 1.15rem; font-weight: 700; margin-bottom: 0.1rem; }
+    .topology-card .tc-type { font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-light); letter-spacing: 0.05em; }
+    .topology-card .tc-body { padding: 1rem 1.2rem; }
+    .topology-card .tc-body p { font-size: 0.88rem; color: var(--text-muted); line-height: 1.65; margin-bottom: 0.6rem; }
+    .topology-card .efficiency-bar { height: 8px; background: var(--border-light); border-radius: 4px; margin: 0.5rem 0 0.2rem; overflow: hidden; }
+    .topology-card .efficiency-fill { height: 100%; border-radius: 4px; }
+    .topology-card .efficiency-label { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-light); }
+
+    .formula-box {
+      background: var(--bg-code); border: 1px solid var(--border);
+      border-radius: 6px; padding: 1.2rem 1.4rem;
+      font-family: var(--font-mono); font-size: 0.85rem;
+      line-height: 2; margin: 1rem 0;
+    }
+    .formula-box .f-title { font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-light); margin-bottom: 0.4rem; }
+    .formula-box .formula { color: var(--green-deep); font-size: 0.95rem; font-weight: 700; }
+    .formula-box .var-line { color: var(--text-muted); font-size: 0.78rem; }
+    .formula-box .example { color: var(--copper); font-size: 0.82rem; }
+
+    .ldo-diagram { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; margin: 1.5rem 0; overflow-x: auto; }
+    .buck-steps { display: flex; flex-direction: column; gap: 0; }
+    .buck-step { display: grid; grid-template-columns: 40px 1fr; gap: 1rem; padding: 0.9rem 0; border-bottom: 1px dashed var(--border-light); align-items: start; }
+    .buck-step:last-child { border-bottom: none; }
+    .buck-step-n { font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-light); padding-top: 3px; }
+    .buck-step h4 { font-size: 0.95rem; margin-bottom: 0.2rem; }
+    .buck-step p { font-size: 0.88rem; color: var(--text-muted); margin: 0; line-height: 1.6; }
+    .power-mistake { background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--copper); border-radius: 0 8px 8px 0; padding: 1.1rem 1.3rem; margin-bottom: 1rem; }
+    .power-mistake .pm-title { font-family: var(--font-serif); font-size: 1.05rem; font-weight: 700; margin-bottom: 0.3rem; color: var(--text); }
+    .power-mistake .pm-mistake { font-size: 0.85rem; color: var(--copper); margin-bottom: 0.5rem; font-family: var(--font-mono); }
+    .power-mistake .pm-fix { font-size: 0.88rem; color: var(--text-muted); line-height: 1.6; }
+    .power-mistake .pm-fix strong { color: var(--green-deep); }
+    .usb-power-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+    .usb-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 1.1rem; }
+    .usb-card .usb-spec { font-family: var(--font-mono); font-size: 0.72rem; color: var(--copper); margin-bottom: 0.4rem; }
+    .usb-card h4 { font-size: 0.92rem; margin-bottom: 0.3rem; }
+    .usb-card p { font-size: 0.83rem; color: var(--text-muted); margin: 0; line-height: 1.6; }
+    .thermal-calc { background: var(--bg-code); border: 1px solid var(--border); border-radius: 6px; padding: 1.2rem; margin: 1rem 0; }
+    .tc-row { display: flex; justify-content: space-between; align-items: baseline; padding: 5px 0; border-bottom: 1px dashed var(--border-light); font-size: 0.88rem; gap: 1rem; flex-wrap: wrap; }
+    .tc-row:last-child { border-bottom: none; }
+    .tc-label { color: var(--text-muted); }
+    .tc-val { font-family: var(--font-mono); font-size: 0.83rem; color: var(--green-deep); }
+    .tc-result { font-family: var(--font-mono); font-size: 0.9rem; color: var(--copper); font-weight: 700; }
+  </style>
+</head>
+<body>
+
+  <div class="page-header">
+    <div class="container">
+      <p class="page-label">13 / Power Design</p>
+      <h1>Power Supply Design</h1>
+      <p>The most common source of first-board failures. How to select the right regulator topology, size your capacitors correctly, calculate thermal dissipation, and handle USB power safely.</p>
+    </div>
+  </div>
+
+  <!-- WHY IT MATTERS -->
+  <section class="section section--white">
+    <div class="container" style="max-width:740px">
+      <p class="section-label">Why power matters most</p>
+      <h2 class="section-title">Power Is the Foundation</h2>
+      <p>Everything on your board depends on clean, stable power. A noisy supply corrupts ADC readings. An underrated regulator resets under load. A poorly chosen capacitor causes a switching supply to oscillate. Insufficient current causes voltage rail sag that manifests as mysterious glitches in completely unrelated parts of the circuit.</p>
+      <p>Beginners often treat the power supply as an afterthought — grab a common LDO, slap a couple of capacitors on it, and move on. This section teaches you to treat power design as a first-class design concern, not a checkbox.</p>
+
+      <div class="callout callout--tip">
+        <p class="callout-title">The two things power design always requires</p>
+        <p style="margin:0">No matter what regulator you choose: (1) <strong>Input and output capacitors sized for the regulator's datasheet requirements</strong> — not just any capacitor, but the correct type and value. (2) <strong>Decoupling capacitors on every IC power pin</strong> — placed as close as possible to the pin. These two things, done correctly, solve 80% of power integrity problems before they start.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPOLOGIES -->
+  <section class="section section--tinted">
+    <div class="container">
+      <p class="section-label">Choosing a topology</p>
+      <h2 class="section-title">Regulator Topologies Compared</h2>
+      <p class="section-intro">The fundamental choice in power design: how much input-output voltage difference do you have, and how much current do you need? These two factors drive the topology decision.</p>
+
+      <div class="topology-grid">
+        <div class="topology-card">
+          <div class="tc-header">
+            <div class="tc-type">Linear regulator</div>
+            <div class="tc-name">LDO Regulator</div>
+          </div>
+          <div class="tc-body">
+            <p>The simplest regulator: passes current through a transistor in a controlled way, burning the excess voltage as heat. "LDO" stands for Low Drop-Out — the minimum voltage difference between input and output at which it still regulates. Extremely simple to implement: input cap, regulator, output cap. That's it.</p>
+            <div>
+              <div class="efficiency-bar"><div class="efficiency-fill" style="width:45%;background:var(--gold)"></div></div>
+              <div class="efficiency-label">Efficiency: Vout/Vin (e.g. 3.3/5V = 66%)</div>
+            </div>
+            <div style="margin-top:0.8rem">
+              <div class="spec-row"><span class="spec-label">Best for</span><span class="spec-val">Low current (&lt;500mA), small Vin–Vout gap</span></div>
+              <div class="spec-row"><span class="spec-label">Noise</span><span class="spec-val">Very low — ideal for analog circuits</span></div>
+              <div class="spec-row"><span class="spec-label">Complexity</span><span class="spec-val">Minimal — 3 components</span></div>
+              <div class="spec-row"><span class="spec-label">Cost</span><span class="spec-val">£0.10–£0.50 per unit</span></div>
+              <div class="spec-row"><span class="spec-label">Examples</span><span class="spec-val">AMS1117-3.3, MCP1700, AP2112</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="topology-card">
+          <div class="tc-header">
+            <div class="tc-type">Switching regulator (step-down)</div>
+            <div class="tc-name">Buck Converter</div>
+          </div>
+          <div class="tc-body">
+            <p>Rapidly switches a transistor on and off, using an inductor and capacitor to smooth the result into a regulated DC output. Highly efficient because the transistor is either fully on (low resistance, low loss) or fully off (no current, no loss) — it's never in a linear region burning power as heat.</p>
+            <div>
+              <div class="efficiency-bar"><div class="efficiency-fill" style="width:90%;background:var(--green)"></div></div>
+              <div class="efficiency-label">Efficiency: typically 85–95%</div>
+            </div>
+            <div style="margin-top:0.8rem">
+              <div class="spec-row"><span class="spec-label">Best for</span><span class="spec-val">Higher current (&gt;500mA), large Vin–Vout gap</span></div>
+              <div class="spec-row"><span class="spec-label">Noise</span><span class="spec-val">Higher — switching harmonics on output</span></div>
+              <div class="spec-row"><span class="spec-label">Complexity</span><span class="spec-val">Moderate — 6–10 components</span></div>
+              <div class="spec-row"><span class="spec-label">Cost</span><span class="spec-val">£0.30–£1.50 per unit</span></div>
+              <div class="spec-row"><span class="spec-label">Examples</span><span class="spec-val">TPS62x, LMR33630, MP2307</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="topology-card">
+          <div class="tc-header">
+            <div class="tc-type">Switching regulator (step-up)</div>
+            <div class="tc-name">Boost Converter</div>
+          </div>
+          <div class="tc-body">
+            <p>Generates an output voltage higher than the input voltage — also using switch + inductor + diode topology. Common uses: generating 5V from a 3.7V LiPo battery, generating a 12V supply from a 5V bus, powering white LEDs (which need ~3.2V forward voltage) from a 3.3V supply.</p>
+            <div>
+              <div class="efficiency-bar"><div class="efficiency-fill" style="width:85%;background:var(--green)"></div></div>
+              <div class="efficiency-label">Efficiency: typically 80–92%</div>
+            </div>
+            <div style="margin-top:0.8rem">
+              <div class="spec-row"><span class="spec-label">Best for</span><span class="spec-val">Battery-powered projects needing higher voltage</span></div>
+              <div class="spec-row"><span class="spec-label">Noise</span><span class="spec-val">Higher than LDO</span></div>
+              <div class="spec-row"><span class="spec-label">Examples</span><span class="spec-val">TPS61023, PAM2401, SX1308</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="topology-card">
+          <div class="tc-header">
+            <div class="tc-type">Battery-specific</div>
+            <div class="tc-name">Buck-Boost / SEPIC</div>
+          </div>
+          <div class="tc-body">
+            <p>Regulates output voltage regardless of whether the input is higher or lower than the output. Essential for battery-powered devices where the battery voltage spans a range that crosses the desired output voltage (e.g. a LiPo at 4.2V–3.0V needing to produce a steady 3.3V).</p>
+            <div>
+              <div class="efficiency-bar"><div class="efficiency-fill" style="width:82%;background:var(--gold)"></div></div>
+              <div class="efficiency-label">Efficiency: typically 80–90%</div>
+            </div>
+            <div style="margin-top:0.8rem">
+              <div class="spec-row"><span class="spec-label">Best for</span><span class="spec-val">Single-cell LiPo → 3.3V with full discharge range</span></div>
+              <div class="spec-row"><span class="spec-label">Complexity</span><span class="spec-val">Higher — more components</span></div>
+              <div class="spec-row"><span class="spec-label">Examples</span><span class="spec-val">TPS63020, LTC3115, TPS630250</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout--info">
+        <p class="callout-title">When to use an LDO vs a buck converter</p>
+        <p style="margin:0;font-size:0.91rem">Use an <strong>LDO</strong> if: your input-output voltage difference is small (less than 1–2V), your current requirement is low (under 300–500mA), or you need the cleanest possible supply for analog circuits (ADC, RF). Use a <strong>buck converter</strong> if: your input voltage is significantly higher than output (e.g. 12V in, 3.3V out), your current requirement is above 500mA, or battery life matters. The crossover point is roughly where the LDO's heat dissipation becomes a problem: P_loss = (Vin − Vout) × Iload. If that product exceeds about 0.5–1W, a buck converter saves you from a heatsink.</p>
+      </div>
+
+      <!-- Topology decision flowchart -->
+      <div class="diagram-wrap" style="margin-top:2rem">
+        <svg viewBox="0 0 600 380" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:600px">
+          <defs>
+            <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#8c8575"/>
+            </marker>
+            <marker id="arr-g" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#2d6a3f"/>
+            </marker>
+          </defs>
+
+          <!-- Start box -->
+          <rect x="200" y="10" width="200" height="44" rx="22" fill="#1a3d26" stroke="#2d6a3f" stroke-width="1.5"/>
+          <text x="300" y="37" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="11" fill="#fff">Power supply needed</text>
+
+          <!-- Arrow down -->
+          <line x1="300" y1="54" x2="300" y2="84" stroke="#8c8575" stroke-width="1.5" marker-end="url(#arr)"/>
+
+          <!-- Diamond 1: Vin > Vout? -->
+          <polygon points="300,85 410,125 300,165 190,125" fill="#fdf6e6" stroke="#b5820a" stroke-width="1.5"/>
+          <text x="300" y="119" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="10" fill="#7a5010">Vin &gt; Vout?</text>
+          <text x="300" y="132" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#9a7030">(need to step down)</text>
+
+          <!-- NO branch left — need boost -->
+          <line x1="190" y1="125" x2="80" y2="125" stroke="#8c8575" stroke-width="1.5" marker-end="url(#arr)"/>
+          <text x="136" y="118" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#8c8575">No</text>
+          <rect x="10" y="100" width="70" height="50" rx="6" fill="#eef4ff" stroke="#3a6fb8" stroke-width="1.5"/>
+          <text x="45" y="122" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9.5" fill="#2a5090">Boost or</text>
+          <text x="45" y="135" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9.5" fill="#2a5090">Buck-boost</text>
+
+          <!-- YES arrow down -->
+          <line x1="300" y1="165" x2="300" y2="196" stroke="#8c8575" stroke-width="1.5" marker-end="url(#arr)"/>
+          <text x="310" y="184" font-family="'Share Tech Mono',monospace" font-size="9" fill="#8c8575">Yes</text>
+
+          <!-- Diamond 2: Current > 500mA? -->
+          <polygon points="300,197 420,237 300,277 180,237" fill="#fdf6e6" stroke="#b5820a" stroke-width="1.5"/>
+          <text x="300" y="230" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="10" fill="#7a5010">Current &gt; 500mA</text>
+          <text x="300" y="243" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#9a7030">or Ploss &gt; 0.5W?</text>
+
+          <!-- NO right branch — LDO -->
+          <line x1="420" y1="237" x2="520" y2="237" stroke="#8c8575" stroke-width="1.5" marker-end="url(#arr)"/>
+          <text x="470" y="230" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#8c8575">No</text>
+          <rect x="520" y="212" width="72" height="50" rx="6" fill="#edf6ee" stroke="#2d6a3f" stroke-width="1.5"/>
+          <text x="556" y="234" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9.5" fill="#1a3d26">LDO</text>
+          <text x="556" y="247" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#2d6a3f">Simple</text>
+          <text x="556" y="258" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#2d6a3f">&amp; clean</text>
+
+          <!-- YES arrow down — buck -->
+          <line x1="300" y1="277" x2="300" y2="308" stroke="#8c8575" stroke-width="1.5" marker-end="url(#arr)"/>
+          <text x="310" y="296" font-family="'Share Tech Mono',monospace" font-size="9" fill="#8c8575">Yes</text>
+
+          <!-- Diamond 3: Need clean analog supply? -->
+          <polygon points="300,309 420,339 300,369 180,339" fill="#fdf6e6" stroke="#b5820a" stroke-width="1.5"/>
+          <text x="300" y="333" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="10" fill="#7a5010">Need clean</text>
+          <text x="300" y="346" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#9a7030">analog supply?</text>
+
+          <!-- YES — Buck + LDO post-reg -->
+          <line x1="180" y1="339" x2="90" y2="339" stroke="#8c8575" stroke-width="1.5" marker-end="url(#arr)"/>
+          <text x="136" y="332" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#8c8575">Yes</text>
+          <rect x="10" y="315" width="80" height="50" rx="6" fill="#fdf0e6" stroke="#a85a18" stroke-width="1.5"/>
+          <text x="50" y="336" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#7a3a10">Buck then</text>
+          <text x="50" y="348" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#7a3a10">LDO post-</text>
+          <text x="50" y="360" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#7a3a10">regulator</text>
+
+          <!-- NO — Buck converter -->
+          <line x1="420" y1="339" x2="520" y2="339" stroke="#8c8575" stroke-width="1.5" marker-end="url(#arr)"/>
+          <text x="470" y="332" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#8c8575">No</text>
+          <rect x="520" y="314" width="72" height="50" rx="6" fill="#fdf0e6" stroke="#a85a18" stroke-width="1.5"/>
+          <text x="556" y="336" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9.5" fill="#7a3a10">Buck</text>
+          <text x="556" y="348" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9.5" fill="#7a3a10">converter</text>
+          <text x="556" y="360" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#a85a18">efficient</text>
+        </svg>
+        <p class="diagram-caption">Regulator topology decision flowchart — follow the questions to find the right choice</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- LDO DEEP DIVE -->
+  <section class="section section--white">
+    <div class="container" style="max-width:740px">
+      <p class="section-label">The simple one first</p>
+      <h2 class="section-title">LDO Regulator Design</h2>
+      <p>An LDO regulator in its simplest form needs only two capacitors — one at the input, one at the output. But the capacitor type and value matter more than most beginners realise.</p>
+
+      <!-- LDO circuit diagram -->
+      <div class="ldo-diagram">
+        <svg viewBox="0 0 560 150" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px">
+          <!-- Input wire from left -->
+          <line x1="10" y1="55" x2="100" y2="55" stroke="#c97530" stroke-width="2" stroke-linecap="round"/>
+          <text x="10" y="48" font-family="'Share Tech Mono',monospace" font-size="10" fill="#c97530">VIN</text>
+          <text x="10" y="70" font-family="'Share Tech Mono',monospace" font-size="9" fill="#8c8575">(e.g. 5V)</text>
+
+          <!-- Input cap C_IN -->
+          <line x1="100" y1="55" x2="100" y2="40" stroke="#c97530" stroke-width="1.5"/>
+          <line x1="100" y1="35" x2="100" y2="40" stroke="#c97530" stroke-width="2.5"/>
+          <line x1="100" y1="44" x2="100" y2="49" stroke="#c97530" stroke-width="2.5"/>
+          <line x1="100" y1="49" x2="100" y2="55" stroke="#888" stroke-width="1.5"/>
+          <line x1="100" y1="55" x2="100" y2="95" stroke="#888" stroke-width="1.5"/>
+          <!-- GND symbol for Cin -->
+          <line x1="90" y1="95" x2="110" y2="95" stroke="#888" stroke-width="1.5"/>
+          <line x1="93" y1="100" x2="107" y2="100" stroke="#888" stroke-width="1.2"/>
+          <line x1="96" y1="105" x2="104" y2="105" stroke="#888" stroke-width="1"/>
+          <text x="116" y="72" font-family="'Share Tech Mono',monospace" font-size="9" fill="#5c5545">CIN</text>
+          <text x="116" y="82" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#aaa">10µF</text>
+
+          <!-- Connect to LDO -->
+          <line x1="100" y1="55" x2="200" y2="55" stroke="#c97530" stroke-width="2" stroke-linecap="round"/>
+
+          <!-- LDO body -->
+          <rect x="200" y="30" width="120" height="80" rx="6" fill="#2a2a2a" stroke="#444" stroke-width="1.5"/>
+          <text x="260" y="68" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="10" fill="#aaa">LDO</text>
+          <text x="260" y="82" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#666">e.g. AMS1117</text>
+          <!-- GND pin on LDO -->
+          <line x1="260" y1="110" x2="260" y2="130" stroke="#888" stroke-width="1.5"/>
+          <line x1="250" y1="130" x2="270" y2="130" stroke="#888" stroke-width="1.5"/>
+          <line x1="253" y1="135" x2="267" y2="135" stroke="#888" stroke-width="1.2"/>
+          <line x1="256" y1="140" x2="264" y2="140" stroke="#888" stroke-width="1"/>
+          <text x="272" y="130" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#888">GND</text>
+
+          <!-- Output wire to right -->
+          <line x1="320" y1="55" x2="440" y2="55" stroke="#2d6a3f" stroke-width="2" stroke-linecap="round"/>
+          <text x="450" y="48" font-family="'Share Tech Mono',monospace" font-size="10" fill="#2d6a3f">VOUT</text>
+          <text x="450" y="62" font-family="'Share Tech Mono',monospace" font-size="9" fill="#8c8575">(e.g. 3.3V)</text>
+
+          <!-- Output cap C_OUT -->
+          <line x1="440" y1="55" x2="440" y2="40" stroke="#2d6a3f" stroke-width="1.5"/>
+          <line x1="440" y1="35" x2="440" y2="40" stroke="#2d6a3f" stroke-width="2.5"/>
+          <line x1="440" y1="44" x2="440" y2="49" stroke="#2d6a3f" stroke-width="2.5"/>
+          <line x1="440" y1="49" x2="440" y2="55" stroke="#888" stroke-width="1.5"/>
+          <line x1="440" y1="55" x2="440" y2="95" stroke="#888" stroke-width="1.5"/>
+          <!-- GND symbol for Cout -->
+          <line x1="430" y1="95" x2="450" y2="95" stroke="#888" stroke-width="1.5"/>
+          <line x1="433" y1="100" x2="447" y2="100" stroke="#888" stroke-width="1.2"/>
+          <line x1="436" y1="105" x2="444" y2="105" stroke="#888" stroke-width="1"/>
+          <text x="456" y="72" font-family="'Share Tech Mono',monospace" font-size="9" fill="#5c5545">COUT</text>
+          <text x="456" y="82" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#aaa">10µF</text>
+
+          <!-- Load symbol -->
+          <line x1="440" y1="55" x2="530" y2="55" stroke="#2d6a3f" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <text x="532" y="58" font-family="'Share Tech Mono',monospace" font-size="9" fill="#5c5545">→ load</text>
+        </svg>
+        <p class="diagram-caption">Minimal LDO circuit: input cap, regulator, output cap, GND</p>
+      </div>
+
+      <h3>The capacitor type problem</h3>
+      <p>Many LDO datasheets specify that the output capacitor must have a minimum ESR (Equivalent Series Resistance) — typically 0.1–1Ω. Ceramic capacitors have extremely low ESR (~1–10mΩ), which actually makes some older LDOs oscillate. Always check the datasheet: if it specifies a minimum ESR, use a tantalum or low-ESR electrolytic. Modern LDOs (AP2112, MCP1700, TLV755) are designed for ceramic capacitors and are more forgiving.</p>
+
+      <h3>Thermal calculation for LDOs</h3>
+      <p>An LDO dissipates heat equal to the voltage drop multiplied by the current: P = (Vin − Vout) × Iload. This is the power you must get out of the package. If it can't dissipate fast enough, the LDO hits its thermal shutdown temperature (usually 125–150°C) and shuts off.</p>
+
+      <div class="thermal-calc">
+        <p style="font-family:var(--font-mono);font-size:0.75rem;color:var(--text-light);margin-bottom:0.5rem">// Example: AMS1117-3.3, Vin=5V, Iload=500mA</p>
+        <div class="tc-row"><span class="tc-label">Power dissipated in LDO</span><span class="tc-val">P = (5.0 − 3.3) × 0.5 = 0.85W</span></div>
+        <div class="tc-row"><span class="tc-label">AMS1117 thermal resistance (θJA, SOT-223)</span><span class="tc-val">~54°C/W</span></div>
+        <div class="tc-row"><span class="tc-label">Temperature rise above ambient</span><span class="tc-val">0.85 × 54 = 45.9°C above ambient</span></div>
+        <div class="tc-row"><span class="tc-label">At 25°C ambient</span><span class="tc-result">Junction temperature ≈ 71°C — safe ✓</span></div>
+        <div class="tc-row" style="border-bottom:none"><span class="tc-label">At 70°C ambient (enclosed product)</span><span class="tc-result">Junction ≈ 116°C — dangerously close to 125°C limit ✗</span></div>
+      </div>
+
+      <p style="font-size:0.93rem;color:var(--text-muted)">This is why the ambient temperature of your operating environment matters. An LDO that runs fine on your bench at 25°C can thermally shut down inside a 70°C equipment enclosure. Use a SOT-223 or TO-252 package (better thermal dissipation) over TO-92 or SOT-23 for anything over ~200mA.</p>
+    </div>
+  </section>
+
+  <!-- BUCK CONVERTER DESIGN -->
+  <section class="section section--tinted">
+    <div class="container" style="max-width:740px">
+      <p class="section-label">More power, less heat</p>
+      <h2 class="section-title">Buck Converter Design Fundamentals</h2>
+      <p>A buck converter is more complex than an LDO but follows a well-defined design process. The key components to size are: the inductor, the output capacitor, and the feedback resistors.</p>
+
+      <div class="formula-box">
+        <p class="f-title">Core design equations</p>
+        <p class="formula">L = (Vin − Vout) × Vout / (ΔIL × fsw × Vin)</p>
+        <p class="var-line">L = inductor value (H) · ΔIL = peak-to-peak ripple current (typically 0.2–0.4 × Iout_max)</p>
+        <p class="var-line">fsw = switching frequency (Hz) · Vin = input voltage · Vout = output voltage</p>
+        <p class="example">// Example: Vin=12V, Vout=3.3V, Iout=1A, fsw=500kHz, ΔIL=0.3A</p>
+        <p class="example">L = (12−3.3)×3.3 / (0.3×500000×12) = 28.71 / 1,800,000 ≈ 16µH → use 15µH or 22µH</p>
+      </div>
+
+      <div class="formula-box">
+        <p class="f-title">Output voltage setting (adjustable buck)</p>
+        <p class="formula">Vout = Vref × (1 + R1/R2)</p>
+        <p class="var-line">Vref = reference voltage (from datasheet, typically 0.8V or 1.25V)</p>
+        <p class="var-line">R1 = top feedback resistor (between Vout and FB pin)</p>
+        <p class="var-line">R2 = bottom feedback resistor (between FB pin and GND)</p>
+        <p class="example">// For TPS62125 (Vref=0.5V): to set Vout=3.3V, use R2=100kΩ → R1=(3.3/0.5−1)×100k = 560kΩ</p>
+      </div>
+
+      <h3>The inductor — the component beginners get wrong most</h3>
+      <p>The inductor is often treated as "just pick any value near the datasheet recommendation." It's not. Three specs matter:</p>
+      <ul style="padding-left:1.3rem;font-size:0.93rem;color:var(--text-muted);line-height:1.9;margin-bottom:1rem">
+        <li><strong>Inductance value (µH)</strong> — calculated from the design equation above. Using a value that's too small increases current ripple (more output noise, higher peak currents). Too large increases transient response time.</li>
+        <li><strong>Saturation current (Isat)</strong> — the current at which the core material saturates and inductance drops dramatically. Your inductor's Isat must exceed your maximum load current plus half the ripple: Isat > Iout_max + ΔIL/2. A saturated inductor in a switching supply usually means immediate failure.</li>
+        <li><strong>DCR (DC winding resistance)</strong> — the resistance of the copper winding. Lower is better — it's a direct power loss. For a 1A supply, even 200mΩ DCR wastes 200mW as heat in the inductor itself.</li>
+      </ul>
+
+      <!-- Inductor saturation curve diagram -->
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 500 185" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:500px">
+          <text x="250" y="16" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="10" fill="#1a3d26" font-weight="600">Inductance vs current — the saturation cliff</text>
+          <!-- Axes -->
+          <line x1="55" y1="140" x2="460" y2="140" stroke="#888" stroke-width="1.5"/>
+          <line x1="55" y1="25"  x2="55"  y2="140" stroke="#888" stroke-width="1.5"/>
+          <!-- X labels -->
+          <text x="55"  y="154" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#5c5545">0A</text>
+          <text x="175" y="154" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#5c5545">1A</text>
+          <text x="290" y="154" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#c0392b">Isat</text>
+          <text x="405" y="154" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#5c5545">3A</text>
+          <text x="258" y="170" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#5c5545">Current through inductor →</text>
+          <!-- Y labels -->
+          <text x="46" y="143" text-anchor="end" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#5c5545">0</text>
+          <text x="46" y="96"  text-anchor="end" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#5c5545">50%</text>
+          <text x="46" y="50"  text-anchor="end" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#5c5545">100%</text>
+          <text x="14" y="92"  text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#5c5545" transform="rotate(-90,14,92)">Inductance</text>
+          <!-- Grid -->
+          <line x1="55" y1="96"  x2="460" y2="96"  stroke="#eee" stroke-width="0.8"/>
+          <line x1="55" y1="50"  x2="460" y2="50"  stroke="#eee" stroke-width="0.8"/>
+          <!-- Ideal flat line (never saturates) - dashed reference -->
+          <line x1="55" y1="50" x2="460" y2="50" stroke="#bbb" stroke-width="1.2" stroke-dasharray="5 4"/>
+          <text x="462" y="48" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#bbb">ideal</text>
+          <!-- Real inductor curve: flat then cliff -->
+          <path d="M55,50 C100,50 200,50 260,52 C275,54 285,60 290,78 C295,96 298,118 302,135 C305,140 310,141 460,141" stroke="#c97530" stroke-width="2.5" fill="none"/>
+          <!-- Shaded safe zone -->
+          <rect x="55" y="25" width="220" height="115" fill="rgba(45,106,63,0.07)"/>
+          <text x="145" y="90" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#2d6a3f">safe operating</text>
+          <text x="145" y="101" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#2d6a3f">zone</text>
+          <!-- Shaded danger zone -->
+          <rect x="275" y="25" width="185" height="115" fill="rgba(192,57,43,0.07)"/>
+          <text x="360" y="90" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#c0392b">saturation zone</text>
+          <text x="360" y="101" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#c0392b">inductance collapses</text>
+          <!-- Isat vertical line -->
+          <line x1="290" y1="25" x2="290" y2="140" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="4 2"/>
+          <!-- Annotation: design here -->
+          <line x1="175" y1="50" x2="175" y2="140" stroke="#2d6a3f" stroke-width="1" stroke-dasharray="3 2"/>
+          <text x="178" y="42" font-family="'Share Tech Mono',monospace" font-size="8" fill="#2d6a3f">design peak</text>
+          <text x="178" y="52" font-family="'Share Tech Mono',monospace" font-size="8" fill="#2d6a3f">current here</text>
+          <!-- Rule annotation -->
+          <path d="M175 135 L290 135" stroke="#c0392b" stroke-width="1" marker-end="url(#arr)"/>
+          <text x="232" y="128" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#c0392b">Isat must be here or right</text>
+        </svg>
+        <p class="diagram-caption">Never design the peak inductor current near Isat. The cliff is sudden — a saturated inductor acts almost like a short circuit, destroying the FET.</p>
+      </div>
+
+      <h3>Buck converter PCB layout rules</h3>
+      <p>Switching supplies are far more layout-sensitive than linear regulators. The switching node (where the inductor connects to the switch) carries large, fast current transients that radiate if the copper area is large.</p>
+      <ul style="padding-left:1.3rem;font-size:0.93rem;color:var(--text-muted);line-height:1.9">
+        <li><strong>Keep the switching node copper area small</strong> — connect IC switch pin → inductor → output capacitor with short, direct traces. Don't flood this node with copper.</li>
+        <li><strong>Input and output capacitors close to the IC</strong> — place them immediately adjacent to the IC input and output pins. The high-frequency current loop is: input cap → switch → inductor → output cap → back to input cap. Keep this loop as small as possible.</li>
+        <li><strong>Feedback trace away from the switching node</strong> — the feedback trace (from Vout to the FB pin via the resistor divider) senses the output voltage. Route it away from the inductor and switching node to avoid noise pickup. It should be a short, direct trace.</li>
+        <li><strong>Solid ground plane under the IC</strong> — the IC's exposed thermal pad (if present) must connect to a ground plane for heat dissipation. Add multiple vias under the thermal pad.</li>
+      </ul>
+
+      <div class="callout callout--warn">
+        <p class="callout-title">The bootstrap capacitor</p>
+        <p style="margin:0;font-size:0.91rem">Most synchronous buck converters have a BST (bootstrap) pin that requires a small capacitor (typically 100nF) between BST and SW (switching node). This is different from the decoupling capacitors on VIN and VOUT. Forgetting it usually means the converter doesn't start or has poor high-side gate drive. Always check the "recommended application circuit" in the datasheet — it shows every required capacitor.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- USB POWER -->
+  <section class="section section--white">
+    <div class="container">
+      <p class="section-label">The universal input</p>
+      <h2 class="section-title">USB Power Input Design</h2>
+      <p class="section-intro">USB is the most common power source for hobbyist and consumer electronics. But USB has evolved considerably — what works for USB 2.0 chargers may not negotiate correctly with USB-C Power Delivery. Here's what you actually need to know.</p>
+
+      <div class="usb-power-grid stagger-children">
+        <div class="usb-card reveal">
+          <p class="usb-spec">USB 2.0 · Standard downstream port</p>
+          <h4>USB 2.0 (Type-A, Micro-B, Mini-B)</h4>
+          <p>Provides 5V VBUS at up to 500mA by default — no negotiation required for this level. To draw more than 100mA (the default if no enumeration occurs), USB 2.0 technically requires enumeration. In practice, most USB chargers provide 500mA or more without enumeration. Safe default assumption: 500mA from any standard USB port.</p>
+        </div>
+        <div class="usb-card reveal">
+          <p class="usb-spec">USB Charging · BC 1.2</p>
+          <h4>Dedicated charging ports</h4>
+          <p>USB Battery Charging Spec 1.2 allows dedicated charger ports to provide up to 1.5A. Detection: the charger shorts D+ and D−. Your device detects this short and can request up to 1.5A. Requires detection circuitry in your device, or simply connect D+ to D− via a 200Ω resistor to signal "I want to charge at 1.5A" to compatible chargers.</p>
+        </div>
+        <div class="usb-card reveal">
+          <p class="usb-spec">USB-C · Default current</p>
+          <h4>USB-C without Power Delivery</h4>
+          <p>A USB-C port at default current can provide 5V at 900mA (USB 3.x) or 500mA (USB 2.0). <strong>Critical requirement:</strong> the CC1 and CC2 pins on a USB-C connector must each have a 5.1kΩ pull-down resistor to GND. Without these, a USB-C charger detects no device attached and provides no power. This is the single most-missed detail in USB-C designs.</p>
+        </div>
+        <div class="usb-card reveal">
+          <p class="usb-spec">USB PD · Power Delivery</p>
+          <h4>USB-C Power Delivery</h4>
+          <p>Negotiates voltages beyond 5V (9V, 12V, 15V, 20V) and currents up to 5A (100W). Requires a dedicated USB PD controller IC (FUSB302, STUSB4500, CH224K) to handle the CC communication protocol. Without PD negotiation, a PD-capable charger falls back to 5V standard. The CH224K is a simple, cheap PD sink controller popular for quick "I want 9V or 12V from this USB-C charger" designs.</p>
+        </div>
+      </div>
+
+      <h3 style="margin-top:1.5rem">Essential protection for USB power input</h3>
+
+      <!-- USB-C CC pin diagram -->
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 620 180" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:620px">
+          <!-- Title -->
+          <text x="310" y="18" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="10.5" fill="#1a3d26" font-weight="600">USB-C connector — CC pin requirements for power-only designs</text>
+
+          <!-- Connector body -->
+          <rect x="220" y="40" width="180" height="100" rx="8" fill="#555" stroke="#333" stroke-width="2"/>
+          <rect x="228" y="50" width="164" height="80" rx="4" fill="#333"/>
+
+          <!-- Pin labels inside connector (simplified) -->
+          <text x="262" y="82" font-family="'Share Tech Mono',monospace" font-size="8" fill="#888">GND  VBUS</text>
+          <text x="262" y="96" font-family="'Share Tech Mono',monospace" font-size="8" fill="#60a5fa">CC1    CC2</text>
+          <text x="262" y="110" font-family="'Share Tech Mono',monospace" font-size="8" fill="#666">D+     D-</text>
+
+          <!-- VBUS wire going right -->
+          <line x1="400" y1="72" x2="490" y2="72" stroke="#c97530" stroke-width="2.5" stroke-linecap="round"/>
+          <text x="496" y="76" font-family="'Share Tech Mono',monospace" font-size="10" fill="#c97530">VBUS (+5V)</text>
+
+          <!-- GND wire going right -->
+          <line x1="400" y1="118" x2="490" y2="118" stroke="#888" stroke-width="2" stroke-linecap="round"/>
+          <text x="496" y="122" font-family="'Share Tech Mono',monospace" font-size="10" fill="#888">GND</text>
+
+          <!-- CC1 wire going left with resistor -->
+          <line x1="220" y1="88" x2="150" y2="88" stroke="#60a5fa" stroke-width="2" stroke-linecap="round"/>
+          <!-- R_CC1 resistor symbol -->
+          <rect x="90" y="82" width="36" height="12" rx="2" fill="none" stroke="#888" stroke-width="1.5"/>
+          <line x1="150" y1="88" x2="126" y2="88" stroke="#60a5fa" stroke-width="2"/>
+          <line x1="90"  y1="88" x2="66"  y2="88" stroke="#60a5fa" stroke-width="2"/>
+          <!-- Down to GND -->
+          <line x1="66" y1="88" x2="66" y2="150" stroke="#888" stroke-width="1.5"/>
+          <line x1="54" y1="150" x2="78" y2="150" stroke="#888" stroke-width="1.5"/>
+          <line x1="57" y1="156" x2="75" y2="156" stroke="#888" stroke-width="1.2"/>
+          <line x1="60" y1="162" x2="72" y2="162" stroke="#888" stroke-width="1"/>
+          <text x="108" y="78" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#888">5.1kΩ</text>
+          <text x="10"  y="92" font-family="'Share Tech Mono',monospace" font-size="9.5" fill="#60a5fa">CC1</text>
+
+          <!-- CC2 wire going left with resistor -->
+          <line x1="220" y1="102" x2="150" y2="102" stroke="#60a5fa" stroke-width="2" stroke-linecap="round"/>
+          <!-- bend down to separate from CC1 -->
+          <line x1="150" y1="102" x2="150" y2="120" stroke="#60a5fa" stroke-width="2"/>
+          <!-- R_CC2 resistor symbol -->
+          <rect x="90" y="114" width="36" height="12" rx="2" fill="none" stroke="#888" stroke-width="1.5"/>
+          <line x1="150" y1="120" x2="126" y2="120" stroke="#60a5fa" stroke-width="2"/>
+          <line x1="90"  y1="120" x2="66"  y2="120" stroke="#60a5fa" stroke-width="2"/>
+          <!-- Down to GND (joins the same GND node) -->
+          <line x1="66" y1="120" x2="66" y2="150" stroke="#888" stroke-width="1.5"/>
+          <text x="108" y="110" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#888">5.1kΩ</text>
+          <text x="10"  y="124" font-family="'Share Tech Mono',monospace" font-size="9.5" fill="#60a5fa">CC2</text>
+
+          <!-- Warning label -->
+          <rect x="220" y="155" width="390" height="20" rx="3" fill="#fdf0e6" stroke="rgba(168,90,24,0.3)" stroke-width="1"/>
+          <text x="415" y="169" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#a85a18">Without these two 5.1kΩ resistors, a USB-C charger will NOT provide power to the board</text>
+        </svg>
+        <p class="diagram-caption">USB-C power-only design: 5.1kΩ pull-downs on CC1 and CC2 are mandatory — without them the charger sees no device</p>
+      </div>
+
+      <p>Any external connection is a potential source of damage. USB VBUS in particular can carry voltage spikes (from hot-plugging) and reverse polarity (from non-standard cables or faulty chargers).</p>
+
+      <div class="grid-2" style="margin-top:1rem">
+        <div class="pcb-card">
+          <span class="ref-label">Protection</span>
+          <h4 style="margin-top:1rem">Polarity protection</h4>
+          <p style="font-size:0.88rem;color:var(--text-muted);margin-top:0.5rem">A Schottky diode in series with VBUS (anode to VBUS, cathode to your power rail) blocks reverse polarity. Voltage drop: ~0.2–0.3V. Alternatively, a P-channel MOSFET ideal diode circuit has near-zero voltage drop and is preferred for battery-powered designs where every millivolt matters.</p>
+        </div>
+        <div class="pcb-card">
+          <span class="ref-label">Protection</span>
+          <h4 style="margin-top:1rem">ESD protection</h4>
+          <p style="font-size:0.88rem;color:var(--text-muted);margin-top:0.5rem">A TVS (Transient Voltage Suppressor) diode across VBUS clamps voltage spikes from ESD events. Use a TVS with a clamping voltage slightly above 5V (e.g. 5.5V working voltage, 9V clamping voltage). PRTR5V0U2X is a common choice that protects both VBUS and the data lines simultaneously.</p>
+        </div>
+        <div class="pcb-card">
+          <span class="ref-label">Protection</span>
+          <h4 style="margin-top:1rem">Overcurrent protection</h4>
+          <p style="font-size:0.88rem;color:var(--text-muted);margin-top:0.5rem">A self-resetting polyfuse (PTC resettable fuse) in series with VBUS limits current to a safe level and resets when the fault clears. Choose a PTC with a hold current above your normal draw and a trip current below the USB port's limit. MF-MSMF series from Bourns is commonly used.</p>
+        </div>
+        <div class="pcb-card">
+          <span class="ref-label">Filtering</span>
+          <h4 style="margin-top:1rem">Input EMI filter</h4>
+          <p style="font-size:0.88rem;color:var(--text-muted);margin-top:0.5rem">A ferrite bead (or common-mode choke for USB data) in series with VBUS, combined with a bulk capacitor (100µF), filters conducted emissions from the USB cable and prevents your switching supply from injecting noise back onto the USB bus. Required for CE/FCC compliance on commercial products.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMMON MISTAKES -->
+  <section class="section section--tinted">
+    <div class="container" style="max-width:740px">
+      <p class="section-label">What goes wrong</p>
+      <h2 class="section-title">Common Power Design Mistakes</h2>
+
+      <div class="power-mistake reveal">
+        <p class="pm-title">Using the wrong capacitor type for a switching regulator</p>
+        <p class="pm-mistake">Mistake: placing a 100µF aluminium electrolytic as the output cap of a buck converter running at 500kHz+</p>
+        <p class="pm-fix">Electrolytic capacitors have high ESL (equivalent series inductance) and are ineffective at high frequencies. The output capacitor of a switching supply needs to handle ripple current at the switching frequency — use <strong>ceramic X5R or X7R capacitors</strong> for this. The datasheet will specify the required capacitance and ESR. Use multiple smaller ceramics in parallel rather than one large electrolytic.</p>
+      </div>
+
+      <div class="power-mistake reveal">
+        <p class="pm-title">Under-sizing the inductor saturation current</p>
+        <p class="pm-mistake">Mistake: choosing an inductor with an Isat rating equal to the average load current</p>
+        <p class="pm-fix">Inductor current has ripple — it's not flat DC. The peak current reaches Iavg + ΔIL/2. If the inductor's Isat is less than this peak value, it saturates, its inductance drops to near zero, and <strong>the converter sees almost a direct short</strong>, sending massive current through the switching FET. Choose Isat > 1.3 × Iout_max as a conservative margin.</p>
+      </div>
+
+      <div class="power-mistake reveal">
+        <p class="pm-title">Missing CC pull-downs on USB-C</p>
+        <p class="pm-mistake">Mistake: designing a USB-C power-only connector without 5.1kΩ resistors on CC1 and CC2</p>
+        <p class="pm-fix"><strong>The board simply won't power up from USB-C chargers.</strong> This is the single most common USB-C mistake. The CC pins are how a USB-C charger knows a device is connected. Without 5.1kΩ to GND on both CC1 and CC2, the charger detects an open circuit and doesn't enable VBUS. Two resistors, 5.1kΩ each, CC1→GND and CC2→GND. Always. No exceptions for power-only USB-C.</p>
+      </div>
+
+      <div class="power-mistake reveal">
+        <p class="pm-title">LDO input capacitor too small</p>
+        <p class="pm-mistake">Mistake: using only a 100nF capacitor on the LDO input</p>
+        <p class="pm-fix">The input capacitor on an LDO supplies current during fast load transients — the time before the upstream supply can respond. 100nF is the <em>decoupling</em> capacitor for high-frequency noise; the bulk input capacitor should typically be <strong>10µF ceramic</strong> (or 100µF electrolytic) to prevent voltage droop when the load suddenly steps up. Many LDO datasheets specify minimum input capacitance — check it.</p>
+      </div>
+
+      <div class="power-mistake reveal">
+        <p class="pm-title">No bulk capacitance at the board power entry point</p>
+        <p class="pm-mistake">Mistake: relying entirely on per-IC decoupling without a large bulk capacitor near the power input connector</p>
+        <p class="pm-fix">When a motor, relay, or large digital load suddenly draws current, the wire/trace impedance from the power supply causes a voltage dip. A large bulk capacitor (typically <strong>100–470µF electrolytic</strong>) right at the power entry point acts as a local reservoir, supplying that initial surge current before the external supply can respond. Especially important for motor drivers, H-bridges, and anything with large inrush current.</p>
+      </div>
+
+      <div class="power-mistake reveal">
+        <p class="pm-title">Ceramic capacitor derating — capacitance that isn't there</p>
+        <p class="pm-mistake">Mistake: specifying a 10µF X5R MLCC capacitor rated 10V and using it at 5V — and expecting 10µF</p>
+        <p class="pm-fix">Ceramic (MLCC) capacitors exhibit significant capacitance loss with applied DC voltage — a property called DC bias derating. An X5R 10µF 10V capacitor may only provide <strong>5–7µF at 5V DC</strong>. X7R and C0G have better (though not perfect) DC bias behaviour. For critical applications: check the capacitance-vs-voltage graph in the datasheet. Use a larger-rated capacitor than you need, or use more capacitors in parallel.</p>
+
+        <!-- MLCC derating chart -->
+        <div class="diagram-wrap" style="margin-top:1rem">
+          <svg viewBox="0 0 540 190" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:540px">
+            <text x="270" y="16" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="10" fill="#1a3d26" font-weight="600">MLCC capacitance vs DC bias voltage</text>
+            <!-- Axes -->
+            <line x1="60" y1="150" x2="490" y2="150" stroke="#888" stroke-width="1.5"/><!-- X axis -->
+            <line x1="60" y1="20"  x2="60"  y2="150" stroke="#888" stroke-width="1.5"/><!-- Y axis -->
+            <!-- X axis labels (voltage) -->
+            <text x="60"  y="165" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#5c5545">0V</text>
+            <text x="143" y="165" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#5c5545">2V</text>
+            <text x="225" y="165" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#5c5545">4V</text>
+            <text x="307" y="165" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#5c5545">6V</text>
+            <text x="390" y="165" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#5c5545">8V</text>
+            <text x="470" y="165" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#5c5545">10V</text>
+            <text x="275" y="182" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#5c5545">Applied DC voltage →</text>
+            <!-- Y axis labels (capacitance %) -->
+            <text x="50" y="154" text-anchor="end" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#5c5545">0%</text>
+            <text x="50" y="124" text-anchor="end" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#5c5545">25%</text>
+            <text x="50" y="94"  text-anchor="end" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#5c5545">50%</text>
+            <text x="50" y="64"  text-anchor="end" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#5c5545">75%</text>
+            <text x="50" y="34"  text-anchor="end" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#5c5545">100%</text>
+            <!-- Y axis title -->
+            <text x="12" y="92" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#5c5545" transform="rotate(-90,12,92)">Capacitance remaining</text>
+            <!-- Grid lines -->
+            <line x1="60" y1="124" x2="490" y2="124" stroke="#eee" stroke-width="0.8"/>
+            <line x1="60" y1="94"  x2="490" y2="94"  stroke="#eee" stroke-width="0.8"/>
+            <line x1="60" y1="64"  x2="490" y2="64"  stroke="#eee" stroke-width="0.8"/>
+            <line x1="60" y1="34"  x2="490" y2="34"  stroke="#eee" stroke-width="0.8"/>
+            <!-- C0G curve (nearly flat - gold) -->
+            <polyline points="60,30 143,30 225,31 307,32 390,33 470,34" stroke="#b5820a" stroke-width="2" fill="none"/>
+            <text x="475" y="30" font-family="'Share Tech Mono',monospace" font-size="8" fill="#b5820a">C0G</text>
+            <!-- X7R curve (moderate drop - green) -->
+            <polyline points="60,30 143,36 225,44 307,55 390,68 470,82" stroke="#2d6a3f" stroke-width="2" fill="none"/>
+            <text x="475" y="78" font-family="'Share Tech Mono',monospace" font-size="8" fill="#2d6a3f">X7R</text>
+            <!-- X5R curve (steep drop - orange) -->
+            <polyline points="60,30 143,44 225,64 307,90 390,116 470,138" stroke="#c97530" stroke-width="2.5" fill="none"/>
+            <text x="475" y="134" font-family="'Share Tech Mono',monospace" font-size="8" fill="#c97530">X5R</text>
+            <!-- Vertical marker at 5V for the 10V rated cap -->
+            <line x1="266" y1="25" x2="266" y2="150" stroke="#c0392b" stroke-width="1" stroke-dasharray="4 2"/>
+            <text x="270" y="23" font-family="'Share Tech Mono',monospace" font-size="8" fill="#c0392b">5V bias on 10V cap</text>
+            <!-- Dot on X5R curve at 5V -->
+            <circle cx="266" cy="77" r="5" fill="#c97530" stroke="#fff" stroke-width="1.5"/>
+            <text x="290" y="74" font-family="'Share Tech Mono',monospace" font-size="8" fill="#c0392b">~55% = 5.5µF of rated 10µF</text>
+          </svg>
+          <p class="diagram-caption">X5R dielectric loses 40–60% capacitance at half its voltage rating. C0G (NP0) is stable across voltage. Always check the datasheet derating curve.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

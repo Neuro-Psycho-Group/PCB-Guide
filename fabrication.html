@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PCB Fabrication — PCB Primer</title>
+  <meta name="description" content="How PCBs are manufactured: etching, drilling, plating, surface finishes. How to order from JLCPCB, PCBWay, and Aisler.">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    .process-step-row {
+      display: grid;
+      grid-template-columns: 86px 1fr;
+      gap: 1.5rem;
+      padding: 1.5rem 0;
+      border-bottom: 1px solid var(--border-light);
+      align-items: start;
+    }
+    .process-step-row:last-child { border-bottom: none; }
+    .step-badge {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      width: 78px; height: 78px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .step-badge .big-num { font-family: var(--font-mono); font-size: 2rem; color: var(--green); line-height: 1; }
+    .step-badge .step-tag { font-family: var(--font-mono); font-size: 0.6rem; color: var(--text-light); letter-spacing: 0.04em; margin-top: 2px; }
+    .process-step-row h3 { margin-bottom: 0.4rem; }
+    .process-step-row p { font-size: 0.93rem; color: var(--text-muted); }
+    @media(max-width:480px){
+      .process-step-row { grid-template-columns: 1fr; }
+      .step-badge { flex-direction: row; width: auto; height: auto; padding: 0.5rem 1rem; gap: 0.8rem; }
+    }
+    .fab-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      position: relative;
+    }
+    .fab-recommended { border-color: var(--green); border-width: 2px; }
+    .fab-rec-label {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-bottom: 0.8rem;
+    }
+    .fab-logo { font-family: var(--font-mono); font-size: 1.15rem; font-weight: 700; color: var(--green-deep); margin-bottom: 0.4rem; }
+    .fab-price-tag {
+      position: absolute; top: 1.2rem; right: 1.2rem;
+      font-family: var(--font-mono); font-size: 0.7rem;
+      background: var(--green-pale); color: var(--green-deep);
+      padding: 3px 8px; border-radius: 20px;
+    }
+    .fab-card p { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.9rem; }
+    .pros-cons { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-top: 0.5rem; }
+    .pros-cons ul { list-style: none; padding: 0; }
+    .pros-cons li { padding: 2px 0; font-size: 0.83rem; color: var(--text-muted); }
+    .pros li::before { content: '+ '; font-family: var(--font-mono); color: var(--green); }
+    .cons li::before { content: '− '; font-family: var(--font-mono); color: var(--copper); }
+    .pc-head { font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.08em; margin-bottom: 0.4rem; }
+    .finish-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+    .finish-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; }
+    .finish-card h4 { color: var(--green-deep); margin-bottom: 0.3rem; }
+    .finish-card .finish-cost { font-family: var(--font-mono); font-size: 0.72rem; color: var(--copper); margin-bottom: 0.5rem; }
+    .finish-card p { font-size: 0.86rem; color: var(--text-muted); margin: 0; line-height: 1.6; }
+    .spec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 1.5rem 0; }
+    .spec-cell { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-light); }
+    .spec-cell:nth-child(odd) { border-right: 1px solid var(--border-light); background: var(--bg-card); }
+    .spec-cell:nth-child(even) { background: var(--bg); }
+    .spec-cell .s-label { font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-light); letter-spacing: 0.05em; margin-bottom: 0.2rem; text-transform: uppercase; }
+    .spec-cell .s-val { font-family: var(--font-mono); font-size: 0.84rem; color: var(--text); }
+    @media(max-width:480px){ .spec-grid,.pros-cons { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+  <div class="page-header">
+    <div class="container">
+      <p class="page-label">05 / Fabrication</p>
+      <h1>Factory to Doorstep</h1>
+      <p>How your Gerber files become a physical board — and how to order one for a few pounds.</p>
+    </div>
+  </div>
+
+  <!-- MANUFACTURING PROCESS DIAGRAM -->
+  <section class="section section--white">
+    <div class="container">
+      <p class="section-label">Inside the factory</p>
+      <h2 class="section-title">How a PCB is Made</h2>
+      <p class="section-intro">From a bare copper-clad FR4 sheet to a finished, tested board — eight distinct manufacturing steps, each one critical.</p>
+
+      <!-- UV / Etching process cross-section diagram -->
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 700 210" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:700px">
+          <!-- 4 stages: substrate, photoresist+UV, develop+etch, result -->
+          <!-- Stage labels at top -->
+          <text x="78"  y="14" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9.5" fill="#1a3d26" font-weight="600">① Start</text>
+          <text x="252" y="14" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9.5" fill="#1a3d26" font-weight="600">② UV Exposure</text>
+          <text x="427" y="14" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9.5" fill="#1a3d26" font-weight="600">③ Develop + Etch</text>
+          <text x="600" y="14" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9.5" fill="#1a3d26" font-weight="600">④ Result</text>
+
+          <!-- ===== STAGE 1: FR4 + copper ===== -->
+          <!-- FR4 substrate -->
+          <rect x="10" y="60" width="136" height="50" rx="2" fill="#c8c3a0" opacity="0.85"/>
+          <text x="78" y="90" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#7a755e">FR4 substrate</text>
+          <!-- Copper layer on top -->
+          <rect x="10" y="44" width="136" height="16" rx="1" fill="#c97530" opacity="0.9"/>
+          <text x="78" y="36" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#a85a18">copper foil (full sheet)</text>
+          <text x="78" y="125" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#5c5545">bare clad material</text>
+
+          <!-- Arrow 1→2 -->
+          <text x="165" y="76" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="18" fill="#c8c0b0">→</text>
+
+          <!-- ===== STAGE 2: UV exposure through mask ===== -->
+          <!-- UV rays from above (blue-violet lines) -->
+          <line x1="192" y1="18" x2="196" y2="38" stroke="#8b5cf6" stroke-width="1.2" opacity="0.9"/>
+          <line x1="202" y1="18" x2="204" y2="38" stroke="#8b5cf6" stroke-width="1.2" opacity="0.9"/>
+          <line x1="212" y1="18" x2="212" y2="38" stroke="#8b5cf6" stroke-width="1.2" opacity="0.9"/>
+          <!-- Blocked: black mask sections -->
+          <rect x="218" y="18" width="22" height="20" rx="1" fill="#1a1a1a"/><!-- mask block -->
+          <rect x="256" y="18" width="22" height="20" rx="1" fill="#1a1a1a"/><!-- mask block -->
+          <line x1="222" y1="18" x2="220" y2="38" stroke="#8b5cf6" stroke-width="1.2" opacity="0.2" stroke-dasharray="2 2"/><!-- blocked -->
+          <line x1="232" y1="18" x2="230" y2="38" stroke="#8b5cf6" stroke-width="1.2" opacity="0.2" stroke-dasharray="2 2"/><!-- blocked -->
+          <line x1="260" y1="18" x2="258" y2="38" stroke="#8b5cf6" stroke-width="1.2" opacity="0.2" stroke-dasharray="2 2"/><!-- blocked -->
+          <line x1="270" y1="18" x2="268" y2="38" stroke="#8b5cf6" stroke-width="1.2" opacity="0.2" stroke-dasharray="2 2"/><!-- blocked -->
+          <!-- Clear areas -->
+          <line x1="242" y1="18" x2="242" y2="38" stroke="#8b5cf6" stroke-width="1.2" opacity="0.9"/>
+          <line x1="280" y1="18" x2="280" y2="38" stroke="#8b5cf6" stroke-width="1.2" opacity="0.9"/>
+          <line x1="290" y1="18" x2="290" y2="38" stroke="#8b5cf6" stroke-width="1.2" opacity="0.9"/>
+          <line x1="300" y1="18" x2="300" y2="38" stroke="#8b5cf6" stroke-width="1.2" opacity="0.9"/>
+          <!-- Photomask label -->
+          <text x="252" y="16" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#8b5cf6">UV light</text>
+          <!-- Photoresist layer (yellow) - hardened where UV hit, soft where blocked -->
+          <rect x="185" y="38" width="136" height="10" rx="1" fill="#f0e060" opacity="0.8"/>
+          <!-- Hard sections (where UV hit) - slightly different shade -->
+          <rect x="185" y="38" width="30" height="10" rx="0" fill="#d4c820" opacity="0.9"/><!-- hard: exposed -->
+          <rect x="237" y="38" width="16" height="10" rx="0" fill="#d4c820" opacity="0.9"/><!-- hard: exposed -->
+          <rect x="278" y="38" width="43" height="10" rx="0" fill="#d4c820" opacity="0.9"/><!-- hard: exposed -->
+          <!-- Copper -->
+          <rect x="185" y="48" width="136" height="16" rx="1" fill="#c97530" opacity="0.9"/>
+          <!-- FR4 -->
+          <rect x="185" y="64" width="136" height="50" rx="2" fill="#c8c3a0" opacity="0.85"/>
+          <text x="253" y="122" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#5c5545">yellow = photoresist · purple = UV · black = mask</text>
+          <text x="253" y="134" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#8b5cf6">exposed resist hardens · blocked resist stays soft</text>
+
+          <!-- Arrow 2→3 -->
+          <text x="338" y="76" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="18" fill="#c8c0b0">→</text>
+
+          <!-- ===== STAGE 3: Develop + Etch ===== -->
+          <!-- Copper remains only where resist was hard (protected) -->
+          <!-- FR4 -->
+          <rect x="360" y="64" width="136" height="50" rx="2" fill="#c8c3a0" opacity="0.85"/>
+          <!-- Copper traces (where resist protected) -->
+          <rect x="360" y="48" width="30" height="16" rx="1" fill="#c97530" opacity="0.9"/><!-- trace A -->
+          <rect x="412" y="48" width="16" height="16" rx="1" fill="#c97530" opacity="0.9"/><!-- trace B -->
+          <rect x="453" y="48" width="43" height="16" rx="1" fill="#c97530" opacity="0.9"/><!-- trace C -->
+          <!-- Remaining resist on top of traces -->
+          <rect x="360" y="38" width="30" height="10" rx="0" fill="#d4c820" opacity="0.7"/>
+          <rect x="412" y="38" width="16" height="10" rx="0" fill="#d4c820" opacity="0.7"/>
+          <rect x="453" y="38" width="43" height="10" rx="0" fill="#d4c820" opacity="0.7"/>
+          <!-- Acid etchant droplets where copper was removed -->
+          <text x="393" y="45" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#c0392b">✕</text>
+          <text x="440" y="45" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#c0392b">✕</text>
+          <text x="393" y="56" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7" fill="#c0392b" opacity="0.7">etched</text>
+          <text x="428" y="122" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#c0392b">acid removes copper where resist was soft</text>
+          <text x="428" y="134" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#5c5545">resist then stripped → copper traces remain</text>
+
+          <!-- Arrow 3→4 -->
+          <text x="510" y="76" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="18" fill="#c8c0b0">→</text>
+
+          <!-- ===== STAGE 4: Final result ===== -->
+          <!-- FR4 -->
+          <rect x="535" y="64" width="136" height="50" rx="2" fill="#c8c3a0" opacity="0.85"/>
+          <!-- Copper traces only -->
+          <rect x="535" y="48" width="30" height="16" rx="1" fill="#c97530" opacity="0.9"/>
+          <rect x="587" y="48" width="16" height="16" rx="1" fill="#c97530" opacity="0.9"/>
+          <rect x="628" y="48" width="43" height="16" rx="1" fill="#c97530" opacity="0.9"/>
+          <!-- Solder mask over traces -->
+          <rect x="535" y="36" width="136" height="12" rx="1" fill="#2d6a3f" opacity="0.85"/>
+          <!-- Openings in mask (pads) -->
+          <rect x="535" y="36" width="30" height="12" fill="#d4a520"/>
+          <rect x="587" y="36" width="16" height="12" fill="#d4a520"/>
+          <rect x="628" y="36" width="43" height="12" fill="#d4a520"/>
+          <!-- Labels -->
+          <text x="603" y="28" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#2d6a3f">solder mask</text>
+          <text x="603" y="98" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#a85a18">copper traces</text>
+          <text x="603" y="122" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#2d6a3f">exactly as designed in Gerbers</text>
+        </svg>
+        <p class="diagram-caption">The photochemical etching process — UV light exposes a photo-sensitive resist, acid etches away unprotected copper, leaving your exact trace design</p>
+      </div>
+
+      <p class="video-section-label">Recommended watch — ordering your first board</p>
+      <a href="https://www.youtube.com/results?search_query=JLCPCB+how+to+order+PCB+tutorial" target="_blank" rel="noopener" class="video-card">
+        <div class="video-thumb" style="background:#1a3d26;display:flex;align-items:center;justify-content:center;">
+          <svg width="60" height="60" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="28" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/><polygon points="22,16 50,30 22,44" fill="white" opacity="0.9"/></svg>
+          <div class="video-play" style="display:none"></div>
+        </div>
+        <div class="video-info">
+          <p class="video-channel">JLCPCB Official · YouTube</p>
+          <p class="video-title">How to Order PCBs from JLCPCB — Step by Step</p>
+          <p class="video-desc">JLCPCB's official channel has clear walkthroughs of their upload and ordering process — uploading Gerbers, checking the viewer, selecting options, and tracking your order. Watching this before placing your first order prevents common mistakes and surprises at checkout.</p>
+          <span class="video-cta">▶ Search on YouTube →</span>
+        </div>
+      </a>
+
+      <!-- Process flow diagram: 8 steps in a clear row, all text well-separated -->
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 740 130" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:740px">
+          <!-- Step box dimensions: width=74, gap=18, start x=10 -->
+          <!-- Centers at: 47, 139, 231, 323, 415, 507, 599, 691 -->
+
+          <!-- Phase colour bands at bottom -->
+          <rect x="10"  y="92" width="74"  height="6" rx="2" fill="rgba(45,106,63,0.4)"/>
+          <rect x="102" y="92" width="74"  height="6" rx="2" fill="rgba(45,106,63,0.4)"/>
+          <rect x="194" y="92" width="74"  height="6" rx="2" fill="rgba(168,90,24,0.4)"/>
+          <rect x="286" y="92" width="74"  height="6" rx="2" fill="rgba(168,90,24,0.4)"/>
+          <rect x="378" y="92" width="74"  height="6" rx="2" fill="rgba(184,134,15,0.4)"/>
+          <rect x="470" y="92" width="74"  height="6" rx="2" fill="rgba(184,134,15,0.4)"/>
+          <rect x="562" y="92" width="74"  height="6" rx="2" fill="rgba(58,111,184,0.4)"/>
+          <rect x="654" y="92" width="76"  height="6" rx="2" fill="rgba(58,111,184,0.4)"/>
+
+          <!-- Step boxes -->
+          <rect x="10"  y="10" width="74" height="78" rx="5" fill="#edf6ee" stroke="rgba(45,106,63,0.3)"  stroke-width="1.2"/>
+          <rect x="102" y="10" width="74" height="78" rx="5" fill="#edf6ee" stroke="rgba(45,106,63,0.3)"  stroke-width="1.2"/>
+          <rect x="194" y="10" width="74" height="78" rx="5" fill="#fdf5ee" stroke="rgba(168,90,24,0.3)"  stroke-width="1.2"/>
+          <rect x="286" y="10" width="74" height="78" rx="5" fill="#fdf5ee" stroke="rgba(168,90,24,0.3)"  stroke-width="1.2"/>
+          <rect x="378" y="10" width="74" height="78" rx="5" fill="#fdf9ee" stroke="rgba(184,134,15,0.3)" stroke-width="1.2"/>
+          <rect x="470" y="10" width="74" height="78" rx="5" fill="#fdf9ee" stroke="rgba(184,134,15,0.3)" stroke-width="1.2"/>
+          <rect x="562" y="10" width="74" height="78" rx="5" fill="#eef4ff" stroke="rgba(58,111,184,0.3)" stroke-width="1.2"/>
+          <rect x="654" y="10" width="76" height="78" rx="5" fill="#eef4ff" stroke="rgba(58,111,184,0.3)" stroke-width="1.2"/>
+
+          <!-- Step numbers -->
+          <text x="47"  y="36" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="16" fill="#2d6a3f">01</text>
+          <text x="139" y="36" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="16" fill="#2d6a3f">02</text>
+          <text x="231" y="36" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="16" fill="#a85a18">03</text>
+          <text x="323" y="36" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="16" fill="#a85a18">04</text>
+          <text x="415" y="36" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="16" fill="#b5820a">05</text>
+          <text x="507" y="36" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="16" fill="#b5820a">06</text>
+          <text x="599" y="36" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="16" fill="#3a6fb8">07</text>
+          <text x="692" y="36" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="16" fill="#3a6fb8">08</text>
+
+          <!-- Step names (line 1) -->
+          <text x="47"  y="54" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#1a3d26">Substrate</text>
+          <text x="139" y="54" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#1a3d26">Photoresist</text>
+          <text x="231" y="54" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#7a3a10">Etching</text>
+          <text x="323" y="54" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#7a3a10">Drilling</text>
+          <text x="415" y="54" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#8a6010">Cu Plating</text>
+          <text x="507" y="54" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#8a6010">Solder Mask</text>
+          <text x="599" y="54" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#2a5090">Silkscreen</text>
+          <text x="692" y="54" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#2a5090">Finish &amp;</text>
+
+          <!-- Step names (line 2) -->
+          <text x="47"  y="66" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#5c5545">FR4 + Cu foil</text>
+          <text x="139" y="66" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#5c5545">UV exposure</text>
+          <text x="231" y="66" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#5c5545">Remove Cu</text>
+          <text x="323" y="66" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#5c5545">CNC drill</text>
+          <text x="415" y="66" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#5c5545">Plate vias</text>
+          <text x="507" y="66" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#5c5545">Apply &amp; cure</text>
+          <text x="599" y="66" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#5c5545">Print labels</text>
+          <text x="692" y="66" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#2a5090">Test</text>
+          <text x="692" y="78" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#5c5545">HASL / ENIG</text>
+
+          <!-- Arrows between steps -->
+          <line x1="84"  y1="49" x2="100"  y2="49" stroke="#ccc" stroke-width="1.5"/>
+          <polygon points="98,45 104,49 98,53" fill="#ccc"/>
+          <line x1="176" y1="49" x2="192"  y2="49" stroke="#ccc" stroke-width="1.5"/>
+          <polygon points="190,45 196,49 190,53" fill="#ccc"/>
+          <line x1="268" y1="49" x2="284"  y2="49" stroke="#ccc" stroke-width="1.5"/>
+          <polygon points="282,45 288,49 282,53" fill="#ccc"/>
+          <line x1="360" y1="49" x2="376"  y2="49" stroke="#ccc" stroke-width="1.5"/>
+          <polygon points="374,45 380,49 374,53" fill="#ccc"/>
+          <line x1="452" y1="49" x2="468"  y2="49" stroke="#ccc" stroke-width="1.5"/>
+          <polygon points="466,45 472,49 466,53" fill="#ccc"/>
+          <line x1="544" y1="49" x2="560"  y2="49" stroke="#ccc" stroke-width="1.5"/>
+          <polygon points="558,45 564,49 558,53" fill="#ccc"/>
+          <line x1="636" y1="49" x2="652"  y2="49" stroke="#ccc" stroke-width="1.5"/>
+          <polygon points="650,45 656,49 650,53" fill="#ccc"/>
+
+          <!-- Phase legend below -->
+          <rect x="10"  y="110" width="10" height="10" rx="2" fill="rgba(45,106,63,0.4)"/>
+          <text x="24" y="119" font-family="'Share Tech Mono',monospace" font-size="8" fill="#5c5545">Preparation</text>
+          <rect x="110" y="110" width="10" height="10" rx="2" fill="rgba(168,90,24,0.4)"/>
+          <text x="124" y="119" font-family="'Share Tech Mono',monospace" font-size="8" fill="#5c5545">Patterning</text>
+          <rect x="210" y="110" width="10" height="10" rx="2" fill="rgba(184,134,15,0.4)"/>
+          <text x="224" y="119" font-family="'Share Tech Mono',monospace" font-size="8" fill="#5c5545">Surface treatment</text>
+          <rect x="360" y="110" width="10" height="10" rx="2" fill="rgba(58,111,184,0.4)"/>
+          <text x="374" y="119" font-family="'Share Tech Mono',monospace" font-size="8" fill="#5c5545">Finishing &amp; QC</text>
+        </svg>
+        <p class="diagram-caption">Standard 2-layer PCB manufacturing — total factory time: 24–48 hours</p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:0">
+        <div class="process-step-row reveal">
+          <div class="step-badge"><span class="big-num">01</span><span class="step-tag">substrate</span></div>
+          <div>
+            <h3>Substrate preparation</h3>
+            <p>Large sheets of FR4 come pre-laminated with copper foil — typically 35µm (1 oz/ft²) on one or both sides. Sheets are cut to panel size. Multiple boards are manufactured on a single panel for efficiency; your 5 boards from JLCPCB will all be on the same panel, separated and broken apart at the end.</p>
+          </div>
+        </div>
+        <div class="process-step-row reveal">
+          <div class="step-badge"><span class="big-num">02</span><span class="step-tag">photoresist</span></div>
+          <div>
+            <h3>Photoresist coating &amp; UV exposure</h3>
+            <p>A light-sensitive chemical (photoresist) is applied to the copper surface. The board is then exposed to UV light through a photomask — a film printed from your copper Gerber file, where black areas block UV and clear areas let it pass. UV-exposed areas harden; unexposed areas wash away in developer solution, leaving bare copper wherever copper should be removed.</p>
+          </div>
+        </div>
+        <div class="process-step-row reveal">
+          <div class="step-badge"><span class="big-num">03</span><span class="step-tag">etching</span></div>
+          <div>
+            <h3>Chemical etching</h3>
+            <p>The board enters a bath of ferric chloride or ammonium persulphate — an acid that dissolves copper. Everywhere the photoresist washed away, the acid attacks the copper, removing it. Where hardened photoresist remains, copper is protected. Result: your traces and pads exactly as drawn. The resist is then stripped off.</p>
+          </div>
+        </div>
+        <div class="process-step-row reveal">
+          <div class="step-badge"><span class="big-num">04</span><span class="step-tag">drilling</span></div>
+          <div>
+            <h3>CNC drilling</h3>
+            <p>A CNC machine drills all holes from your Excellon drill file — through-hole component holes and via holes — using carbide drill bits. Modern machines drill thousands of holes per minute with ±0.05mm positional accuracy. The drill file you generated during Gerber export controls every hole diameter and location.</p>
+          </div>
+        </div>
+        <div class="process-step-row reveal">
+          <div class="step-badge"><span class="big-num">05</span><span class="step-tag">plating</span></div>
+          <div>
+            <h3>Electroless copper plating</h3>
+            <p>Drilled holes are coated with copper via an electroless (chemical) plating process, then thickened by electroplating. This deposits a conductive copper barrel inside each via hole, electrically connecting the copper layers through the hole. Without this step, a via would just be an empty tunnel with no connection between layers.</p>
+          </div>
+        </div>
+        <div class="process-step-row reveal">
+          <div class="step-badge"><span class="big-num">06</span><span class="step-tag">soldermask</span></div>
+          <div>
+            <h3>Solder mask application</h3>
+            <p>Liquid epoxy solder mask is applied to the whole board surface and photo-developed — the same process as the copper layer. It is opened at pad locations (solder mask openings) and cured. The colour you choose (green, red, blue, black, white, yellow) is simply the colour of this epoxy. It protects copper from oxidation and prevents solder from bridging between adjacent pads during assembly.</p>
+          </div>
+        </div>
+        <div class="process-step-row reveal">
+          <div class="step-badge"><span class="big-num">07</span><span class="step-tag">silkscreen</span></div>
+          <div>
+            <h3>Silkscreen printing</h3>
+            <p>White (or occasionally yellow or black) ink is inkjet- or screen-printed onto the solder mask, from your silkscreen Gerber file. This shows component designators (R1, U2, C4), polarity markers (+, K, pin 1 dots), and any text you added. It has absolutely zero electrical function — purely for human readability during assembly, testing, and repair.</p>
+          </div>
+        </div>
+        <div class="process-step-row reveal">
+          <div class="step-badge"><span class="big-num">08</span><span class="step-tag">finish + QC</span></div>
+          <div>
+            <h3>Surface finish, singulation &amp; electrical testing</h3>
+            <p>A surface finish is applied to all exposed copper pads (see below). The panel is then routed or scored to separate individual boards. Finally, automated electrical testing (flying probe or bed-of-nails test fixtures) verifies no short circuits or open connections exist. Boards that fail testing are scrapped before shipping.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SURFACE FINISHES -->
+  <section class="section section--tinted">
+    <div class="container">
+      <p class="section-label">Pad protection</p>
+      <h2 class="section-title">Surface Finishes</h2>
+      <p class="section-intro">Bare copper oxidises within hours. A surface finish is applied to every exposed pad to prevent oxidation and ensure good solder wetting during assembly.</p>
+
+      <div class="finish-grid">
+        <div class="finish-card reveal">
+          <h4>HASL (Lead-free)</h4>
+          <p class="finish-cost">Baseline cost — included free at JLCPCB</p>
+          <p>Hot Air Solder Levelling. The board is dipped in molten solder then levelled with hot-air knives. Creates a tin-silver-copper coating on all pads. Cheap, robust, and very solderable. Slightly uneven surface — not ideal for fine-pitch SMD (0.5mm pitch QFP/QFN) but perfect for 0805 components and through-hole.</p>
+        </div>
+        <div class="finish-card reveal">
+          <h4>ENIG</h4>
+          <p class="finish-cost">~£1–2 extra per board at JLCPCB</p>
+          <p>Electroless Nickel Immersion Gold. A nickel barrier layer then a very thin gold flash over all pads. Perfectly flat surface — excellent for fine-pitch ICs and BGA pads. Gold prevents oxidation indefinitely. The better choice once you start using QFP, QFN, or any SMD with pitch below 0.8mm.</p>
+        </div>
+        <div class="finish-card reveal">
+          <h4>OSP</h4>
+          <p class="finish-cost">Usually cheapest or free</p>
+          <p>Organic Solderability Preservative. A thin organic coating protecting copper until soldering. Flat surface like ENIG. Disadvantage: limited shelf life (6–12 months), and unsoldered pads start oxidising after first reflow. Not ideal for boards you'll rework multiple times or store for later.</p>
+        </div>
+        <div class="finish-card reveal">
+          <h4>ENEPIG</h4>
+          <p class="finish-cost">Premium — 3–5× HASL cost</p>
+          <p>Electroless Nickel Electroless Palladium Immersion Gold. Nickel + palladium + gold. Wire-bondable surface, long shelf life, excellent reliability. Used in automotive and aerospace applications. Complete overkill for hobbyist boards — file it away for future reference.</p>
+        </div>
+      </div>
+
+      <div class="callout callout--tip">
+        <p class="callout-title">Which finish should you choose?</p>
+        <p style="margin:0">Start with <strong>HASL lead-free</strong> — it's free and works for everything with 0805 or larger SMD, or through-hole. Once you use fine-pitch QFP or QFN packages, upgrade to <strong>ENIG</strong> for its flat, reliable surface. The extra cost is negligible when you're already paying for shipping.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAB HOUSES -->
+  <section class="section section--white">
+    <div class="container">
+      <p class="section-label">Where to order</p>
+      <h2 class="section-title">PCB Fabrication Services</h2>
+      <p class="section-intro">You don't build your own boards — you send Gerber files to a specialist factory. Here are the main options for hobbyists in the UK and Europe.</p>
+
+      <div class="grid-2 stagger-children" style="margin-bottom:2rem">
+
+        <div class="fab-card fab-recommended reveal">
+          <p class="fab-rec-label">★ Recommended for beginners</p>
+          <p class="fab-logo">JLCPCB</p>
+          <span class="fab-price-tag">from ~£3 / 5 boards</span>
+          <p>The default choice for almost every hobbyist. Extremely cheap, reliable quality, fast turnaround. Five boards for $2–5 plus shipping (~£8–12 DHL to UK). Also offers PCBA (PCB Assembly) — they source components from LCSC and do SMT placement at very competitive prices. The Gerber viewer on their website is the best available for quickly checking your files before ordering.</p>
+          <div class="pros-cons">
+            <div><p class="pc-head" style="color:var(--green)">PROS</p>
+              <ul class="pros"><li>Cheapest option</li><li>24–48hr production</li><li>Excellent Gerber viewer</li><li>PCBA service available</li><li>Huge spec range</li></ul></div>
+            <div><p class="pc-head" style="color:var(--copper)">CONS</p>
+              <ul class="cons"><li>Ships from China</li><li>7–14 day delivery</li><li>Occasional customs delays</li></ul></div>
+          </div>
+        </div>
+
+        <div class="fab-card reveal">
+          <p class="fab-logo">Aisler</p>
+          <span class="fab-price-tag">from ~£10 / 3 boards</span>
+          <p>European fab house (Netherlands/Germany) with manufacturing in Germany. More expensive than Chinese services but ships within EU/UK — no customs paperwork, typically 5–7 day delivery. Quality is excellent. A practical choice when you need boards quickly, are building commercially and want a EU supply chain, or have had too many customs headaches with JLCPCB. Supports direct upload from KiCad.</p>
+          <div class="pros-cons">
+            <div><p class="pc-head" style="color:var(--green)">PROS</p>
+              <ul class="pros"><li>Ships from EU — no customs</li><li>5–7 day UK delivery</li><li>Excellent quality</li><li>KiCad native upload</li></ul></div>
+            <div><p class="pc-head" style="color:var(--copper)">CONS</p>
+              <ul class="cons"><li>3× price of JLCPCB</li><li>Min 3 boards</li></ul></div>
+          </div>
+        </div>
+
+        <div class="fab-card reveal">
+          <p class="fab-logo">PCBWay</p>
+          <span class="fab-price-tag">from ~£4 / 5 boards</span>
+          <p>Very similar to JLCPCB in pricing and quality. Often preferred for unusual specifications — non-standard thicknesses, tight tolerances, special materials like Rogers or flex. Also offers PCBA, CNC machining, and 3D printing, making it useful as a single supplier for mechanical and electronic prototyping.</p>
+          <div class="pros-cons">
+            <div><p class="pc-head" style="color:var(--green)">PROS</p>
+              <ul class="pros"><li>Wide spec range</li><li>Good PCBA service</li><li>One-stop prototyping</li></ul></div>
+            <div><p class="pc-head" style="color:var(--copper)">CONS</p>
+              <ul class="cons"><li>Ships from China</li><li>Slightly pricier than JLCPCB</li></ul></div>
+          </div>
+        </div>
+
+        <div class="fab-card reveal">
+          <p class="fab-logo">OSH Park</p>
+          <span class="fab-price-tag">from ~$5 / 3 boards</span>
+          <p>US-based, famous for distinctive purple solder mask with ENIG finish. Shares panelisation with other customers to reduce cost. Ships from Oregon — slow and pricier to the UK due to shipping and customs. Popular in the US maker community; less practical for UK hobbyists unless you specifically want the OSH Park aesthetic or their community design sharing features.</p>
+          <div class="pros-cons">
+            <div><p class="pc-head" style="color:var(--green)">PROS</p>
+              <ul class="pros"><li>ENIG included as standard</li><li>Design sharing community</li></ul></div>
+            <div><p class="pc-head" style="color:var(--copper)">CONS</p>
+              <ul class="cons"><li>US shipping to UK is slow</li><li>Customs issues likely</li><li>Not cost-competitive</li></ul></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Standard specs reference -->
+      <h3 style="margin-bottom:1rem">JLCPCB Standard Capability (Free Tier)</h3>
+      <div class="spec-grid">
+        <div class="spec-cell"><p class="s-label">Layers</p><p class="s-val">1–2 (free), 4–6 layer available</p></div>
+        <div class="spec-cell"><p class="s-label">Min trace / space</p><p class="s-val">0.127mm / 0.127mm</p></div>
+        <div class="spec-cell"><p class="s-label">Board thickness</p><p class="s-val">1.6mm standard (0.4–2.0mm avail.)</p></div>
+        <div class="spec-cell"><p class="s-label">Min drill diameter</p><p class="s-val">0.3mm (0.2mm with extra charge)</p></div>
+        <div class="spec-cell"><p class="s-label">Copper weight</p><p class="s-val">1 oz (35µm) standard; 2oz available</p></div>
+        <div class="spec-cell"><p class="s-label">Board size range</p><p class="s-val">10×10mm to 500×500mm</p></div>
+        <div class="spec-cell"><p class="s-label">Surface finish</p><p class="s-val">HASL lead-free (ENIG +~£1.50)</p></div>
+        <div class="spec-cell"><p class="s-label">Solder mask colours</p><p class="s-val">Green, red, blue, black, white, yellow</p></div>
+        <div class="spec-cell"><p class="s-label">Production time</p><p class="s-val">24–48 hours standard</p></div>
+        <div class="spec-cell"><p class="s-label">UK delivery</p><p class="s-val">7–14 days DHL Express / 14–25 days economy</p></div>
+      </div>
+
+      <div class="callout callout--tip">
+        <p class="callout-title">Tip: panel multiple copies</p>
+        <p style="margin:0">JLCPCB charges by panel area, not board count within that area. If your board is small (under 5×5cm), you can tile multiple copies on one panel using V-score or mouse-bite breakaway tabs between them — getting 10 or 20 copies for the same price as 5. Search "KiCad panelisation" for tools that automate this.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PCBA SECTION -->
+  <section class="section section--tinted">
+    <div class="container" style="max-width:760px">
+      <p class="section-label">Going further</p>
+      <h2 class="section-title">PCB Assembly (PCBA) Services</h2>
+      <p>Once you're comfortable designing boards, PCBA services let you outsource the soldering too. You upload your Gerbers, a Bill of Materials (BOM) listing every component, and a component placement file (CPL). The factory sources the components (from LCSC for JLCPCB), applies solder paste, places components with pick-and-place machines, and runs the boards through a reflow oven.</p>
+
+      <p>For SMD-heavy boards with many tiny components, PCBA is often actually <em>cheaper</em> than buying all the components separately and soldering by hand — especially at quantities of 5–50 boards. JLCPCB charges from $8 setup plus $0.0017 per SMD component placed.</p>
+
+      <div class="callout callout--warn">
+        <p class="callout-title">PCBA component availability</p>
+        <p style="margin:0">Not all components are in LCSC's library. When designing for PCBA, check that your BOM components are available on LCSC (lcsc.com) before finalising your schematic — or you'll need to hand-solder the unavailable ones after the PCBA run. In KiCad, you can add LCSC part numbers directly to your schematic symbols for easy BOM generation.</p>
+      </div>
+    </div>
+  </section>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Soldering Guide — PCB Primer</title>
+  <meta name="description" content="Complete soldering guide: equipment recommendations, through-hole and SMD technique, common defect identification and fixes, and safety.">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    .equipment-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+    .equip-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 1.1rem; }
+    .equip-card .equip-cat { font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-light); margin-bottom: 0.3rem; }
+    .equip-card h4 { font-size: 1rem; color: var(--green-deep); margin-bottom: 0.4rem; }
+    .equip-card p { font-size: 0.85rem; color: var(--text-muted); margin: 0 0 0.5rem; }
+    .equip-card .equip-rec { font-family: var(--font-mono); font-size: 0.75rem; color: var(--copper); }
+    .defect-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.2rem; margin: 2rem 0; }
+    .defect-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; }
+    .defect-card .defect-name { font-family: var(--font-serif); font-size: 1.1rem; font-weight: 700; margin-bottom: 0.3rem; color: var(--text); }
+    .defect-card .defect-cause { font-size: 0.83rem; color: var(--copper); margin-bottom: 0.4rem; }
+    .defect-card .defect-desc { font-size: 0.86rem; color: var(--text-muted); margin-bottom: 0.7rem; line-height: 1.6; }
+    .defect-card .defect-fix { font-size: 0.84rem; background: var(--green-faint); color: var(--green-deep); padding: 0.5rem 0.7rem; border-radius: 4px; }
+    .temp-guide { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .temp-row { display: grid; grid-template-columns: 110px 1fr 1fr; gap: 0; }
+    .temp-row > div { padding: 8px 12px; border-bottom: 1px solid var(--border-light); font-size: 0.88rem; }
+    .temp-row:last-child > div { border-bottom: none; }
+    .temp-val { font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700; }
+    .temp-header > div { background: var(--green-deep); color: var(--text-on-green); font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.05em; padding: 8px 12px; }
+    .solder-types { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+    .solder-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; padding: 1rem; }
+    .solder-card h4 { font-size: 0.95rem; color: var(--copper); margin-bottom: 0.4rem; }
+    .solder-card p { font-size: 0.83rem; color: var(--text-muted); margin: 0; }
+  </style>
+</head>
+<body>
+
+  <div class="page-header">
+    <div class="container">
+      <p class="page-label">06 / Soldering</p>
+      <h1>Iron in Hand</h1>
+      <p>The equipment you need, the technique that works, how to identify and fix bad joints, and staying safe. Soldering is a learnable skill — everyone starts badly.</p>
+    </div>
+  </div>
+
+  <!-- ======== WHAT IS SOLDER ======== -->
+  <section class="section section--white">
+    <div class="container">
+      <p class="section-label">The material</p>
+      <h2 class="section-title">Solder: What It Is and What to Buy</h2>
+      <p class="section-intro">Solder is a fusible metal alloy that melts at low temperatures to create a permanent, electrically conductive join between a component and a PCB pad.</p>
+
+      <!-- Good vs bad joint anatomy diagram -->
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 680 220" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:680px">
+
+          <!-- ===== GOOD JOINT (left) ===== -->
+          <text x="110" y="20" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="11" fill="#2d6a3f" font-weight="600">✓ GOOD joint</text>
+
+          <!-- PCB pad (copper coloured) -->
+          <rect x="60" y="130" width="100" height="12" rx="1" fill="#d4a520" stroke="#b5820a" stroke-width="0.8"/>
+          <text x="168" y="140" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#b5820a">pad</text>
+
+          <!-- Solder mask either side of pad -->
+          <rect x="10"  y="118" width="50" height="24" rx="1" fill="#2d6a3f" opacity="0.85"/>
+          <rect x="160" y="118" width="50" height="24" rx="1" fill="#2d6a3f" opacity="0.85"/>
+          <text x="35"  y="152" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#2d6a3f">mask</text>
+          <text x="185" y="152" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#2d6a3f">mask</text>
+
+          <!-- Component lead (through pad) -->
+          <rect x="104" y="30" width="12" height="160" rx="2" fill="#aaa" stroke="#888" stroke-width="0.8"/>
+          <text x="123" y="55" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#888">lead</text>
+
+          <!-- Good solder fillet — concave volcano shape, shiny -->
+          <!-- Built as a smooth curve around the lead -->
+          <path d="M60 130 Q62 115 80 100 Q90 90 110 88 Q130 90 140 100 Q158 115 160 130 Z" fill="#9ecdc3" stroke="#4a9d93" stroke-width="1"/>
+          <!-- Shiny highlight on fillet -->
+          <path d="M75 120 Q88 108 100 106 Q112 108 118 118" stroke="rgba(255,255,255,0.5)" stroke-width="2" fill="none"/>
+
+          <!-- Annotations for good joint -->
+          <line x1="90" y1="100" x2="50" y2="72" stroke="#2d6a3f" stroke-width="0.8" stroke-dasharray="3 2"/>
+          <text x="8"  y="65" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#2d6a3f">concave</text>
+          <text x="8"  y="75" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#2d6a3f">fillet</text>
+
+          <line x1="145" y1="108" x2="178" y2="80" stroke="#2d6a3f" stroke-width="0.8" stroke-dasharray="3 2"/>
+          <text x="180" y="73" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#2d6a3f">shiny</text>
+          <text x="180" y="83" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#2d6a3f">smooth</text>
+
+          <text x="110" y="175" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#2d6a3f">wets pad + lead · concave · shiny</text>
+
+          <!-- ===== COLD JOINT (centre-left) ===== -->
+          <text x="340" y="20" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="11" fill="#b5820a" font-weight="600">✗ Cold joint</text>
+
+          <rect x="290" y="130" width="100" height="12" rx="1" fill="#d4a520" stroke="#b5820a" stroke-width="0.8"/>
+          <rect x="240" y="118" width="50" height="24" rx="1" fill="#2d6a3f" opacity="0.85"/>
+          <rect x="390" y="118" width="50" height="24" rx="1" fill="#2d6a3f" opacity="0.85"/>
+          <rect x="334" y="30"  width="12" height="160" rx="2" fill="#aaa" stroke="#888" stroke-width="0.8"/>
+
+          <!-- Cold joint — convex, lumpy, dull -->
+          <path d="M290 130 Q292 122 300 115 Q310 108 320 107 Q332 108 342 115 Q358 122 390 130 Z" fill="#b8b8a0" stroke="#888" stroke-width="1"/>
+          <!-- Lumpy texture to indicate grainy/dull -->
+          <path d="M300 120 Q308 117 316 119 Q324 121 332 118 Q340 120 350 122" stroke="rgba(150,150,130,0.8)" stroke-width="1.5" fill="none"/>
+
+          <line x1="320" y1="110" x2="282" y2="78" stroke="#b5820a" stroke-width="0.8" stroke-dasharray="3 2"/>
+          <text x="228" y="72" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#b5820a">convex,</text>
+          <text x="228" y="82" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#b5820a">lumpy</text>
+
+          <line x1="356" y1="118" x2="392" y2="84" stroke="#b5820a" stroke-width="0.8" stroke-dasharray="3 2"/>
+          <text x="394" y="78" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#b5820a">dull,</text>
+          <text x="394" y="88" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#b5820a">grainy</text>
+
+          <text x="340" y="175" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#b5820a">joint not hot enough · high resistance · will fail</text>
+
+          <!-- ===== SOLDER BRIDGE (right) ===== -->
+          <text x="575" y="20" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="11" fill="#c0392b" font-weight="600">✗ Solder bridge</text>
+
+          <!-- Two adjacent pads -->
+          <rect x="495" y="130" width="45" height="12" rx="1" fill="#d4a520" stroke="#b5820a" stroke-width="0.8"/>
+          <rect x="555" y="130" width="45" height="12" rx="1" fill="#d4a520" stroke="#b5820a" stroke-width="0.8"/>
+          <rect x="460" y="118" width="35" height="24" rx="1" fill="#2d6a3f" opacity="0.85"/>
+          <rect x="600" y="118" width="40" height="24" rx="1" fill="#2d6a3f" opacity="0.85"/>
+          <!-- Gap label -->
+          <line x1="540" y1="136" x2="555" y2="136" stroke="#888" stroke-width="1" stroke-dasharray="2 1"/>
+          <!-- Two leads -->
+          <rect x="509" y="30" width="11" height="160" rx="1" fill="#aaa" stroke="#888" stroke-width="0.8"/>
+          <rect x="574" y="30" width="11" height="160" rx="1" fill="#aaa" stroke="#888" stroke-width="0.8"/>
+
+          <!-- Bridge blob connecting the two pads/leads -->
+          <path d="M495 130 Q500 120 509 112 Q525 102 548 102 Q568 102 580 112 Q595 120 600 130 Z" fill="#9ecdc3" stroke="#4a9d93" stroke-width="1"/>
+          <!-- Bridge highlighted with different colour in the middle -->
+          <path d="M535 115 Q548 108 562 115" stroke="#e74c3c" stroke-width="3" fill="none" opacity="0.7"/>
+
+          <line x1="548" y1="103" x2="548" y2="68" stroke="#c0392b" stroke-width="0.8" stroke-dasharray="3 2"/>
+          <text x="548" y="62" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#c0392b">SHORT</text>
+          <text x="548" y="72" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#c0392b">CIRCUIT</text>
+
+          <text x="575" y="175" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#c0392b">connects adjacent pins · must be removed with wick</text>
+
+          <!-- Bottom substrate bar -->
+          <rect x="10" y="142"  width="200" height="16" rx="1" fill="#c8c3a0" opacity="0.6"/>
+          <rect x="240" y="142" width="200" height="16" rx="1" fill="#c8c3a0" opacity="0.6"/>
+          <rect x="460" y="142" width="200" height="16" rx="1" fill="#c8c3a0" opacity="0.6"/>
+          <text x="110" y="200" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#8c8575">FR4 substrate</text>
+          <text x="340" y="200" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#8c8575">FR4 substrate</text>
+          <text x="575" y="200" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#8c8575">FR4 substrate</text>
+        </svg>
+        <p class="diagram-caption">Solder joint anatomy — cross-section comparison of good and common defective joints</p>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <p>Modern solder is a tin/silver/copper alloy (SAC305: 96.5% Sn, 3% Ag, 0.5% Cu) for lead-free, or traditionally tin/lead (Sn63Pb37: 63% Sn, 37% Pb). Good solder joint appearance is shiny and concave — a properly wetted, smooth fillet between the pad and the component lead.</p>
+
+          <p>Solder wire contains a flux core — a chemical that activates on heating to clean oxidation from the surfaces being joined, allowing the solder to flow and wet properly. You cannot get a good joint without flux activity.</p>
+
+          <div class="callout callout--warn">
+            <p class="callout-title">Lead-free vs leaded solder</p>
+            <p style="margin:0">Leaded solder (Sn63Pb37, melts at ~183°C) is easier to work with — it flows better, wets more readily, and the joints are slightly shinier. Lead-free (SAC305, melts at ~217°C) requires higher temperatures and more precise technique, but is safer and RoHS compliant. Beginners: start with leaded solder in a well-ventilated area. Wash hands after every session.</p>
+          </div>
+        </div>
+
+        <div>
+          <div class="solder-types">
+            <div class="solder-card">
+              <h4>Sn63Pb37</h4>
+              <p>63% tin, 37% lead. Eutectic alloy — melts sharply at 183°C. Easiest to work with. Not RoHS. Good for learning.</p>
+              <p style="margin-top:0.5rem;font-family:var(--font-mono);font-size:0.75rem;color:var(--green)">Recommended for beginners</p>
+            </div>
+            <div class="solder-card">
+              <h4>SAC305</h4>
+              <p>96.5% tin, 3% silver, 0.5% copper. Lead-free. Melts at ~217°C. Requires hotter iron and more skill. RoHS compliant.</p>
+              <p style="margin-top:0.5rem;font-family:var(--font-mono);font-size:0.75rem;color:var(--text-muted)">Move to this once skilled</p>
+            </div>
+            <div class="solder-card">
+              <h4>Solder Paste</h4>
+              <p>Tiny balls of solder suspended in flux gel. Applied to SMD pads via stencil or syringe. Required for reflow soldering SMD components.</p>
+              <p style="margin-top:0.5rem;font-family:var(--font-mono);font-size:0.75rem;color:var(--text-muted)">For reflow / SMD work</p>
+            </div>
+          </div>
+          <div class="callout callout--tip" style="margin-top:0">
+            <p class="callout-title">Wire diameter</p>
+            <p style="margin:0">Buy 0.6mm or 0.7mm diameter solder wire for SMD work and general fine work. 1.0mm is fine for through-hole. Avoid anything thicker than 1.0mm for PCB work.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== EQUIPMENT ======== -->
+  <section class="section section--tinted">
+    <div class="container">
+      <p class="section-label">The toolkit</p>
+      <h2 class="section-title">Equipment You Need</h2>
+
+      <div class="equipment-grid">
+        <div class="equip-card">
+          <p class="equip-cat">Essential</p>
+          <h4>Temperature-controlled iron</h4>
+          <p>The single most important investment. A station with a precise, adjustable temperature transforms soldering. Cheap un-regulated irons run too hot, damage components, and produce cold joints.</p>
+          <p class="equip-rec">Hakko FX-888D · Weller WE1010 · TS100/TS101 (portable)</p>
+        </div>
+        <div class="equip-card">
+          <p class="equip-cat">Essential</p>
+          <h4>Soldering iron tips</h4>
+          <p>Chisel tips (1.5–2mm) are the most useful all-rounders. Fine conical tips for tight SMD work. Keep tips tinned (coated in solder) when not in use to prevent oxidation.</p>
+          <p class="equip-rec">Start with a chisel tip. Add a conical for SMD.</p>
+        </div>
+        <div class="equip-card">
+          <p class="equip-cat">Essential</p>
+          <h4>Flux</h4>
+          <p>Additional flux beyond what's in the solder wire. Makes a dramatic difference to joint quality. Apply before soldering, especially for SMD drag-soldering and rework.</p>
+          <p class="equip-rec">MG Chemicals 8341 no-clean flux pen · Amtech NC-559</p>
+        </div>
+        <div class="equip-card">
+          <p class="equip-cat">Essential</p>
+          <h4>Solder wick (desoldering braid)</h4>
+          <p>Copper braid that, when pressed onto solder with a hot iron, wicks away the molten solder by capillary action. Essential for removing solder bridges and reworking mistakes.</p>
+          <p class="equip-rec">Chemtronics Soder-Wick 80-3-5</p>
+        </div>
+        <div class="equip-card">
+          <p class="equip-cat">Essential</p>
+          <h4>Magnification</h4>
+          <p>You cannot inspect SMD solder joints reliably with the naked eye. A 10× loupe or USB microscope reveals cold joints, bridges, and missing solder that are invisible otherwise.</p>
+          <p class="equip-rec">$15 jeweller's loupe as minimum · Andonstar AD246 microscope</p>
+        </div>
+        <div class="equip-card">
+          <p class="equip-cat">Strongly recommended</p>
+          <h4>Hot air station</h4>
+          <p>For SMD rework and soldering QFN/BGA packages. Blows hot air through a nozzle to melt SMD solder joints from above without touching the component.</p>
+          <p class="equip-rec">Quick 861DW · Yihua 858D</p>
+        </div>
+        <div class="equip-card">
+          <p class="equip-cat">Recommended</p>
+          <h4>PCB vice / helping hands</h4>
+          <p>Holds the board at a comfortable angle, freeing both hands for iron and solder. PCB vice with alligator clips or a dedicated PCB holder stand.</p>
+          <p class="equip-rec">Kaisi K-800 · Panavise 301</p>
+        </div>
+        <div class="equip-card">
+          <p class="equip-cat">Recommended</p>
+          <h4>Isopropyl alcohol (IPA) + brush</h4>
+          <p>99% IPA and a stiff brush (toothbrush) for cleaning flux residue after soldering. No-clean flux can be left, but cleaning always looks better and prevents long-term corrosion concerns.</p>
+          <p class="equip-rec">99% IPA only — 70% leaves residue</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== TEMPERATURE GUIDE ======== -->
+  <section class="section section--white">
+    <div class="container">
+      <p class="section-label">Temperature settings</p>
+      <h2 class="section-title">Iron Temperature Guide</h2>
+      <p class="section-intro">Temperature matters enormously. Too cool: solder won't flow properly, joints are grainy. Too hot: you damage components, lift pads, and oxidise the tip instantly.</p>
+
+      <div class="table-wrap">
+        <div class="temp-guide">
+          <div class="temp-row temp-header">
+            <div>Iron temp</div>
+            <div>Use case</div>
+            <div>Notes</div>
+          </div>
+          <div class="temp-row">
+            <div class="temp-val" style="color:var(--green)">320°C</div>
+            <div>Leaded solder, through-hole, standard work</div>
+            <div style="color:var(--text-muted);font-size:0.85rem">Default starting temperature for most THT work with Sn63Pb37</div>
+          </div>
+          <div class="temp-row">
+            <div class="temp-val" style="color:var(--green)">330–340°C</div>
+            <div>Leaded solder, SMD work, fine pitch</div>
+            <div style="color:var(--text-muted);font-size:0.85rem">Slightly higher to compensate for the small contact area with SMD pads</div>
+          </div>
+          <div class="temp-row">
+            <div class="temp-val" style="color:var(--gold)">350–370°C</div>
+            <div>Lead-free solder (SAC305), through-hole</div>
+            <div style="color:var(--text-muted);font-size:0.85rem">SAC305 melts at 217°C — you need extra margin to ensure proper reflow</div>
+          </div>
+          <div class="temp-row">
+            <div class="temp-val" style="color:var(--gold)">370–400°C</div>
+            <div>Lead-free SMD, large ground pads, connectors</div>
+            <div style="color:var(--text-muted);font-size:0.85rem">Large pads connected to ground planes sink heat — increase temp briefly</div>
+          </div>
+          <div class="temp-row">
+            <div class="temp-val" style="color:var(--copper)">400°C+</div>
+            <div>Specialised only — heavy copper, large connectors</div>
+            <div style="color:var(--text-muted);font-size:0.85rem">Risk of pad lift, component damage, tip oxidation. Use carefully.</div>
+          </div>
+          <div class="temp-row">
+            <div class="temp-val" style="color:var(--text-light)">250°C</div>
+            <div>Removing solder with wick</div>
+            <div style="color:var(--text-muted);font-size:0.85rem">Lower temp for wick work helps prevent pad lift when desoldering</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== THROUGH-HOLE TECHNIQUE ======== -->
+  <section class="section section--tinted">
+    <div class="container">
+      <p class="section-label">Technique</p>
+      <h2 class="section-title">Through-Hole Soldering: Step by Step</h2>
+
+      <!-- Iron angle and heat transfer diagram -->
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 660 200" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:660px">
+
+          <!-- ===== WRONG WAY: heating the solder (left) ===== -->
+          <text x="150" y="18" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="10.5" fill="#c0392b" font-weight="600">✗ Wrong — heating the solder</text>
+
+          <!-- Board cross section -->
+          <rect x="40"  y="130" width="220" height="12" rx="1" fill="#2d6a3f" opacity="0.85"/><!-- mask -->
+          <rect x="40"  y="142" width="220" height="10" rx="1" fill="#c97530" opacity="0.9"/><!-- copper -->
+          <rect x="40"  y="152" width="220" height="36" rx="1" fill="#c8c3a0" opacity="0.7"/><!-- FR4 -->
+          <!-- Pad exposed -->
+          <rect x="130" y="130" width="40" height="12" fill="#d4a520"/>
+          <!-- Lead -->
+          <rect x="147" y="30"  width="6"  height="130" fill="#aaa" stroke="#888" stroke-width="0.5"/>
+
+          <!-- Iron coming from upper-right, touching solder wire (WRONG) -->
+          <!-- Iron body -->
+          <rect x="240" y="30" width="80" height="22" rx="6" fill="#555" stroke="#333" stroke-width="1" transform="rotate(-30, 280, 41)"/>
+          <polygon points="226,68 238,58 245,72" fill="#888"/><!-- tip -->
+          <!-- Solder wire being fed to the iron tip (wrong way) -->
+          <path d="M190 50 Q210 62 226 68" stroke="#9ecdc3" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <!-- Arrow showing solder going to iron, not joint -->
+          <circle cx="210" cy="58" r="4" fill="#c0392b" opacity="0.8"/>
+          <text x="168" y="42" font-family="'Share Tech Mono',monospace" font-size="9" fill="#c0392b">solder touches iron</text>
+          <text x="168" y="52" font-family="'Share Tech Mono',monospace" font-size="9" fill="#c0392b">not the joint!</text>
+          <!-- Result: blobby bad joint -->
+          <ellipse cx="152" cy="126" rx="22" ry="10" fill="#b8b8a0" stroke="#888" stroke-width="1" opacity="0.9"/>
+          <text x="150" y="188" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#c0392b">solder balls up · cold joint · won't wet</text>
+
+          <!-- Divider -->
+          <line x1="320" y1="10" x2="320" y2="195" stroke="#ddd" stroke-width="1" stroke-dasharray="4 3"/>
+
+          <!-- ===== RIGHT WAY: heating the joint (right) ===== -->
+          <text x="490" y="18" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="10.5" fill="#2d6a3f" font-weight="600">✓ Correct — heating the joint</text>
+
+          <!-- Board cross section (right side) -->
+          <rect x="360" y="130" width="220" height="12" rx="1" fill="#2d6a3f" opacity="0.85"/>
+          <rect x="360" y="142" width="220" height="10" rx="1" fill="#c97530" opacity="0.9"/>
+          <rect x="360" y="152" width="220" height="36" rx="1" fill="#c8c3a0" opacity="0.7"/>
+          <rect x="450" y="130" width="40"  height="12" fill="#d4a520"/>
+          <!-- Lead -->
+          <rect x="467" y="30"  width="6"  height="130" fill="#aaa" stroke="#888" stroke-width="0.5"/>
+
+          <!-- Iron at 45°, touching the junction of lead and pad -->
+          <rect x="530" y="52" width="80" height="22" rx="6" fill="#555" stroke="#333" stroke-width="1" transform="rotate(-40, 570, 63)"/>
+          <polygon points="514,112 524,100 534,112" fill="#888"/><!-- tip touching joint -->
+
+          <!-- Heat arrow from iron into joint -->
+          <path d="M514 112 Q480 128 470 128" stroke="#e67e22" stroke-width="2" fill="none" marker-end="url(#heatarr)" stroke-dasharray="4 2"/>
+          <text x="484" y="122" font-family="'Share Tech Mono',monospace" font-size="8" fill="#e67e22">heat</text>
+
+          <!-- Solder wire fed to the joint (correct) -->
+          <path d="M395 80 Q418 104 466 128" stroke="#9ecdc3" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <!-- Arrow on solder wire -->
+          <text x="358" y="72" font-family="'Share Tech Mono',monospace" font-size="9" fill="#2d6a3f">solder touches</text>
+          <text x="358" y="82" font-family="'Share Tech Mono',monospace" font-size="9" fill="#2d6a3f">joint — not iron</text>
+
+          <!-- Result: good concave joint -->
+          <path d="M450 130 Q455 120 468 114 Q475 110 480 114 Q490 120 490 130 Z" fill="#9ecdc3" stroke="#4a9d93" stroke-width="1"/>
+
+          <text x="490" y="188" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#2d6a3f">solder flows into hot joint · smooth concave fillet</text>
+        </svg>
+        <p class="diagram-caption">The most important technique rule: always heat the joint, then feed solder to the joint — never melt solder on the iron tip</p>
+      </div>
+
+      <div class="steps">
+        <div class="step reveal">
+          <div class="step-num" style="font-size:0.8rem">01</div>
+          <div class="step-body">
+            <h3>Insert and secure the component</h3>
+            <p style="font-size:0.93rem;color:var(--text-muted)">Push the component through from the top. Bend the leads slightly outward (about 15–20°) on the underside — this holds the component in place while you flip the board to solder.</p>
+          </div>
+        </div>
+        <div class="step reveal">
+          <div class="step-num" style="font-size:0.8rem">02</div>
+          <div class="step-body">
+            <h3>Heat the joint — pad AND lead together</h3>
+            <p style="font-size:0.93rem;color:var(--text-muted)">Place the iron tip so it touches both the copper pad and the component lead simultaneously. Hold for 2–3 seconds to bring both to temperature. <strong>You are heating the joint, not the solder.</strong></p>
+          </div>
+        </div>
+        <div class="step reveal">
+          <div class="step-num" style="font-size:0.8rem">03</div>
+          <div class="step-body">
+            <h3>Apply solder to the joint (not the iron)</h3>
+            <p style="font-size:0.93rem;color:var(--text-muted)">Touch the solder wire to the junction of the pad and lead — not to the tip of the iron. When the joint is hot enough, the solder will flow instantly into the joint. Feed in enough for a good fillet, then stop.</p>
+          </div>
+        </div>
+        <div class="step reveal">
+          <div class="step-num" style="font-size:0.8rem">04</div>
+          <div class="step-body">
+            <h3>Remove iron, don't move the joint</h3>
+            <p style="font-size:0.93rem;color:var(--text-muted)">Remove the iron (and solder wire first) then the iron. Do not move the component or the board for 3–5 seconds while the solder solidifies. Movement during solidification causes a "cold joint" — grainy appearance, poor contact.</p>
+          </div>
+        </div>
+        <div class="step reveal">
+          <div class="step-num" style="font-size:0.8rem">05</div>
+          <div class="step-body">
+            <h3>Inspect and clip</h3>
+            <p style="font-size:0.93rem;color:var(--text-muted)">A good through-hole joint looks like a small smooth volcano — shiny, concave fillet that coats the lead and wets into the pad. Use flush cutters to clip the lead close (but not flush) to the solder. Then inspect under magnification.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== SMD TECHNIQUE ======== -->
+  <section class="section section--white">
+    <div class="container">
+      <p class="section-label">Technique</p>
+      <h2 class="section-title">SMD Soldering: Iron &amp; Hot Air</h2>
+      <p class="section-intro">Surface mount soldering is different from through-hole in every way — the scale, the tools, the order of operations, and the failure modes. Here's how to do it properly with both an iron and hot air.</p>
+
+      <div class="tabs">
+        <div class="tab-list">
+          <button class="tab-btn">With a soldering iron</button>
+          <button class="tab-btn">With hot air</button>
+          <button class="tab-btn">Reflow oven (solder paste)</button>
+        </div>
+
+        <!-- IRON METHOD -->
+        <div class="tab-panel">
+          <p>An iron works well for SMD components down to 0402 size, SOIC-8/16, and with care even TQFP packages. The technique is different from through-hole — you pre-tin one pad, tack the component, then solder the remaining joints.</p>
+
+          <!-- SMD pre-tin and tack sequence diagram -->
+          <div class="diagram-wrap" style="margin-bottom:1.2rem">
+            <svg viewBox="0 0 660 155" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:660px">
+              <!-- 4 stages: pads clean → pre-tin one → place+tack → solder other -->
+              <!-- Stage 1: Clean pads -->
+              <text x="72" y="13" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#1a3d26" font-weight="600">① Apply flux</text>
+              <rect x="20" y="60" width="40" height="18" rx="2" fill="#d4a520" stroke="#b5820a" stroke-width="1"/><!-- pad A -->
+              <rect x="66" y="60" width="40" height="18" rx="2" fill="#d4a520" stroke="#b5820a" stroke-width="1"/><!-- pad B -->
+              <rect x="20" y="56" width="86" height="26" rx="1" fill="rgba(230,200,100,0.2)" stroke="#d4a520" stroke-width="0.5"/>
+              <!-- Flux droplet indicator -->
+              <text x="62" y="50" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8.5" fill="#b5820a">flux →</text>
+              <text x="62" y="95" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#5c5545">2 bare pads</text>
+              <text x="62" y="105" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#2d6a3f">apply flux pen</text>
+
+              <!-- Arrow -->
+              <text x="134" y="75" font-family="'Share Tech Mono',monospace" font-size="18" fill="#c5c0b0">→</text>
+
+              <!-- Stage 2: Pre-tin one pad -->
+              <text x="228" y="13" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#1a3d26" font-weight="600">② Pre-tin ONE pad</text>
+              <rect x="162" y="60" width="40" height="18" rx="2" fill="#d4a520" stroke="#b5820a" stroke-width="1"/><!-- pad A — bare -->
+              <!-- Pre-tinned pad B (has solder on it) -->
+              <rect x="208" y="60" width="40" height="18" rx="2" fill="#d4a520" stroke="#b5820a" stroke-width="1"/>
+              <path d="M208 60 Q218 54 228 56 Q238 54 248 60" fill="#9ecdc3" stroke="#4a9d93" stroke-width="0.8"/><!-- solder blob -->
+              <rect x="208" y="60" width="40" height="8" rx="1" fill="#9ecdc3" opacity="0.7"/><!-- solder on pad -->
+              <text x="228" y="50" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="7.5" fill="#4a9d93">thin solder layer</text>
+              <text x="204" y="95" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#5c5545">left pad: bare</text>
+              <text x="204" y="105" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#c97530">right pad: tinned</text>
+
+              <!-- Arrow -->
+              <text x="296" y="75" font-family="'Share Tech Mono',monospace" font-size="18" fill="#c5c0b0">→</text>
+
+              <!-- Stage 3: Place and tack -->
+              <text x="392" y="13" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#1a3d26" font-weight="600">③ Place + tack</text>
+              <!-- Pads -->
+              <rect x="326" y="60" width="40" height="18" rx="2" fill="#d4a520" stroke="#b5820a" stroke-width="1"/>
+              <rect x="372" y="60" width="40" height="18" rx="2" fill="#d4a520" stroke="#b5820a" stroke-width="1"/>
+              <!-- Component body placed (tweezers position it) -->
+              <rect x="330" y="62" width="78" height="14" rx="3" fill="#2a2a2a" stroke="#444" stroke-width="1"/>
+              <text x="369" y="73" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#888">0805</text>
+              <!-- Iron touching tinned pad -->
+              <line x1="400" y1="40" x2="388" y2="60" stroke="#888" stroke-width="2.5" stroke-linecap="round"/><!-- iron body -->
+              <polygon points="385,60 392,58 390,66" fill="#c0392b"/><!-- hot tip -->
+              <text x="406" y="44" font-family="'Share Tech Mono',monospace" font-size="8" fill="#c0392b">iron →</text>
+              <!-- Tweezers holding component -->
+              <text x="314" y="57" font-family="'Share Tech Mono',monospace" font-size="8" fill="#3a6fb8">tweezers</text>
+              <text x="392" y="95" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#5c5545">place component</text>
+              <text x="392" y="105" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#c97530">tack tinned pad</text>
+              <text x="392" y="115" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#2d6a3f">check alignment!</text>
+
+              <!-- Arrow -->
+              <text x="462" y="75" font-family="'Share Tech Mono',monospace" font-size="18" fill="#c5c0b0">→</text>
+
+              <!-- Stage 4: Solder other pad -->
+              <text x="568" y="13" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="9" fill="#1a3d26" font-weight="600">④ Solder other pad</text>
+              <rect x="500" y="60" width="40" height="18" rx="2" fill="#d4a520" stroke="#b5820a" stroke-width="1"/>
+              <rect x="546" y="60" width="40" height="18" rx="2" fill="#d4a520" stroke="#b5820a" stroke-width="1"/>
+              <!-- Component -->
+              <rect x="504" y="62" width="78" height="14" rx="3" fill="#2a2a2a" stroke="#444" stroke-width="1"/>
+              <text x="543" y="73" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#888">0805</text>
+              <!-- Good solder fillets both ends -->
+              <path d="M500 60 Q505 54 512 56 Q518 54 524 60" fill="#9ecdc3" stroke="#4a9d93" stroke-width="0.8"/>
+              <rect x="500" y="60" width="40" height="8" rx="1" fill="#9ecdc3" opacity="0.7"/>
+              <path d="M546 60 Q551 54 558 56 Q564 54 570 60" fill="#9ecdc3" stroke="#4a9d93" stroke-width="0.8"/>
+              <rect x="546" y="60" width="40" height="8" rx="1" fill="#9ecdc3" opacity="0.7"/>
+              <text x="568" y="95" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#5c5545">solder left pad</text>
+              <text x="568" y="105" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#2d6a3f">then reflow tack</text>
+              <text x="568" y="115" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="8" fill="#2d6a3f">inspect both joints</text>
+
+              <!-- Bottom substrate bar (all four stages) -->
+              <rect x="20"  y="78" width="106" height="12" rx="1" fill="#c8c3a0" opacity="0.5"/>
+              <rect x="162" y="78" width="106" height="12" rx="1" fill="#c8c3a0" opacity="0.5"/>
+              <rect x="326" y="78" width="106" height="12" rx="1" fill="#c8c3a0" opacity="0.5"/>
+              <rect x="500" y="78" width="106" height="12" rx="1" fill="#c8c3a0" opacity="0.5"/>
+            </svg>
+            <p class="diagram-caption">SMD iron technique: flux first → pre-tin one pad → place with tweezers → tack with iron → solder other pad → reflow first joint</p>
+          </div>
+
+          <div class="steps">
+            <div class="step">
+              <div class="step-num" style="font-size:0.8rem">01</div>
+              <div class="step-body">
+                <h3>Add flux to the pads</h3>
+                <p style="font-size:0.93rem;color:var(--text-muted)">Apply a small amount of flux to the pad area. This is not optional for SMD — it makes the difference between solder that flows perfectly and solder that balls up. A flux pen is easiest; a syringe of gel flux also works.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num" style="font-size:0.8rem">02</div>
+              <div class="step-body">
+                <h3>Pre-tin one pad</h3>
+                <p style="font-size:0.93rem;color:var(--text-muted)">Apply a small amount of solder to just one pad — the one you'll use to tack the component. The goal is a thin, flat layer of solder on the pad, not a blob. This is your anchor point.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num" style="font-size:0.8rem">03</div>
+              <div class="step-body">
+                <h3>Place and tack</h3>
+                <p style="font-size:0.93rem;color:var(--text-muted)">Using tweezers, position the component on its pads. Hold it in place with the tweezers, then briefly touch the iron to the pre-tinned pad — the solder reflows and tacks the component's first contact. Now you can release the tweezers. The component is held by one joint; check alignment carefully before proceeding.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num" style="font-size:0.8rem">04</div>
+              <div class="step-body">
+                <h3>Solder remaining contacts</h3>
+                <p style="font-size:0.93rem;color:var(--text-muted)">For a two-pad component (resistor, capacitor): solder the other pad normally. Apply a fresh dab of flux, touch the iron to the junction of the pad and the component contact, and feed in a small amount of solder. For multi-pin ICs (SOIC etc.): solder the opposite corner pin first to anchor both ends, then work around the remaining pins.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num" style="font-size:0.8rem">05</div>
+              <div class="step-body">
+                <h3>Go back and reflow the tack joint</h3>
+                <p style="font-size:0.93rem;color:var(--text-muted)">The very first joint (your tack) has less solder than the others. Go back, add flux and a tiny amount of solder, and reflow it to match. Then inspect every joint under magnification.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="callout callout--tip" style="margin-top:1.5rem">
+            <p class="callout-title">Drag soldering for ICs</p>
+            <p style="margin:0">For SOIC, TQFP, or other multi-pin ICs, <strong>drag soldering</strong> is faster than soldering each pin individually. Apply generous flux to all the pins, load a small amount of solder onto a chisel tip, and drag it along the row of pins in one smooth motion. Surface tension pulls the solder to each pin. Any bridges are removed with fresh flux and wick. This sounds scary but is genuinely faster and cleaner than pin-by-pin once you practise.</p>
+          </div>
+        </div>
+
+        <!-- HOT AIR METHOD -->
+        <div class="tab-panel">
+          <p>Hot air is ideal for removing and replacing SMD components, soldering QFN packages with thermal pads, and any rework that an iron can't reach cleanly. The component floats on molten solder paste — surface tension self-aligns it when everything is properly applied.</p>
+
+          <div class="steps">
+            <div class="step">
+              <div class="step-num" style="font-size:0.8rem">01</div>
+              <div class="step-body">
+                <h3>Apply solder paste or flux</h3>
+                <p style="font-size:0.93rem;color:var(--text-muted)">For new placement: apply solder paste to each pad with a syringe (or a mini stencil). For rework of an existing joint: apply liquid flux. The paste amount should roughly match the pad area — thin and even, not a thick blob.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num" style="font-size:0.8rem">02</div>
+              <div class="step-body">
+                <h3>Place the component</h3>
+                <p style="font-size:0.93rem;color:var(--text-muted)">Position with tweezers. Approximate alignment is fine — the component self-aligns once solder melts (for small passives and ICs up to QFP). For large BGAs, placement must be accurate as self-alignment is weaker at that scale.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num" style="font-size:0.8rem">03</div>
+              <div class="step-body">
+                <h3>Set hot air station temperature and airflow</h3>
+                <p style="font-size:0.93rem;color:var(--text-muted)">For leaded solder paste: 300–320°C, medium airflow. For lead-free: 350–380°C. Lower airflow prevents blowing components off pads. Use the correct nozzle — a flat or narrow nozzle for fine work, a wide nozzle for large components.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num" style="font-size:0.8rem">04</div>
+              <div class="step-body">
+                <h3>Heat evenly in circular motions</h3>
+                <p style="font-size:0.93rem;color:var(--text-muted)">Hold the nozzle 15–25mm above the component and move in slow circles. Don't focus on one point — heat the entire component and pads together. Watch for the solder paste: first it bubbles (flux boiling off), then goes grey and lumpy, then suddenly becomes bright and liquid. When it transitions to liquid, all joints are reflowed. Remove the air immediately.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num" style="font-size:0.8rem">05</div>
+              <div class="step-body">
+                <h3>Don't move the board — let it cool</h3>
+                <p style="font-size:0.93rem;color:var(--text-muted)">The solder solidifies within 5–10 seconds of removing the heat. Don't touch anything. Once solid, inspect under magnification. Adjacent components can be displaced by airflow — check that nothing nearby moved during reflow.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- REFLOW METHOD -->
+        <div class="tab-panel">
+          <p>Reflow soldering is the industrial method — and fully achievable at home with a cheap toaster oven or dedicated reflow oven. It's far faster than iron soldering when you have many SMD components, and gives more consistent results.</p>
+
+          <h3>The reflow process</h3>
+          <div class="steps">
+            <div class="step">
+              <div class="step-num" style="font-size:0.8rem">01</div>
+              <div class="step-body">
+                <h3>Apply solder paste via stencil</h3>
+                <p style="font-size:0.93rem;color:var(--text-muted)">A stainless steel stencil (cut to match your solder mask openings — JLCPCB can supply one) is placed over the board and held in position. Solder paste is spread across it with a squeegee, depositing paste onto every pad through the stencil apertures. The stencil is then lifted away. Result: perfectly sized paste deposits on every pad in one pass.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num" style="font-size:0.8rem">02</div>
+              <div class="step-body">
+                <h3>Pick and place all components</h3>
+                <p style="font-size:0.93rem;color:var(--text-muted)">Place each component onto its paste deposits using tweezers. The paste is sticky and holds components in position. Work methodically across the board. Approximate alignment is fine — components self-align significantly during reflow. Do not jostle the board after placement.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num" style="font-size:0.8rem">03</div>
+              <div class="step-body">
+                <h3>Run the reflow profile</h3>
+                <p style="font-size:0.93rem;color:var(--text-muted)">A reflow profile has four stages: <strong>preheat</strong> (ramp slowly to ~150°C, driving off paste solvents), <strong>soak</strong> (hold 150–180°C for 60–90s, activating flux), <strong>reflow</strong> (ramp quickly above solder melting point, ~220°C for SAC305), and <strong>cool</strong> (ramp back down). A dedicated reflow oven follows this profile automatically. A toaster oven requires manual temperature monitoring with a thermocouple.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num" style="font-size:0.8rem">04</div>
+              <div class="step-body">
+                <h3>Inspect and clean</h3>
+                <p style="font-size:0.93rem;color:var(--text-muted)">After cooling, inspect every joint under magnification. Check for bridges (common where pins are close), tombstoned components, and insufficient paste. Clean flux residue with 99% IPA and a brush. Fix any defects with an iron and additional flux.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="callout callout--info" style="margin-top:1rem">
+            <p class="callout-title">Beginner reflow setup</p>
+            <p style="margin:0">A cheap T962 reflow oven (~£50–80 on eBay) is a reasonable entry point. It works but has hot spots — search for "T962 firmware upgrade" for a community fix. A better alternative is a hotplate (like the MHP30) used as a bottom-side preheat, combined with hot air for reflow. Dedicated PCB reflow ovens (Controleo3, Whizoo Clapotis) are excellent but cost £150–300.</p>
+          </div>
+        </div>
+      </div><!-- end tabs -->
+    </div>
+  </section>
+
+  <!-- ======== DEFECTS GUIDE ======== -->
+  <section class="section section--white">
+    <div class="container">
+      <p class="section-label">Quality control</p>
+      <h2 class="section-title">Identifying and Fixing Bad Joints</h2>
+      <p class="section-intro">Every soldering beginner makes these. Learn to recognise them — a bad joint that looks fine visually is how a board fails two weeks later.</p>
+
+      <p class="video-section-label">Recommended watch — soldering technique</p>
+      <a href="https://www.youtube.com/watch?v=J5Sb21qbpEQ" target="_blank" rel="noopener" class="video-card" style="margin-bottom:1.5rem">
+        <div class="video-thumb">
+          <img src="https://img.youtube.com/vi/J5Sb21qbpEQ/mqdefault.jpg" alt="EEVblog Soldering Tutorial" loading="lazy" onerror="this.style.display='none';this.parentElement.style.background='#1a1a2e'">
+          <div class="video-play">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="white"><polygon points="5,2 16,9 5,16"/></svg>
+          </div>
+        </div>
+        <div class="video-info">
+          <p class="video-channel">EEVblog · YouTube</p>
+          <p class="video-title">EEVblog #180 — Soldering Tutorial Part 3 — Surface Mount</p>
+          <p class="video-desc">Dave Jones' definitive SMD soldering tutorial — covers every technique on this page with live demonstrations: pre-tinning, tacking, drag soldering ICs, hot air removal, solder wick use, and identifying bad joints under a microscope. Essential watching before your first SMD soldering session. His Parts 1 and 2 cover through-hole technique and equipment selection.</p>
+          <span class="video-cta">▶ Watch on YouTube →</span>
+        </div>
+      </a>
+
+      <div class="defect-grid">
+        <div class="defect-card">
+          <p class="defect-name">Cold joint</p>
+          <p class="defect-cause">Cause: joint not hot enough when solder applied</p>
+          <p class="defect-desc">Looks dull, grainy, or crystalline — like dried mud rather than a smooth shiny surface. The solder didn't properly wet and bond to both surfaces. High resistance, can fail intermittently.</p>
+          <div class="defect-fix">Fix: Apply flux, reheat the joint fully, let solder reflow. Remove excess with wick if needed, then resolder properly.</div>
+        </div>
+
+        <div class="defect-card">
+          <p class="defect-name">Solder bridge</p>
+          <p class="defect-cause">Cause: too much solder, pads too close</p>
+          <p class="defect-desc">An unintended blob of solder connecting two pads or traces that should not be connected. Creates a short circuit. Common on fine-pitch SMD components.</p>
+          <div class="defect-fix">Fix: Apply flux (very important), press solder wick onto the bridge with the iron. The wick absorbs the excess solder. Inspect carefully after.</div>
+        </div>
+
+        <div class="defect-card">
+          <p class="defect-name">Lifted pad</p>
+          <p class="defect-cause">Cause: too much heat, too long, or mechanical stress</p>
+          <p class="defect-desc">The copper pad separates from the PCB substrate. Usually irreversible. The trace connecting to it may also tear. Common when desoldering without enough flux or when pulling a THT lead sideways.</p>
+          <div class="defect-fix">Fix: Carefully scrape the trace to expose bare copper, solder a short wire jumper to the trace end, connect to the component pad. Prevention is better than cure.</div>
+        </div>
+
+        <div class="defect-card">
+          <p class="defect-name">Insufficient solder</p>
+          <p class="defect-cause">Cause: not enough solder applied</p>
+          <p class="defect-desc">Too little solder to form a proper fillet. The pad may be visible around the lead with little coverage. The joint may have adequate conductivity initially but is mechanically fragile.</p>
+          <div class="defect-fix">Fix: Reheat, add a small amount of additional solder to build up the fillet properly. Aim for a smooth concave volcano shape.</div>
+        </div>
+
+        <div class="defect-card">
+          <p class="defect-name">Tombstoning (SMD)</p>
+          <p class="defect-cause">Cause: one pad reflows before the other</p>
+          <p class="defect-desc">A small SMD component (resistor, capacitor) lifts one end off its pad and stands vertically — like a tombstone. Happens in reflow when surface tension pulls the component up. One leg connected, one floating.</p>
+          <div class="defect-fix">Fix: Use tweezers to press the component flat while reheating with hot air. Prevention: ensure both pads heat simultaneously. Check paste volume on both pads.</div>
+        </div>
+
+        <div class="defect-card">
+          <p class="defect-name">Solder ball</p>
+          <p class="defect-cause">Cause: solder paste moisture, or solder spatter</p>
+          <p class="defect-desc">Tiny balls of solder scattered around the board, not attached to any joint. Can roll around and cause intermittent short circuits. Common with contaminated paste or when solder spatters during THT work.</p>
+          <div class="defect-fix">Fix: Inspect carefully under magnification. Remove with sticky flux brush or IPA clean. Prevent: store paste in fridge, avoid moisture in paste.</div>
+        </div>
+
+        <div class="defect-card">
+          <p class="defect-name">Dewetting</p>
+          <p class="defect-cause">Cause: contaminated surface, old solder, no flux</p>
+          <p class="defect-desc">Solder appears to have pulled back from the surface, leaving exposed copper surrounded by a ring of solder. The solder refused to bond to the base metal. Looks like the solder is repelled.</p>
+          <div class="defect-fix">Fix: Clean with IPA, apply fresh flux, reheat. May need to remove old solder completely and redo from scratch.</div>
+        </div>
+
+        <div class="defect-card">
+          <p class="defect-name">Component shifted (SMD)</p>
+          <p class="defect-cause">Cause: airflow during reflow, placement error</p>
+          <p class="defect-desc">Component has moved from its intended position — rotated, offset from pads, or completely off the pads. One leg on, one partially on. Can cause intermittent contact or short.</p>
+          <div class="defect-fix">Fix: While solder is still hot (or reflowing with hot air), gently nudge component back to correct position with tweezers. Work quickly.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== SAFETY ======== -->
+  <section class="section section--tinted">
+    <div class="container" style="max-width:720px">
+      <p class="section-label">Safety</p>
+      <h2 class="section-title">Soldering Safety</h2>
+
+      <div class="callout callout--danger">
+        <p class="callout-title">Flux fumes</p>
+        <p style="margin:0">Flux fumes are respiratory irritants. Solder in a well-ventilated room, or better, use a fume extractor (a fan + activated carbon filter held near the soldering point). Never solder in an enclosed space. This is the most important safety rule.</p>
+      </div>
+
+      <div class="grid-2" style="margin-top:1.5rem">
+        <div>
+          <h3>Burns</h3>
+          <p>Soldering irons run at 320–400°C. Burns are easy, heal slowly, and are entirely avoidable. Put the iron back in its stand immediately when not in use. Never hold a board with your hand while soldering it. Set up proper work lighting so you can see clearly without leaning in close.</p>
+        </div>
+        <div>
+          <h3>Lead exposure</h3>
+          <p>If using leaded solder: wash hands thoroughly after every soldering session. Don't eat while soldering. Keep children away from the workspace. Dispose of solder offcuts appropriately. Lead in solder is a different level of risk to, say, lead in paint — but basic hygiene is still important.</p>
+        </div>
+        <div>
+          <h3>Component disposal</h3>
+          <p>Electronic components contain various heavy metals. Don't throw them in household waste. Most areas have WEEE (Waste Electrical and Electronic Equipment) recycling facilities. Supermarkets often have small electronics drop-off bins.</p>
+        </div>
+        <div>
+          <h3>ESD precautions</h3>
+          <p>Static electricity can silently destroy CMOS components. Use an anti-static wrist strap when handling bare ICs and PCBs, especially MOSFET-input devices and microcontrollers. Affordable wrist straps are available for £2–5.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

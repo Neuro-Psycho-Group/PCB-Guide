@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PCB Primer — A Complete Beginner's Guide to Printed Circuit Boards</title>
+  <meta name="description" content="Learn everything about PCB design from scratch. History, anatomy, components, workflow, soldering, fabrication, and software tools. From zero to your first board.">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    @keyframes drawTrace {
+      to { stroke-dashoffset: 0; }
+    }
+    .hero-nav-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-top: 3rem;
+    }
+    .hero-nav-card {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(90,173,116,0.2);
+      border-radius: 8px;
+      padding: 1.2rem 1.4rem;
+      text-decoration: none;
+      color: rgba(232,245,234,0.85);
+      transition: all 0.2s;
+      display: block;
+    }
+    .hero-nav-card:hover {
+      background: rgba(255,255,255,0.1);
+      border-color: rgba(90,173,116,0.5);
+      color: #fff;
+      transform: translateY(-2px);
+    }
+    .hero-nav-card .card-num {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--green-light);
+      margin-bottom: 0.4rem;
+      display: block;
+    }
+    .hero-nav-card h3 {
+      color: #fff;
+      font-size: 1.05rem;
+      margin-bottom: 0.25rem;
+      font-weight: 600;
+    }
+    .hero-nav-card p {
+      font-size: 0.82rem;
+      color: rgba(232,245,234,0.6);
+      margin: 0;
+      line-height: 1.5;
+    }
+    .pcb-intro-visual {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .quick-facts {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border-light);
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 2rem 0;
+    }
+    .quick-fact {
+      background: var(--bg-card);
+      padding: 1.4rem;
+      text-align: center;
+    }
+    .quick-fact .big { font-family: var(--font-mono); font-size: 2rem; color: var(--green); display: block; margin-bottom: 0.3rem; }
+    .quick-fact .label { font-size: 0.82rem; color: var(--text-muted); }
+    .intro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: start; }
+    @media(max-width:720px){ .intro-grid { grid-template-columns: 1fr; } .quick-facts { grid-template-columns: 1fr; } }
+    .what-is-list { list-style: none; display: flex; flex-direction: column; gap: 0.8rem; margin: 1.2rem 0; }
+    .what-is-list li { display: flex; gap: 1rem; align-items: flex-start; font-size: 0.96rem; }
+    .what-is-list .icon { width: 28px; height: 28px; background: var(--green-pale); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--green); font-size: 0.8rem; margin-top: 1px; }
+  </style>
+</head>
+<body>
+  <!-- Nav injected by JS -->
+
+  <!-- ======== HERO ======== -->
+  <section class="page-hero">
+    <div class="hero-traces" aria-hidden="true">
+      <svg id="hero-traces-svg" width="400" height="100%" viewBox="0 0 400 500" fill="none" xmlns="http://www.w3.org/2000/svg" style="height:100%">
+        <path d="M20 40 H 120 V 120 H 200 V 200" stroke="#5aad74" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M60 0 V 80 H 160 V 160 H 260" stroke="#5aad74" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M160 0 V 40 H 280 V 100" stroke="#c97530" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M280 100 H 380 V 200 H 310" stroke="#c97530" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M0 200 H 100 V 280 H 200 V 380" stroke="#5aad74" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M200 380 H 320 V 450" stroke="#5aad74" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="120" cy="120" r="5" stroke="#5aad74" stroke-width="2" fill="none"/>
+        <circle cx="200" cy="200" r="4" stroke="#c97530" stroke-width="2" fill="none"/>
+        <circle cx="100" cy="280" r="4" stroke="#5aad74" stroke-width="2" fill="none"/>
+        <circle cx="280" cy="100" r="5" stroke="#c97530" stroke-width="2" fill="none"/>
+        <rect x="185" y="185" width="30" height="30" rx="3" stroke="#5aad74" stroke-width="1.5" fill="none"/>
+        <rect x="265" y="85" width="30" height="30" rx="3" stroke="#c97530" stroke-width="1.5" fill="none"/>
+        <path d="M0 350 H 80 V 420 H 150" stroke="#c97530" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M350 0 V 80 H 390" stroke="#5aad74" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M300 200 V 300 H 380 V 350" stroke="#5aad74" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="container">
+      <div class="hero-content">
+        <p class="hero-label">PCB Primer · v1.0</p>
+        <h1>Printed Circuit<br>Boards, Demystified.</h1>
+        <p class="lead">The complete beginner's guide to PCB design, fabrication, and assembly. Start with zero knowledge. Finish ready to design and order your own board.</p>
+        <div class="hero-badges">
+          <span class="badge badge--outline">✦ Beginner friendly</span>
+          <span class="badge badge--outline">✦ Interactive diagrams</span>
+          <span class="badge badge--solid">⬡ 60+ illustrated terms</span>
+        </div>
+      </div>
+      <nav class="hero-nav-grid" aria-label="Site sections">
+        <a href="history.html" class="hero-nav-card">
+          <span class="card-num">01 / History</span>
+          <h3>Where it all began</h3>
+          <p>From Eisler's etched radio to your £5 JLCPCB order</p>
+        </a>
+        <a href="anatomy.html" class="hero-nav-card">
+          <span class="card-num">02 / Anatomy</span>
+          <h3>Inside the board</h3>
+          <p>Layers, traces, vias, pads — every part explained</p>
+        </a>
+        <a href="components.html" class="hero-nav-card">
+          <span class="card-num">03 / Components</span>
+          <h3>Parts on the board</h3>
+          <p>THT vs SMD, resistors, caps, ICs, packages</p>
+        </a>
+        <a href="workflow.html" class="hero-nav-card">
+          <span class="card-num">04 / Workflow</span>
+          <h3>Schematic to board</h3>
+          <p>The full 9-step design process, step by step</p>
+        </a>
+        <a href="fabrication.html" class="hero-nav-card">
+          <span class="card-num">05 / Fabrication</span>
+          <h3>Factory to doorstep</h3>
+          <p>How boards are manufactured and how to order</p>
+        </a>
+        <a href="soldering.html" class="hero-nav-card">
+          <span class="card-num">06 / Soldering</span>
+          <h3>Iron in hand</h3>
+          <p>Equipment, technique, defects, and safety</p>
+        </a>
+        <a href="software.html" class="hero-nav-card">
+          <span class="card-num">07 / Software</span>
+          <h3>EDA tools</h3>
+          <p>KiCad, EasyEDA, Altium — which to use and why</p>
+        </a>
+        <a href="first-board.html" class="hero-nav-card">
+          <span class="card-num">08 / First Board</span>
+          <h3>Build it now</h3>
+          <p>Step-by-step: design an ATtiny85 blinker in KiCad and order it</p>
+        </a>
+        <a href="debugging.html" class="hero-nav-card">
+          <span class="card-num">12 / Debugging</span>
+          <h3>When it doesn't work</h3>
+          <p>Systematic bring-up, multimeter &amp; scope technique, failure catalogue, rework</p>
+        </a>
+        <a href="power-design.html" class="hero-nav-card">
+          <span class="card-num">13 / Power Design</span>
+          <h3>Power supply design</h3>
+          <p>LDOs, buck converters, USB input, capacitor selection, thermal management</p>
+        </a>
+        <a href="advanced.html" class="hero-nav-card">
+          <span class="card-num">09 / Advanced</span>
+          <h3>Signal integrity &amp; EMC</h3>
+          <p>Impedance control, differential pairs, ground planes, decoupling strategy</p>
+        </a>
+        <a href="resources.html" class="hero-nav-card">
+          <span class="card-num">10 / Resources</span>
+          <h3>Keep learning</h3>
+          <p>Books, YouTube, suppliers, calculators, communities, learning path</p>
+        </a>
+        <a href="glossary.html" class="hero-nav-card">
+          <span class="card-num">11 / Glossary</span>
+          <h3>The vocabulary</h3>
+          <p>60+ terms you'll encounter, clearly defined &amp; searchable</p>
+        </a>
+      </nav>
+    </div>
+  </section>
+
+  <!-- ======== WHAT IS A PCB? ======== -->
+  <section class="section section--white">
+    <div class="container">
+      <div class="intro-grid">
+        <div>
+          <p class="section-label">The basics</p>
+          <h2 class="section-title">What is a PCB?</h2>
+          <p>A <strong>Printed Circuit Board</strong> is a flat board that does two things simultaneously: it mechanically holds your electronic components in place, and it electrically connects them — without a single wire.</p>
+          <p>Instead of wire, the connections are thin copper pathways chemically etched into the board's surface. These are called <strong>traces</strong>. Combined with holes (vias) that connect layers, and pads where components solder on, the board becomes a complete, reusable wiring system.</p>
+          <p>The word "printed" is historical — it comes from the printing-like photographic process used to pattern the copper, not from a printer. The correct term is etched or patterned, but "printed" stuck.</p>
+
+          <ul class="what-is-list">
+            <li><span class="icon">→</span><span><strong>Mechanical support</strong> — holds every component at a precise, repeatable position</span></li>
+            <li><span class="icon">→</span><span><strong>Electrical connections</strong> — copper traces replace physical wires entirely</span></li>
+            <li><span class="icon">→</span><span><strong>Repeatability</strong> — a thousand identical boards can be manufactured from one design file</span></li>
+            <li><span class="icon">→</span><span><strong>Miniaturisation</strong> — components can be packed far more tightly than point-to-point wiring allows</span></li>
+          </ul>
+        </div>
+        <div>
+          <div class="pcb-intro-visual diagram-wrap" style="margin:0">
+            <!-- Simple illustrative PCB cross-section SVG - generous spacing, no text overlap -->
+            <svg viewBox="0 0 460 320" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:460px">
+              <!-- Component: IC chip on top -->
+              <rect x="155" y="18" width="90" height="50" rx="5" fill="#3d3d3d" stroke="#1a1a1a" stroke-width="1"/>
+              <text x="200" y="48" text-anchor="middle" font-family="'Share Tech Mono', monospace" font-size="11" fill="#aaa">IC chip</text>
+              <!-- IC pins -->
+              <line x1="165" y1="68" x2="165" y2="82" stroke="#999" stroke-width="1.5"/>
+              <line x1="180" y1="68" x2="180" y2="82" stroke="#999" stroke-width="1.5"/>
+              <line x1="195" y1="68" x2="195" y2="82" stroke="#999" stroke-width="1.5"/>
+              <line x1="210" y1="68" x2="210" y2="82" stroke="#999" stroke-width="1.5"/>
+              <line x1="225" y1="68" x2="225" y2="82" stroke="#999" stroke-width="1.5"/>
+
+              <!-- Solder mask top (green) -->
+              <rect x="60" y="82" width="280" height="16" rx="2" fill="#2d6a3f" opacity="0.9"/>
+              <!-- Copper traces on top -->
+              <rect x="60" y="98" width="280" height="11" rx="1" fill="#c97530" opacity="0.85"/>
+              <!-- Pad cutouts (exposed copper, no mask) -->
+              <rect x="157" y="98" width="15" height="11" fill="#d4a520"/>
+              <rect x="172" y="98" width="15" height="11" fill="#d4a520"/>
+              <rect x="187" y="98" width="15" height="11" fill="#d4a520"/>
+              <rect x="202" y="98" width="15" height="11" fill="#d4a520"/>
+              <rect x="217" y="98" width="15" height="11" fill="#d4a520"/>
+
+              <!-- FR4 substrate -->
+              <rect x="60" y="109" width="280" height="80" rx="1" fill="#c8c3a0" opacity="0.8"/>
+              <text x="200" y="154" text-anchor="middle" font-family="'Share Tech Mono', monospace" font-size="10" fill="#5c5545">FR4 substrate · 1.6mm</text>
+
+              <!-- Via (plated hole) -->
+              <rect x="300" y="98" width="10" height="101" fill="#d4a520" opacity="0.85" rx="1"/>
+              <ellipse cx="305" cy="98" rx="5" ry="3" fill="#d4a520"/>
+              <ellipse cx="305" cy="199" rx="5" ry="3" fill="#d4a520"/>
+
+              <!-- Copper traces bottom -->
+              <rect x="60" y="189" width="280" height="11" rx="1" fill="#c97530" opacity="0.85"/>
+              <!-- Solder mask bottom -->
+              <rect x="60" y="200" width="280" height="16" rx="2" fill="#2d6a3f" opacity="0.9"/>
+              <!-- Silkscreen -->
+              <rect x="60" y="216" width="280" height="10" rx="1" fill="#f5f0e0" opacity="0.6"/>
+
+              <!-- Right-side labels - all start at x=360, clean spacing -->
+              <!-- Leader lines from layer centres to labels -->
+              <line x1="341" y1="90"  x2="355" y2="90"  stroke="#8c8575" stroke-width="0.8" stroke-dasharray="3 2"/>
+              <line x1="341" y1="104" x2="355" y2="104" stroke="#8c8575" stroke-width="0.8" stroke-dasharray="3 2"/>
+              <line x1="341" y1="149" x2="355" y2="149" stroke="#8c8575" stroke-width="0.8" stroke-dasharray="3 2"/>
+              <line x1="341" y1="195" x2="355" y2="195" stroke="#8c8575" stroke-width="0.8" stroke-dasharray="3 2"/>
+              <line x1="341" y1="207" x2="355" y2="207" stroke="#8c8575" stroke-width="0.8" stroke-dasharray="3 2"/>
+              <line x1="341" y1="221" x2="355" y2="221" stroke="#8c8575" stroke-width="0.8" stroke-dasharray="3 2"/>
+              <line x1="315" y1="148" x2="355" y2="230" stroke="#b5820a" stroke-width="0.8" stroke-dasharray="3 2"/>
+
+              <text x="358" y="93"  font-family="'Share Tech Mono', monospace" font-size="9.5" fill="#5c5545">solder mask</text>
+              <text x="358" y="107" font-family="'Share Tech Mono', monospace" font-size="9.5" fill="#a85a18">copper (top)</text>
+              <text x="358" y="152" font-family="'Share Tech Mono', monospace" font-size="9.5" fill="#5c5545">substrate</text>
+              <text x="358" y="198" font-family="'Share Tech Mono', monospace" font-size="9.5" fill="#a85a18">copper (btm)</text>
+              <text x="358" y="210" font-family="'Share Tech Mono', monospace" font-size="9.5" fill="#2d6a3f">solder mask</text>
+              <text x="358" y="224" font-family="'Share Tech Mono', monospace" font-size="9.5" fill="#5c5545">silkscreen</text>
+              <text x="358" y="238" font-family="'Share Tech Mono', monospace" font-size="9.5" fill="#b5820a">via</text>
+
+              <!-- Trace label with arrow -->
+              <path d="M 120 104 L 100 140" stroke="#a85a18" stroke-width="1" stroke-dasharray="3 2"/>
+              <text x="46" y="155" font-family="'Share Tech Mono', monospace" font-size="9.5" fill="#a85a18">trace</text>
+
+              <!-- Pad label -->
+              <path d="M 187 98 L 170 75" stroke="#b5820a" stroke-width="1" stroke-dasharray="3 2"/>
+              <text x="128" y="72" font-family="'Share Tech Mono', monospace" font-size="9.5" fill="#b5820a">pad</text>
+
+              <!-- Solder blobs -->
+              <ellipse cx="165" cy="83" rx="7" ry="5" fill="#9FE1CB" opacity="0.9"/>
+              <ellipse cx="210" cy="83" rx="7" ry="5" fill="#9FE1CB" opacity="0.9"/>
+
+              <text x="200" y="285" text-anchor="middle" font-family="'Share Tech Mono', monospace" font-size="10" fill="#8c8575">2-layer PCB cross-section</text>
+            </svg>
+          </div>
+          <p class="diagram-caption" style="margin-top:0.6rem">Click a layer on the anatomy page for interactive detail</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== QUICK FACTS ======== -->
+  <section class="section section--tinted">
+    <div class="container">
+      <p class="section-label">By the numbers</p>
+      <h2 class="section-title">PCBs by the numbers</h2>
+      <div class="quick-facts">
+        <div class="quick-fact reveal">
+          <span class="big">1936</span>
+          <span class="label">Year Paul Eisler made the first practical PCB (in a London bedsit)</span>
+        </div>
+        <div class="quick-fact reveal">
+          <span class="big">$5</span>
+          <span class="label">Approximate cost for 5 hobby boards from JLCPCB today, shipped</span>
+        </div>
+        <div class="quick-fact reveal">
+          <span class="big">0.1mm</span>
+          <span class="label">Typical minimum trace width at standard hobbyist fab houses</span>
+        </div>
+      </div>
+
+      <div class="grid-3 mt-2 stagger-children">
+        <div class="card">
+          <p class="section-label" style="margin-bottom:0.6rem">Before PCBs</p>
+          <h3>Point-to-point wiring</h3>
+          <p style="font-size:0.93rem;color:var(--text-muted)">Every connection was a physical wire soldered between components. Unreliable, slow to build, impossible to mass-produce, and prone to vibration failure.</p>
+        </div>
+        <div class="card">
+          <p class="section-label" style="margin-bottom:0.6rem">The PCB revolution</p>
+          <h3>Etched copper connections</h3>
+          <p style="font-size:0.93rem;color:var(--text-muted)">Copper traces replace wires entirely. The same design can be mass-produced with identical connections every time — enabling everything from radios to iPhones.</p>
+        </div>
+        <div class="card">
+          <p class="section-label" style="margin-bottom:0.6rem">Today</p>
+          <h3>Accessible to everyone</h3>
+          <p style="font-size:0.93rem;color:var(--text-muted)">Free EDA software, $2 prototyping services, and worldwide shipping mean anyone with a laptop can design a board this week and hold it in their hands next week.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== HOW TO USE THIS GUIDE ======== -->
+  <section class="section section--white">
+    <div class="container" style="max-width:680px">
+      <p class="section-label">Your learning path</p>
+      <h2 class="section-title">Suggested reading order</h2>
+      <p class="section-intro">Each section builds on the last. If you're completely new, follow the order below. If you have some knowledge, jump to any section — they're designed to be self-contained.</p>
+
+      <div class="steps">
+        <div class="step reveal">
+          <div class="step-num">01</div>
+          <div class="step-body">
+            <p class="step-phase">Start here</p>
+            <h3><a href="history.html">History</a></h3>
+            <p style="font-size:0.93rem;color:var(--text-muted)">Understanding why PCBs were invented gives you a mental model for why they work the way they do. Takes 5 minutes.</p>
+          </div>
+        </div>
+        <div class="step reveal">
+          <div class="step-num">02</div>
+          <div class="step-body">
+            <p class="step-phase">Understand the object</p>
+            <h3><a href="anatomy.html">Anatomy &amp; Layers</a></h3>
+            <p style="font-size:0.93rem;color:var(--text-muted)">What are you actually looking at when you see a PCB? Layers, materials, traces, vias — interactive diagram included.</p>
+          </div>
+        </div>
+        <div class="step reveal">
+          <div class="step-num">03</div>
+          <div class="step-body">
+            <p class="step-phase">The parts</p>
+            <h3><a href="components.html">Components</a></h3>
+            <p style="font-size:0.93rem;color:var(--text-muted)">Through-hole vs surface mount. Resistors, capacitors, ICs, connectors — what they do and how to identify them.</p>
+          </div>
+        </div>
+        <div class="step reveal">
+          <div class="step-num">04</div>
+          <div class="step-body">
+            <p class="step-phase">The design process</p>
+            <h3><a href="workflow.html">Design Workflow</a></h3>
+            <p style="font-size:0.93rem;color:var(--text-muted)">From blank page to Gerber files. The full schematic-to-layout process with practical tips at each stage.</p>
+          </div>
+        </div>
+        <div class="step reveal">
+          <div class="step-num">05</div>
+          <div class="step-body">
+            <p class="step-phase">Build it</p>
+            <h3><a href="fabrication.html">Fabrication</a> + <a href="soldering.html">Soldering</a></h3>
+            <p style="font-size:0.93rem;color:var(--text-muted)">Order your boards, solder your components. The physical side of turning a design file into a working device.</p>
+          </div>
+        </div>
+        <div class="step reveal">
+          <div class="step-num">06</div>
+          <div class="step-body">
+            <p class="step-phase">Hands on</p>
+            <h3><a href="first-board.html">Your First Board</a></h3>
+            <p style="font-size:0.93rem;color:var(--text-muted)">A step-by-step project: design a real ATtiny85 LED blinker in KiCad, generate Gerbers, and order it. Every single step shown — nothing assumed.</p>
+          </div>
+        </div>
+        <div class="step reveal">
+          <div class="step-num">07</div>
+          <div class="step-body">
+            <p class="step-phase">Go deeper</p>
+            <h3><a href="advanced.html">Advanced Topics</a> + <a href="resources.html">Resources</a></h3>
+            <p style="font-size:0.93rem;color:var(--text-muted)">Signal integrity, impedance control, EMC, and differential pairs. Plus the books, YouTube channels, tools and suppliers to keep learning.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout--tip" style="margin-top:2rem">
+        <p class="callout-title">First board recommendation</p>
+        <p style="margin:0">Design an LED that lights up when powered — one LED, one resistor, one power connector. This covers everything: schematic, footprints, layout, Gerbers, ordering, and soldering. Your second board can be ambitious. Your first just needs to work.</p>
+      </div>
+    </div>
+  </section>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
